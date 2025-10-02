@@ -1,0 +1,30 @@
+# Core Dependencies for SwasthAI Project
+# Install with: pip install -r requirements.txt
+
+# AI & Machine Learning
+groq==0.4.1
+huggingface-hub==0.19.4
+
+# Web Framework  
+gradio==4.44.0
+
+# Audio Processing
+gtts==2.3.2
+pydub==0.25.1
+speechrecognition==3.10.0
+pyaudio==0.2.11
+
+# Image Processing
+Pillow==10.0.1
+
+# Utility Libraries
+python-dotenv==1.0.0
+requests==2.31.0
+
+# Optional (Premium Features)
+elevenlabs==0.2.24
+
+# Development Dependencies (Optional)
+black==23.9.1
+flake8==6.1.0
+pytest==7.4.3
