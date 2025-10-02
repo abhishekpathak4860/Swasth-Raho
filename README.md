@@ -1,4 +1,4 @@
-# 🩺 Swasth Raho - AI Medical Voice Assistant
+# 🩺 Swasth Raho - AI Medical Health Assistant
 
 ## 📋 About This Project
 
