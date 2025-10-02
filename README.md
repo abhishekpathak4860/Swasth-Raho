@@ -2,7 +2,7 @@
 
 ## 📋 About This Project
 
-This is an AI-powered medical voice assistant that:
+This is an AI-powered medical health assistant that:
 
 - 🎤 Converts your voice to text
 - 🖼️ Analyzes medical images
