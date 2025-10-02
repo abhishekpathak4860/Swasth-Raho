@@ -465,6 +465,3 @@ This project was created to improve healthcare accessibility, especially in rura
 - 🔲 Doctor appointment booking
 - 🔲 Medical report generation
 
----
-
-_Happy Coding! 🚀 Hope your first Python project is successful!_
