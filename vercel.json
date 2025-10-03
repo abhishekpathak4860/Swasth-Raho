@@ -1,14 +1,4 @@
 {
-  "builds": [
-    {
-      "src": "Gradio/voicebot.py",
-      "use": "@vercel/python"
-    }
-  ],
-  "routes": [
-    {
-      "src": "/(.*)",
-      "dest": "Gradio/voicebot.py"
-    }
-  ]
+  "builds": [{ "src": "Gradio/voicebot.py", "use": "@vercel/python" }],
+  "routes": [{ "src": "/(.*)", "dest": "Gradio/voicebot.py" }]
 }
