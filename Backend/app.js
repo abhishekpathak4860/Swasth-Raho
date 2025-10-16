@@ -4,6 +4,7 @@ import dotenv from "dotenv";
 import connectDB from "./config/DB.js";
 import registerRoute from "./routes/registerRoute.js";
 import cookieParser from "cookie-parser";
+import patientProfileRoute from "./routes/patientProfileRoute.js";
 
 dotenv.config();
 const app = express();
@@ -19,8 +20,8 @@ app.use(cookieParser());
 
 // api calls here
 app.use("/api", registerRoute);
-
+app.use("/patient", patientProfileRoute);
 connectDB();
 
-const PORT = process.env.PORT || 5000;
+const PORT = 5000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

@@ -1,10 +1,12 @@
 "use client";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
+import axios from "axios";
 
 export default function PatientDashboard() {
   const [activeTab, setActiveTab] = useState("profile");
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [user, setUser] = useState<any>(null);
 
   const sidebarItems = [
     {
@@ -39,6 +41,20 @@ export default function PatientDashboard() {
     },
   ];
 
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const res = await axios.get("http://localhost:5000/patient/profile", {
+          withCredentials: true, // send cookies
+        });
+        setUser(res.data.patient);
+      } catch (error) {
+        console.error("Error fetching profile:", error);
+      }
+    };
+
+    fetchProfile();
+  }, []);
   return (
     <div className="min-h-screen bg-gray-50 flex">
       {/* Sidebar */}
@@ -190,21 +206,23 @@ export default function PatientDashboard() {
                     <label className="block text-sm font-medium text-gray-600">
                       Full Name
                     </label>
-                    <p className="text-gray-800 font-medium">John Doe</p>
+                    <p className="text-gray-800 font-medium">{user?.name}</p>
                   </div>
 
                   <div>
                     <label className="block text-sm font-medium text-gray-600">
                       Age
                     </label>
-                    <p className="text-gray-800 font-medium">32 years</p>
+                    <p className="text-gray-800 font-medium">
+                      {user?.age} years
+                    </p>
                   </div>
 
                   <div>
                     <label className="block text-sm font-medium text-gray-600">
-                      Gender
+                      Role
                     </label>
-                    <p className="text-gray-800 font-medium">Male</p>
+                    <p className="text-gray-800 font-medium">{user?.role}</p>
                   </div>
 
                   {/* <div>
@@ -227,16 +245,14 @@ export default function PatientDashboard() {
                     <label className="block text-sm font-medium text-gray-600">
                       Email
                     </label>
-                    <p className="text-gray-800 font-medium">
-                      john.doe@email.com
-                    </p>
+                    <p className="text-gray-800 font-medium">{user?.email}</p>
                   </div>
 
                   <div>
                     <label className="block text-sm font-medium text-gray-600">
                       Phone
                     </label>
-                    <p className="text-gray-800 font-medium">+91 98765 43210</p>
+                    <p className="text-gray-800 font-medium">{user?.contact}</p>
                   </div>
 
                   <div>
@@ -244,7 +260,7 @@ export default function PatientDashboard() {
                       Location
                     </label>
                     <p className="text-gray-800 font-medium">
-                      123 Health Street, Medical City, MC 12345
+                      {user?.location}
                     </p>
                   </div>
 

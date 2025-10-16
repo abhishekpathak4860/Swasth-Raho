@@ -2,10 +2,12 @@
 import React, { useState } from "react";
 import Link from "next/link";
 
-export default function Appointments() {
-  const [activeTab, setActiveTab] = useState("appointments");
+export default function Doctors() {
+  const [activeTab, setActiveTab] = useState("doctors");
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [showBookingForm, setShowBookingForm] = useState(false);
+  const [selectedFilter, setSelectedFilter] = useState("all");
+  const [selectedDoctor, setSelectedDoctor] = useState("");
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -48,74 +50,103 @@ export default function Appointments() {
     },
   ];
 
-  const doctors = [
-    { id: 1, name: "Dr. Amit Sharma", specialization: "Cardiologist" },
-    { id: 2, name: "Dr. Priya Patel", specialization: "Dermatologist" },
-    { id: 3, name: "Dr. Rahul Kumar", specialization: "Neurologist" },
-    { id: 4, name: "Dr. Sneha Singh", specialization: "Orthopedic" },
-    { id: 5, name: "Dr. Vijay Mehta", specialization: "Pediatrician" },
-  ];
-
-  // Sample appointments data
-  const upcomingAppointments = [
+  const doctorsData = [
     {
       id: 1,
-      doctor: "Dr. Amit Sharma",
+      name: "Dr. Amit Sharma",
       specialization: "Cardiologist",
-      date: "2025-10-20",
-      time: "10:00 AM",
-      status: "confirmed",
-      disease: "Heart Checkup",
+      experience: "15 years",
+      rating: 4.8,
+      image: "👨‍⚕️",
+      contact: "+91 98765 43210",
+      education: "MBBS, MD Cardiology",
+      hospital: "Heart Care Centre",
+      availability: "Mon-Fri: 9AM-5PM",
+      consultationFee: "₹1500",
     },
     {
       id: 2,
-      doctor: "Dr. Priya Patel",
+      name: "Dr. Priya Patel",
       specialization: "Dermatologist",
-      date: "2025-10-22",
-      time: "2:30 PM",
-      status: "pending",
-      disease: "Skin Allergy",
+      experience: "12 years",
+      rating: 4.9,
+      image: "👩‍⚕️",
+      contact: "+91 87654 32109",
+      education: "MBBS, MD Dermatology",
+      hospital: "Skin Care Clinic",
+      availability: "Tue-Sat: 10AM-6PM",
+      consultationFee: "₹1200",
     },
     {
       id: 3,
-      doctor: "Dr. Rahul Kumar",
+      name: "Dr. Rahul Kumar",
       specialization: "Neurologist",
-      date: "2025-10-25",
-      time: "11:15 AM",
-      status: "confirmed",
-      disease: "Migraine",
+      experience: "18 years",
+      rating: 4.7,
+      image: "👨‍⚕️",
+      contact: "+91 76543 21098",
+      education: "MBBS, DM Neurology",
+      hospital: "Neuro Care Institute",
+      availability: "Mon-Wed-Fri: 11AM-4PM",
+      consultationFee: "₹2000",
     },
-  ];
-
-  const pastAppointments = [
     {
       id: 4,
-      doctor: "Dr. Sneha Singh",
+      name: "Dr. Sneha Singh",
       specialization: "Orthopedic",
-      date: "2025-10-10",
-      time: "9:00 AM",
-      status: "completed",
-      disease: "Back Pain",
+      experience: "10 years",
+      rating: 4.6,
+      image: "👩‍⚕️",
+      contact: "+91 65432 10987",
+      education: "MBBS, MS Orthopedics",
+      hospital: "Bone & Joint Clinic",
+      availability: "Mon-Sat: 8AM-2PM",
+      consultationFee: "₹1800",
     },
     {
       id: 5,
-      doctor: "Dr. Vijay Mehta",
+      name: "Dr. Vijay Mehta",
       specialization: "Pediatrician",
-      date: "2025-10-05",
-      time: "4:00 PM",
-      status: "completed",
-      disease: "General Checkup",
+      experience: "20 years",
+      rating: 4.9,
+      image: "👨‍⚕️",
+      contact: "+91 54321 09876",
+      education: "MBBS, MD Pediatrics",
+      hospital: "Children's Hospital",
+      availability: "Daily: 9AM-7PM",
+      consultationFee: "₹1000",
     },
     {
       id: 6,
-      doctor: "Dr. Amit Sharma",
-      specialization: "Cardiologist",
-      date: "2025-09-28",
-      time: "10:30 AM",
-      status: "cancelled",
-      disease: "Blood Pressure",
+      name: "Dr. Ravi Gupta",
+      specialization: "Ophthalmologist",
+      experience: "14 years",
+      rating: 4.8,
+      image: "👨‍⚕️",
+      contact: "+91 43210 98765",
+      education: "MBBS, MS Ophthalmology",
+      hospital: "Eye Care Centre",
+      availability: "Tue-Thu-Sat: 10AM-5PM",
+      consultationFee: "₹1300",
     },
   ];
+
+  const specializations = [
+    { id: "all", name: "All Doctors", icon: "🏥" },
+    { id: "Cardiologist", name: "Heart", icon: "❤️" },
+    { id: "Dermatologist", name: "Skin", icon: "🔬" },
+    { id: "Neurologist", name: "Brain", icon: "🧠" },
+    { id: "Orthopedic", name: "Bones", icon: "🦴" },
+    { id: "Pediatrician", name: "Children", icon: "👶" },
+    { id: "Ophthalmologist", name: "Eyes", icon: "👁️" },
+  ];
+
+  const filteredDoctors =
+    selectedFilter === "all"
+      ? doctorsData
+      : doctorsData.filter(
+          (doctor) => doctor.specialization === selectedFilter
+        );
 
   const handleInputChange = (e: { target: { name: any; value: any } }) => {
     setFormData({
@@ -124,10 +155,18 @@ export default function Appointments() {
     });
   };
 
+  const handleBookAppointment = (doctorName: string) => {
+    setSelectedDoctor(doctorName);
+    setFormData({
+      ...formData,
+      doctor: doctorName,
+    });
+    setShowBookingForm(true);
+  };
+
   const handleSubmit = (e: { preventDefault: () => void }) => {
     e.preventDefault();
     console.log("Booking appointment:", formData);
-    // Add booking logic here
     setShowBookingForm(false);
     setFormData({
       name: "",
@@ -138,21 +177,6 @@ export default function Appointments() {
       time: "",
     });
     alert("Appointment booked successfully!");
-  };
-
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case "confirmed":
-        return "bg-green-100 text-green-800 border-green-200";
-      case "pending":
-        return "bg-yellow-100 text-yellow-800 border-yellow-200";
-      case "cancelled":
-        return "bg-red-100 text-red-800 border-red-200";
-      case "completed":
-        return "bg-blue-100 text-blue-800 border-blue-200";
-      default:
-        return "bg-gray-100 text-gray-800 border-gray-200";
-    }
   };
 
   return (
@@ -192,7 +216,7 @@ export default function Appointments() {
               }`}
               onClick={() => setActiveTab(item.id)}
             >
-              <span className="text-2xl">{item.icon}</span>
+              {/* <span className="text-2xl">{item.icon}</span> */}
               <span
                 className={`ml-3 font-medium ${
                   isSidebarOpen ? "block" : "hidden"
@@ -254,19 +278,11 @@ export default function Appointments() {
                 </svg>
               </button>
               <h2 className="text-2xl font-bold text-gray-800 ml-44">
-                📅 Appointments
+                Our Doctors
               </h2>
             </div>
 
             <div className="flex items-center space-x-4">
-              {/* Book Appointment Button */}
-              <button
-                onClick={() => setShowBookingForm(true)}
-                className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition font-medium"
-              >
-                Book Appointment
-              </button>
-
               {/* Notifications */}
               <button className="relative p-2 text-gray-600 hover:bg-gray-100 rounded-full">
                 <svg
@@ -301,148 +317,143 @@ export default function Appointments() {
           </div>
         </header>
 
-        {/* Main Content Area - Adjusted for fixed header */}
+        {/* Main Content Area */}
         <main className="flex-1 p-6 mt-20 overflow-y-auto">
-          {/* Upcoming Appointments */}
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-xl font-bold text-gray-800">
-                Upcoming Appointments
-              </h3>
-              <span className="px-3 py-1 bg-green-100 text-green-800 text-sm font-medium rounded-full">
-                {upcomingAppointments.length} Scheduled
-              </span>
-            </div>
-
-            <div className="space-y-4">
-              {upcomingAppointments.map((appointment) => (
-                <div
-                  key={appointment.id}
-                  className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition"
-                >
-                  <div className="flex flex-col md:flex-row md:items-center justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center space-x-3 mb-2">
-                        <h4 className="text-lg font-semibold text-gray-800">
-                          {appointment.doctor}
-                        </h4>
-                        <span
-                          className={`px-2 py-1 text-xs font-medium rounded-full border ${getStatusBadge(
-                            appointment.status
-                          )}`}
-                        >
-                          {appointment.status.toUpperCase()}
-                        </span>
-                      </div>
-                      <p className="text-gray-600 mb-1">
-                        🏥 {appointment.specialization}
-                      </p>
-                      <p className="text-gray-600 mb-1">
-                        💊 {appointment.disease}
-                      </p>
-                      <div className="flex items-center space-x-4 text-sm text-gray-500">
-                        <span>📅 {appointment.date}</span>
-                        <span>⏰ {appointment.time}</span>
-                      </div>
-                    </div>
-
-                    <div className="flex space-x-2 mt-4 md:mt-0">
-                      {appointment.status === "pending" && (
-                        <>
-                          <button className="px-3 py-1 bg-yellow-600 text-white text-sm rounded hover:bg-yellow-700 transition">
-                            Reschedule
-                          </button>
-                          <button className="px-3 py-1 bg-red-600 text-white text-sm rounded hover:bg-red-700 transition">
-                            Cancel
-                          </button>
-                        </>
-                      )}
-                      {appointment.status === "confirmed" && (
-                        <>
-                          <button className="px-3 py-1 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 transition">
-                            Details
-                          </button>
-                          {/* <button className="px-3 py-1 bg-red-600 text-white text-sm rounded hover:bg-red-700 transition">
-                            ❌ Cancel
-                          </button> */}
-                        </>
-                      )}
-                    </div>
-                  </div>
+          {/* Special AI Doctor Card */}
+          <div className="bg-gradient-to-r from-purple-600 to-pink-600 rounded-2xl p-6 mb-6 text-white">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-4">
+                <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center text-3xl">
+                  🤖
                 </div>
+                <div>
+                  <h3 className="text-2xl font-bold">Dr. Meera Sharma</h3>
+                  <p className="text-purple-100">AI Medical Assistant</p>
+                  <p className="text-sm text-purple-200 mt-1">
+                    Available 24/7 • Instant Consultation
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() =>
+                  window.open(
+                    "https://abhishekpathak4860-medibot.hf.space/",
+                    "_blank"
+                  )
+                }
+                className="px-6 py-3 bg-white text-purple-600 rounded-xl font-semibold hover:bg-purple-50 transition-all shadow-lg"
+              >
+                Consult AI Doctor
+              </button>
+            </div>
+          </div>
+
+          {/* Filter Buttons */}
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
+            <h3 className="text-lg font-bold text-gray-800 mb-4">
+              Filter by Specialization
+            </h3>
+            <div className="flex flex-wrap gap-3">
+              {specializations.map((spec) => (
+                <button
+                  key={spec.id}
+                  onClick={() => setSelectedFilter(spec.id)}
+                  className={`px-4 py-2 rounded-xl font-medium transition-all ${
+                    selectedFilter === spec.id
+                      ? "bg-blue-600 text-white shadow-lg"
+                      : "bg-gray-100 text-gray-700 hover:bg-blue-50 hover:text-blue-600"
+                  }`}
+                >
+                  {spec.name}
+                </button>
               ))}
             </div>
           </div>
 
-          {/* Past Appointments */}
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-xl font-bold text-gray-800">
-                Past Appointments
-              </h3>
-              <span className="px-3 py-1 bg-blue-100 text-blue-800 text-sm font-medium rounded-full">
-                {pastAppointments.length} Records
-              </span>
-            </div>
-
-            <div className="space-y-4">
-              {pastAppointments.map((appointment) => (
-                <div
-                  key={appointment.id}
-                  className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition"
-                >
-                  <div className="flex flex-col md:flex-row md:items-center justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center space-x-3 mb-2">
-                        <h4 className="text-lg font-semibold text-gray-800">
-                          {appointment.doctor}
-                        </h4>
-                        <span
-                          className={`px-2 py-1 text-xs font-medium rounded-full border ${getStatusBadge(
-                            appointment.status
-                          )}`}
-                        >
-                          {appointment.status.toUpperCase()}
-                        </span>
-                      </div>
-                      <p className="text-gray-600 mb-1">
-                        🏥 {appointment.specialization}
-                      </p>
-                      <p className="text-gray-600 mb-1">
-                        💊 {appointment.disease}
-                      </p>
-                      <div className="flex items-center space-x-4 text-sm text-gray-500">
-                        <span>📅 {appointment.date}</span>
-                        <span>⏰ {appointment.time}</span>
-                      </div>
-                    </div>
-
-                    <div className="flex space-x-2 mt-4 md:mt-0">
-                      {appointment.status === "completed" && (
-                        <>
-                          <button className="px-3 py-1 bg-green-600 text-white text-sm rounded hover:bg-green-700 transition">
-                            📄 View Report
-                          </button>
-                          {/* <button className="px-3 py-1 bg-yellow-600 text-white text-sm rounded hover:bg-yellow-700 transition">
-                            ⭐ Rate Doctor
-                          </button> */}
-                        </>
-                      )}
-                      {appointment.status === "cancelled" && (
-                        <button className="px-3 py-1 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 transition">
-                          Book Again
-                        </button>
-                      )}
+          {/* Doctors Grid */}
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filteredDoctors.map((doctor) => (
+              <div
+                key={doctor.id}
+                className="bg-white rounded-xl shadow-lg border border-gray-200 p-6 hover:shadow-xl transition-all duration-300 transform hover:scale-105"
+              >
+                {/* Doctor Header */}
+                <div className="flex items-center space-x-4 mb-4">
+                  {/* <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-green-500 rounded-full flex items-center justify-center text-3xl">
+                    {doctor.image}
+                  </div> */}
+                  <div>
+                    <h4 className="text-xl font-bold text-gray-800">
+                      {doctor.name}
+                    </h4>
+                    <p className="text-blue-600 font-medium">
+                      {doctor.specialization}
+                    </p>
+                    <div className="flex items-center space-x-1 mt-1">
+                      {/* <span className="text-yellow-500">⭐</span>
+                      <span className="text-sm text-gray-600">
+                        {doctor.rating}/5
+                      </span> */}
                     </div>
                   </div>
                 </div>
-              ))}
-            </div>
+
+                {/* Doctor Details */}
+                <div className="space-y-2 mb-4">
+                  <div className="flex items-center space-x-2 text-sm text-gray-600">
+                    <span>🎓</span>
+                    <span>{doctor.education}</span>
+                  </div>
+                  <div className="flex items-center space-x-2 text-sm text-gray-600">
+                    <span>💼</span>
+                    <span>{doctor.experience} experience</span>
+                  </div>
+                  <div className="flex items-center space-x-2 text-sm text-gray-600">
+                    <span>🏥</span>
+                    <span>{doctor.hospital}</span>
+                  </div>
+                  <div className="flex items-center space-x-2 text-sm text-gray-600">
+                    <span>⏰</span>
+                    <span>{doctor.availability}</span>
+                  </div>
+                  <div className="flex items-center space-x-2 text-sm text-gray-600">
+                    <span>💰</span>
+                    <span>Consultation: {doctor.consultationFee}</span>
+                  </div>
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex space-x-2">
+                  <button
+                    onClick={() => handleBookAppointment(doctor.name)}
+                    className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-medium"
+                  >
+                    📅 Book Appointment
+                  </button>
+                  <button className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition">
+                    📞
+                  </button>
+                </div>
+              </div>
+            ))}
           </div>
+
+          {/* No doctors found */}
+          {filteredDoctors.length === 0 && (
+            <div className="text-center py-12">
+              <div className="text-6xl mb-4">🔍</div>
+              <h3 className="text-xl font-semibold text-gray-800 mb-2">
+                No doctors found
+              </h3>
+              <p className="text-gray-600">
+                Try selecting a different specialization
+              </p>
+            </div>
+          )}
         </main>
       </div>
 
-      {/* Booking Form Modal - Updated with Better Colors */}
+      {/* Booking Form Modal - Same as appointments page */}
       {showBookingForm && (
         <>
           {/* Overlay with backdrop blur */}
@@ -457,7 +468,9 @@ export default function Appointments() {
               <div className="p-6">
                 {/* Header with gradient background */}
                 <div className="flex items-center justify-between mb-6 -m-6 p-6 bg-gradient-to-r from-blue-600 to-green-600 text-white">
-                  <h3 className="text-2xl font-bold">Book New Appointment</h3>
+                  <h3 className="text-2xl font-bold">
+                    📅 Book Appointment with {selectedDoctor}
+                  </h3>
                   <button
                     onClick={() => setShowBookingForm(false)}
                     className="text-white/80 hover:text-white text-2xl hover:bg-white/20 rounded-full w-8 h-8 flex items-center justify-center transition-all"
@@ -479,7 +492,7 @@ export default function Appointments() {
 
                   <div>
                     <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      Full Name
+                      👤 Full Name
                     </label>
                     <input
                       type="text"
@@ -494,7 +507,7 @@ export default function Appointments() {
 
                   <div>
                     <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      Email Address
+                      📧 Email Address
                     </label>
                     <input
                       type="email"
@@ -509,7 +522,7 @@ export default function Appointments() {
 
                   <div>
                     <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      Type of Disease/Issue
+                      💊 Type of Disease/Issue
                     </label>
                     <input
                       type="text"
@@ -524,27 +537,20 @@ export default function Appointments() {
 
                   <div>
                     <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      Choose Doctor
+                      👨‍⚕️ Doctor
                     </label>
-                    <select
+                    <input
+                      type="text"
                       name="doctor"
                       value={formData.doctor}
-                      onChange={handleInputChange}
-                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-800 bg-white shadow-sm transition-all"
-                      required
-                    >
-                      <option value="">Select a doctor</option>
-                      {doctors.map((doctor) => (
-                        <option key={doctor.id} value={doctor.name}>
-                          {doctor.name} - {doctor.specialization}
-                        </option>
-                      ))}
-                    </select>
+                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl bg-gray-100 text-gray-800"
+                      readOnly
+                    />
                   </div>
 
                   <div>
                     <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      Preferred Date
+                      📅 Preferred Date
                     </label>
                     <input
                       type="date"
@@ -559,7 +565,7 @@ export default function Appointments() {
 
                   <div>
                     <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      Preferred Time
+                      ⏰ Preferred Time
                     </label>
                     <select
                       name="time"
@@ -582,14 +588,14 @@ export default function Appointments() {
                   <div className="flex space-x-4 pt-6">
                     <button
                       type="submit"
-                      className="flex-1 px-1 py-2 bg-gradient-to-r from-blue-600 to-green-600 text-white rounded-xl hover:from-blue-700 hover:to-green-700 transition-all font-semibold shadow-lg"
+                      className="flex-1 px-6 py-3 bg-gradient-to-r from-blue-600 to-green-600 text-white rounded-xl hover:from-blue-700 hover:to-green-700 transition-all font-semibold shadow-lg hover:shadow-xl transform hover:scale-105"
                     >
-                      Book Appointment
+                      📅 Book Appointment
                     </button>
                     <button
                       type="button"
                       onClick={() => setShowBookingForm(false)}
-                      className="flex-1 px-1 py-2 bg-gray-500 text-white rounded-xl hover:bg-gray-600 transition-all font-semibold shadow-lg"
+                      className="flex-1 px-6 py-3 bg-gray-500 text-white rounded-xl hover:bg-gray-600 transition-all font-semibold shadow-lg"
                     >
                       Cancel
                     </button>
