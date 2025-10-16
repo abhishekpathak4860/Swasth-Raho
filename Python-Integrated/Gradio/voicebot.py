@@ -165,10 +165,10 @@ with gr.Blocks() as demo:
         outputs=[stt_output, doc_response, doc_voice, chat_output]
     )
 # ASGI app expose for Vercel
-app = gr.mount_gradio_app(app=None, blocks=demo, path="/")
+# app = gr.mount_gradio_app(app=None, blocks=demo, path="/")
 
 # Local dev ke liye
-if __name__ == "__main__":
-    demo.launch(server_name="0.0.0.0", server_port=7860)
+# if __name__ == "__main__":
+#     demo.launch(server_name="0.0.0.0", server_port=7860)
 
-# demo.launch(debug=True)
+demo.launch(debug=True)
