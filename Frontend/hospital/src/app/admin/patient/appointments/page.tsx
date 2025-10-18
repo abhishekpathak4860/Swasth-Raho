@@ -1,12 +1,21 @@
 "use client";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
+import { DoctorType } from "../doctors/page";
+import axios from "axios";
 
 export default function Appointments() {
   const [activeTab, setActiveTab] = useState("appointments");
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [showBookingForm, setShowBookingForm] = useState(false);
+  const [doctorsData, setDoctorsData] = useState<DoctorType[]>([]);
+  const [upcomingAppointments, setUpcomingAppointments] = useState<any[]>([]);
+  const [pastAppointments, setPastAppointments] = useState<any[]>([]);
+  const [toggleButton, setToggleButton] = useState(false);
+
   const [formData, setFormData] = useState({
+    appointmentId: "",
+    doc_id: "",
     name: "",
     email: "",
     disease: "",
@@ -48,88 +57,27 @@ export default function Appointments() {
     },
   ];
 
-  const doctors = [
-    { id: 1, name: "Dr. Amit Sharma", specialization: "Cardiologist" },
-    { id: 2, name: "Dr. Priya Patel", specialization: "Dermatologist" },
-    { id: 3, name: "Dr. Rahul Kumar", specialization: "Neurologist" },
-    { id: 4, name: "Dr. Sneha Singh", specialization: "Orthopedic" },
-    { id: 5, name: "Dr. Vijay Mehta", specialization: "Pediatrician" },
-  ];
-
-  // Sample appointments data
-  const upcomingAppointments = [
-    {
-      id: 1,
-      doctor: "Dr. Amit Sharma",
-      specialization: "Cardiologist",
-      date: "2025-10-20",
-      time: "10:00 AM",
-      status: "confirmed",
-      disease: "Heart Checkup",
-    },
-    {
-      id: 2,
-      doctor: "Dr. Priya Patel",
-      specialization: "Dermatologist",
-      date: "2025-10-22",
-      time: "2:30 PM",
-      status: "pending",
-      disease: "Skin Allergy",
-    },
-    {
-      id: 3,
-      doctor: "Dr. Rahul Kumar",
-      specialization: "Neurologist",
-      date: "2025-10-25",
-      time: "11:15 AM",
-      status: "confirmed",
-      disease: "Migraine",
-    },
-  ];
-
-  const pastAppointments = [
-    {
-      id: 4,
-      doctor: "Dr. Sneha Singh",
-      specialization: "Orthopedic",
-      date: "2025-10-10",
-      time: "9:00 AM",
-      status: "completed",
-      disease: "Back Pain",
-    },
-    {
-      id: 5,
-      doctor: "Dr. Vijay Mehta",
-      specialization: "Pediatrician",
-      date: "2025-10-05",
-      time: "4:00 PM",
-      status: "completed",
-      disease: "General Checkup",
-    },
-    {
-      id: 6,
-      doctor: "Dr. Amit Sharma",
-      specialization: "Cardiologist",
-      date: "2025-09-28",
-      time: "10:30 AM",
-      status: "cancelled",
-      disease: "Blood Pressure",
-    },
-  ];
-
-  const handleInputChange = (e: { target: { name: any; value: any } }) => {
+  const rescheduleAppointment = (appointment: any) => {
+    // Set form data to the current appointment’s details
     setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
+      appointmentId: appointment._id,
+      doc_id: appointment.doc_id || "",
+      name: appointment.p_name || "",
+      email: appointment.p_email || "",
+      disease: appointment.disease || "",
+      doctor: appointment.doc_name || "",
+      date: appointment.date || "",
+      time: appointment.time || "",
     });
+    setToggleButton(true);
+    setShowBookingForm(true);
   };
 
-  const handleSubmit = (e: { preventDefault: () => void }) => {
-    e.preventDefault();
-    console.log("Booking appointment:", formData);
-    // Add booking logic here
-    setShowBookingForm(false);
+  // handle refresh form
+  const handleRefreshForm = () => {
     setFormData({
+      appointmentId: "",
+      doc_id: "",
       name: "",
       email: "",
       disease: "",
@@ -137,9 +85,60 @@ export default function Appointments() {
       date: "",
       time: "",
     });
-    alert("Appointment booked successfully!");
+  };
+  const handleInputChange = (e: { target: { name: any; value: any } }) => {
+    const { name, value } = e.target;
+
+    // if (name === "doctor") {
+    //   const doctorObj = JSON.parse(value);
+    //   setFormData({
+    //     ...formData,
+    //     doctor: doctorObj.name,
+    //     doc_id: doctorObj.id,
+    //   });
+    // } else {
+    setFormData({
+      ...formData,
+      [name]: value,
+    });
   };
 
+  const handleSubmit = async (e: { preventDefault: () => void }) => {
+    try {
+      e.preventDefault();
+      const res = await axios.post(
+        "http://localhost:5000/patient/appointment",
+        formData,
+        {
+          withCredentials: true,
+        }
+      );
+      setShowBookingForm(false);
+      setToggleButton(false);
+      fetchAppointmentData(); // fetch latest appointments after patient submits form
+      handleRefreshForm();
+      alert(`${res.data.message}`);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  const UpdateAppointment = async (e: { preventDefault: () => void }) => {
+    try {
+      e.preventDefault();
+      const res = await axios.patch(
+        `http://localhost:5000/patient/UpdateAppointment/${formData.appointmentId}`,
+        formData,
+        { withCredentials: true }
+      );
+      // alert(`${res.data.message}`);
+      setShowBookingForm(false);
+      fetchAppointmentData();
+      handleRefreshForm();
+    } catch (error) {
+      console.log(error);
+    }
+  };
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "confirmed":
@@ -154,7 +153,55 @@ export default function Appointments() {
         return "bg-gray-100 text-gray-800 border-gray-200";
     }
   };
+  // gets doctors data for appointment form
+  useEffect(() => {
+    const fetchDoctorData = async () => {
+      try {
+        const res = await axios.get("http://localhost:5000/patient/doctors", {
+          withCredentials: true, // send cookies
+        });
+        setDoctorsData(res.data.doctor);
+      } catch (error) {
+        console.error("Error fetching profile:", error);
+      }
+    };
+    fetchDoctorData();
+  }, []);
+  // get appointments data
+  const fetchAppointmentData = async () => {
+    try {
+      const res = await axios.get(
+        "http://localhost:5000/patient/get-appointments",
+        {
+          withCredentials: true,
+        }
+      );
 
+      // Filter appointments based on status
+      const allAppointments = res.data.appointments;
+
+      // Upcoming appointments: pending and confirmed
+      const upcoming = allAppointments.filter(
+        (appointment: any) =>
+          appointment.status === "pending" || appointment.status === "confirmed"
+      );
+
+      // Past appointments: completed and cancelled
+      const past = allAppointments.filter(
+        (appointment: any) =>
+          appointment.status === "completed" ||
+          appointment.status === "cancelled"
+      );
+
+      setUpcomingAppointments(upcoming);
+      setPastAppointments(past);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+  useEffect(() => {
+    fetchAppointmentData();
+  }, []);
   return (
     <div className="min-h-screen bg-gray-50 flex">
       {/* Sidebar - Fixed Position */}
@@ -317,14 +364,14 @@ export default function Appointments() {
             <div className="space-y-4">
               {upcomingAppointments.map((appointment) => (
                 <div
-                  key={appointment.id}
+                  key={appointment._id}
                   className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition"
                 >
                   <div className="flex flex-col md:flex-row md:items-center justify-between">
                     <div className="flex-1">
                       <div className="flex items-center space-x-3 mb-2">
                         <h4 className="text-lg font-semibold text-gray-800">
-                          {appointment.doctor}
+                          {appointment.doc_name}
                         </h4>
                         <span
                           className={`px-2 py-1 text-xs font-medium rounded-full border ${getStatusBadge(
@@ -335,21 +382,27 @@ export default function Appointments() {
                         </span>
                       </div>
                       <p className="text-gray-600 mb-1">
-                        🏥 {appointment.specialization}
+                        🏥 {appointment.type}
                       </p>
                       <p className="text-gray-600 mb-1">
                         💊 {appointment.disease}
                       </p>
                       <div className="flex items-center space-x-4 text-sm text-gray-500">
                         <span>📅 {appointment.date}</span>
-                        <span>⏰ {appointment.time}</span>
+                        {/* <span>⏰ {appointment.time}</span> */}
                       </div>
+                      <span className="text-sm text-gray-500">
+                        ⏰ {appointment.time}
+                      </span>
                     </div>
 
                     <div className="flex space-x-2 mt-4 md:mt-0">
                       {appointment.status === "pending" && (
                         <>
-                          <button className="px-3 py-1 bg-yellow-600 text-white text-sm rounded hover:bg-yellow-700 transition">
+                          <button
+                            className="px-3 py-1 bg-yellow-600 text-white text-sm rounded hover:bg-yellow-700 transition"
+                            onClick={() => rescheduleAppointment(appointment)}
+                          >
                             Reschedule
                           </button>
                           <button className="px-3 py-1 bg-red-600 text-white text-sm rounded hover:bg-red-700 transition">
@@ -388,14 +441,14 @@ export default function Appointments() {
             <div className="space-y-4">
               {pastAppointments.map((appointment) => (
                 <div
-                  key={appointment.id}
+                  key={appointment._id}
                   className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition"
                 >
                   <div className="flex flex-col md:flex-row md:items-center justify-between">
                     <div className="flex-1">
                       <div className="flex items-center space-x-3 mb-2">
                         <h4 className="text-lg font-semibold text-gray-800">
-                          {appointment.doctor}
+                          {appointment.doc_name}
                         </h4>
                         <span
                           className={`px-2 py-1 text-xs font-medium rounded-full border ${getStatusBadge(
@@ -406,15 +459,17 @@ export default function Appointments() {
                         </span>
                       </div>
                       <p className="text-gray-600 mb-1">
-                        🏥 {appointment.specialization}
+                        🏥 {appointment.type}
                       </p>
                       <p className="text-gray-600 mb-1">
                         💊 {appointment.disease}
                       </p>
                       <div className="flex items-center space-x-4 text-sm text-gray-500">
                         <span>📅 {appointment.date}</span>
-                        <span>⏰ {appointment.time}</span>
                       </div>
+                      <span className="text-sm text-gray-500">
+                        ⏰ {appointment.time}
+                      </span>
                     </div>
 
                     <div className="flex space-x-2 mt-4 md:mt-0">
@@ -448,7 +503,11 @@ export default function Appointments() {
           {/* Overlay with backdrop blur */}
           <div
             className="fixed inset-0 bg-gray-900/40 backdrop-blur-sm z-50"
-            onClick={() => setShowBookingForm(false)}
+            onClick={() => {
+              setShowBookingForm(false),
+                handleRefreshForm(),
+                setToggleButton(false);
+            }}
           ></div>
 
           {/* Modal Content */}
@@ -459,7 +518,11 @@ export default function Appointments() {
                 <div className="flex items-center justify-between mb-6 -m-6 p-6 bg-gradient-to-r from-blue-600 to-green-600 text-white">
                   <h3 className="text-2xl font-bold">Book New Appointment</h3>
                   <button
-                    onClick={() => setShowBookingForm(false)}
+                    onClick={() => {
+                      setShowBookingForm(false),
+                        handleRefreshForm,
+                        setToggleButton(false);
+                    }}
                     className="text-white/80 hover:text-white text-2xl hover:bg-white/20 rounded-full w-8 h-8 flex items-center justify-center transition-all"
                   >
                     ✕
@@ -467,7 +530,7 @@ export default function Appointments() {
                 </div>
 
                 <form
-                  onSubmit={handleSubmit}
+                  onSubmit={toggleButton ? UpdateAppointment : handleSubmit}
                   className="space-y-4 max-h-[60vh] overflow-y-auto pr-2"
                   style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
                 >
@@ -479,7 +542,7 @@ export default function Appointments() {
 
                   <div>
                     <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      Full Name
+                      Patient Full Name
                     </label>
                     <input
                       type="text"
@@ -526,17 +589,29 @@ export default function Appointments() {
                     <label className="block text-sm font-semibold text-gray-700 mb-2">
                       Choose Doctor
                     </label>
+
                     <select
                       name="doctor"
-                      value={formData.doctor}
-                      onChange={handleInputChange}
+                      value={formData.doc_id} // bind by doc_id, not doctor name
+                      onChange={(e) => {
+                        const selectedDoctor = doctorsData.find(
+                          (doc) => doc._id === e.target.value
+                        );
+                        if (selectedDoctor) {
+                          setFormData({
+                            ...formData,
+                            doc_id: selectedDoctor._id,
+                            doctor: selectedDoctor.name,
+                          });
+                        }
+                      }}
                       className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-800 bg-white shadow-sm transition-all"
                       required
                     >
                       <option value="">Select a doctor</option>
-                      {doctors.map((doctor) => (
-                        <option key={doctor.id} value={doctor.name}>
-                          {doctor.name} - {doctor.specialization}
+                      {doctorsData.map((doctor) => (
+                        <option key={doctor._id} value={doctor._id}>
+                          {doctor.name} - {doctor.type}
                         </option>
                       ))}
                     </select>
@@ -584,11 +659,15 @@ export default function Appointments() {
                       type="submit"
                       className="flex-1 px-1 py-2 bg-gradient-to-r from-blue-600 to-green-600 text-white rounded-xl hover:from-blue-700 hover:to-green-700 transition-all font-semibold shadow-lg"
                     >
-                      Book Appointment
+                      {toggleButton ? "Reschedule" : "Book Appointment"}
                     </button>
                     <button
                       type="button"
-                      onClick={() => setShowBookingForm(false)}
+                      onClick={() => {
+                        setShowBookingForm(false),
+                          handleRefreshForm(),
+                          setToggleButton(false);
+                      }}
                       className="flex-1 px-1 py-2 bg-gray-500 text-white rounded-xl hover:bg-gray-600 transition-all font-semibold shadow-lg"
                     >
                       Cancel

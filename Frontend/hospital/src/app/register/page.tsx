@@ -2,6 +2,7 @@
 import React, { useState } from "react";
 import axios from "axios";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 interface DoctorFormData {
   name: string;
@@ -11,6 +12,10 @@ interface DoctorFormData {
   type: string;
   contact: string;
   role: string;
+  experience: string;
+  education: string;
+  hospital: string;
+  consultationFee: string;
 }
 
 interface PatientFormData {
@@ -24,6 +29,7 @@ interface PatientFormData {
 }
 
 export default function Register() {
+  const router = useRouter();
   const [role, setRole] = useState<"doctor" | "patient" | "">("");
   const [formDataDoctor, setFormDataDoctor] = useState<DoctorFormData>({
     name: "",
@@ -33,6 +39,10 @@ export default function Register() {
     type: "",
     contact: "",
     role: "doctor",
+    experience: "",
+    education: "",
+    hospital: "",
+    consultationFee: "",
   });
 
   const [formDataPatient, setFormDataPatient] = useState<PatientFormData>({
@@ -51,7 +61,8 @@ export default function Register() {
       const apiUrl = "http://localhost:5000/api/register";
       const data = role === "doctor" ? formDataDoctor : formDataPatient;
       const res = await axios.post(apiUrl, data);
-      alert(res.data.message);
+      // alert(res.data.message);
+      router.push("/login");
     } catch (error: any) {
       alert(error.response?.data?.message || "Registration failed");
     }
@@ -279,6 +290,83 @@ export default function Register() {
               />
             </div>
 
+            {role == "doctor" && (
+              <>
+                {" "}
+                <div>
+                  <label className="block text-gray-700 font-medium mb-1">
+                    Experience
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g.15 years"
+                    value={formDataDoctor.experience}
+                    onChange={(e) =>
+                      setFormDataDoctor({
+                        ...formDataDoctor,
+                        experience: e.target.value,
+                      })
+                    }
+                    className="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500 outline-none text-black text-sm"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-gray-700 font-medium mb-1">
+                    Education
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g.MBBS, MD Cardiology"
+                    value={formDataDoctor.education}
+                    onChange={(e) =>
+                      setFormDataDoctor({
+                        ...formDataDoctor,
+                        education: e.target.value,
+                      })
+                    }
+                    className="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500 outline-none text-black text-sm"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-gray-700 font-medium mb-1">
+                    Hospital Name
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g.Heart Care Centre"
+                    value={formDataDoctor.hospital}
+                    onChange={(e) =>
+                      setFormDataDoctor({
+                        ...formDataDoctor,
+                        hospital: e.target.value,
+                      })
+                    }
+                    className="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500 outline-none text-black text-sm"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-gray-700 font-medium mb-1">
+                    Consultation Fee
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g. 1500"
+                    value={formDataDoctor.consultationFee}
+                    onChange={(e) =>
+                      setFormDataDoctor({
+                        ...formDataDoctor,
+                        consultationFee: e.target.value,
+                      })
+                    }
+                    className="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500 outline-none text-black text-sm"
+                    required
+                  />
+                </div>
+              </>
+            )}
             <button
               type="submit"
               className="w-full bg-gradient-to-r from-green-600 to-blue-600 text-white py-2 rounded-lg font-semibold text-sm hover:opacity-90 transition"

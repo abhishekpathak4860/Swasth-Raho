@@ -4,8 +4,20 @@ import bcrypt from "bcryptjs";
 
 export const registerUser = async (req, res) => {
   try {
-    const { name, email, password, role, age, type, location, contact } =
-      req.body;
+    const {
+      name,
+      email,
+      password,
+      role,
+      age,
+      type,
+      location,
+      contact,
+      experience,
+      education,
+      hospital,
+      consultationFee,
+    } = req.body;
 
     if (!name || !email || !password || !role || !age || !contact) {
       return res
@@ -40,6 +52,10 @@ export const registerUser = async (req, res) => {
         age,
         type,
         contact,
+        experience,
+        education,
+        hospital,
+        consultationFee,
       });
     } else if (role === "patient") {
       if (!location)

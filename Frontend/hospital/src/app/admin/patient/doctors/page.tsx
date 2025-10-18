@@ -1,14 +1,29 @@
 "use client";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
+import axios from "axios";
 
+export interface DoctorType {
+  _id: string;
+  name: string;
+  email: string;
+  type: string;
+  education: string;
+  experience: string;
+  hospital: string;
+  consultationFee: string;
+  age: number;
+  contact: string;
+}
 export default function Doctors() {
   const [activeTab, setActiveTab] = useState("doctors");
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [showBookingForm, setShowBookingForm] = useState(false);
   const [selectedFilter, setSelectedFilter] = useState("all");
   const [selectedDoctor, setSelectedDoctor] = useState("");
+  const [doctorsData, setDoctorsData] = useState<DoctorType[]>([]);
   const [formData, setFormData] = useState({
+    doc_id: "",
     name: "",
     email: "",
     disease: "",
@@ -50,86 +65,86 @@ export default function Doctors() {
     },
   ];
 
-  const doctorsData = [
-    {
-      id: 1,
-      name: "Dr. Amit Sharma",
-      specialization: "Cardiologist",
-      experience: "15 years",
-      rating: 4.8,
-      image: "👨‍⚕️",
-      contact: "+91 98765 43210",
-      education: "MBBS, MD Cardiology",
-      hospital: "Heart Care Centre",
-      availability: "Mon-Fri: 9AM-5PM",
-      consultationFee: "₹1500",
-    },
-    {
-      id: 2,
-      name: "Dr. Priya Patel",
-      specialization: "Dermatologist",
-      experience: "12 years",
-      rating: 4.9,
-      image: "👩‍⚕️",
-      contact: "+91 87654 32109",
-      education: "MBBS, MD Dermatology",
-      hospital: "Skin Care Clinic",
-      availability: "Tue-Sat: 10AM-6PM",
-      consultationFee: "₹1200",
-    },
-    {
-      id: 3,
-      name: "Dr. Rahul Kumar",
-      specialization: "Neurologist",
-      experience: "18 years",
-      rating: 4.7,
-      image: "👨‍⚕️",
-      contact: "+91 76543 21098",
-      education: "MBBS, DM Neurology",
-      hospital: "Neuro Care Institute",
-      availability: "Mon-Wed-Fri: 11AM-4PM",
-      consultationFee: "₹2000",
-    },
-    {
-      id: 4,
-      name: "Dr. Sneha Singh",
-      specialization: "Orthopedic",
-      experience: "10 years",
-      rating: 4.6,
-      image: "👩‍⚕️",
-      contact: "+91 65432 10987",
-      education: "MBBS, MS Orthopedics",
-      hospital: "Bone & Joint Clinic",
-      availability: "Mon-Sat: 8AM-2PM",
-      consultationFee: "₹1800",
-    },
-    {
-      id: 5,
-      name: "Dr. Vijay Mehta",
-      specialization: "Pediatrician",
-      experience: "20 years",
-      rating: 4.9,
-      image: "👨‍⚕️",
-      contact: "+91 54321 09876",
-      education: "MBBS, MD Pediatrics",
-      hospital: "Children's Hospital",
-      availability: "Daily: 9AM-7PM",
-      consultationFee: "₹1000",
-    },
-    {
-      id: 6,
-      name: "Dr. Ravi Gupta",
-      specialization: "Ophthalmologist",
-      experience: "14 years",
-      rating: 4.8,
-      image: "👨‍⚕️",
-      contact: "+91 43210 98765",
-      education: "MBBS, MS Ophthalmology",
-      hospital: "Eye Care Centre",
-      availability: "Tue-Thu-Sat: 10AM-5PM",
-      consultationFee: "₹1300",
-    },
-  ];
+  // const doctorsData = [
+  //   {
+  //     id: 1,
+  //     name: "Dr. Amit Sharma",
+  //     specialization: "Cardiologist",
+  //     experience: "15 years",
+  //     rating: 4.8,
+  //     image: "👨‍⚕️",
+  //     contact: "+91 98765 43210",
+  //     education: "MBBS, MD Cardiology",
+  //     hospital: "Heart Care Centre",
+  //     availability: "Mon-Fri: 9AM-5PM",
+  //     consultationFee: "₹1500",
+  //   },
+  //   {
+  //     id: 2,
+  //     name: "Dr. Priya Patel",
+  //     specialization: "Dermatologist",
+  //     experience: "12 years",
+  //     rating: 4.9,
+  //     image: "👩‍⚕️",
+  //     contact: "+91 87654 32109",
+  //     education: "MBBS, MD Dermatology",
+  //     hospital: "Skin Care Clinic",
+  //     availability: "Tue-Sat: 10AM-6PM",
+  //     consultationFee: "₹1200",
+  //   },
+  //   {
+  //     id: 3,
+  //     name: "Dr. Rahul Kumar",
+  //     specialization: "Neurologist",
+  //     experience: "18 years",
+  //     rating: 4.7,
+  //     image: "👨‍⚕️",
+  //     contact: "+91 76543 21098",
+  //     education: "MBBS, DM Neurology",
+  //     hospital: "Neuro Care Institute",
+  //     availability: "Mon-Wed-Fri: 11AM-4PM",
+  //     consultationFee: "₹2000",
+  //   },
+  //   {
+  //     id: 4,
+  //     name: "Dr. Sneha Singh",
+  //     specialization: "Orthopedic",
+  //     experience: "10 years",
+  //     rating: 4.6,
+  //     image: "👩‍⚕️",
+  //     contact: "+91 65432 10987",
+  //     education: "MBBS, MS Orthopedics",
+  //     hospital: "Bone & Joint Clinic",
+  //     availability: "Mon-Sat: 8AM-2PM",
+  //     consultationFee: "₹1800",
+  //   },
+  //   {
+  //     id: 5,
+  //     name: "Dr. Vijay Mehta",
+  //     specialization: "Pediatrician",
+  //     experience: "20 years",
+  //     rating: 4.9,
+  //     image: "👨‍⚕️",
+  //     contact: "+91 54321 09876",
+  //     education: "MBBS, MD Pediatrics",
+  //     hospital: "Children's Hospital",
+  //     availability: "Daily: 9AM-7PM",
+  //     consultationFee: "₹1000",
+  //   },
+  //   {
+  //     id: 6,
+  //     name: "Dr. Ravi Gupta",
+  //     specialization: "Ophthalmologist",
+  //     experience: "14 years",
+  //     rating: 4.8,
+  //     image: "👨‍⚕️",
+  //     contact: "+91 43210 98765",
+  //     education: "MBBS, MS Ophthalmology",
+  //     hospital: "Eye Care Centre",
+  //     availability: "Tue-Thu-Sat: 10AM-5PM",
+  //     consultationFee: "₹1300",
+  //   },
+  // ];
 
   const specializations = [
     { id: "all", name: "All Doctors", icon: "🏥" },
@@ -144,9 +159,7 @@ export default function Doctors() {
   const filteredDoctors =
     selectedFilter === "all"
       ? doctorsData
-      : doctorsData.filter(
-          (doctor) => doctor.specialization === selectedFilter
-        );
+      : doctorsData.filter((doctor) => doctor.type === selectedFilter);
 
   const handleInputChange = (e: { target: { name: any; value: any } }) => {
     setFormData({
@@ -155,30 +168,56 @@ export default function Doctors() {
     });
   };
 
-  const handleBookAppointment = (doctorName: string) => {
-    setSelectedDoctor(doctorName);
+  const handleBookAppointment = (doctor: DoctorType) => {
+    setSelectedDoctor(doctor.name);
     setFormData({
       ...formData,
-      doctor: doctorName,
+      doctor: doctor.name,
+      doc_id: doctor._id,
     });
     setShowBookingForm(true);
   };
 
-  const handleSubmit = (e: { preventDefault: () => void }) => {
-    e.preventDefault();
-    console.log("Booking appointment:", formData);
-    setShowBookingForm(false);
-    setFormData({
-      name: "",
-      email: "",
-      disease: "",
-      doctor: "",
-      date: "",
-      time: "",
-    });
-    alert("Appointment booked successfully!");
+  const handleSubmit = async (e: { preventDefault: () => void }) => {
+    try {
+      e.preventDefault();
+      const res = await axios.post(
+        "http://localhost:5000/patient/appointment",
+        formData,
+        {
+          withCredentials: true,
+        }
+      );
+      setShowBookingForm(false);
+      setFormData({
+        doc_id: "",
+        name: "",
+        email: "",
+        disease: "",
+        doctor: "",
+        date: "",
+        time: "",
+      });
+      alert(`${res.data.message}`);
+    } catch (error) {
+      console.log(error);
+    }
   };
 
+  useEffect(() => {
+    const fetchDoctorData = async () => {
+      try {
+        const res = await axios.get("http://localhost:5000/patient/doctors", {
+          withCredentials: true, // send cookies
+        });
+        setDoctorsData(res.data.doctor);
+      } catch (error) {
+        console.error("Error fetching profile:", error);
+      }
+    };
+
+    fetchDoctorData();
+  }, []);
   return (
     <div className="min-h-screen bg-gray-50 flex">
       {/* Sidebar - Fixed Position */}
@@ -374,7 +413,7 @@ export default function Doctors() {
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredDoctors.map((doctor) => (
               <div
-                key={doctor.id}
+                key={doctor._id}
                 className="bg-white rounded-xl shadow-lg border border-gray-200 p-6 hover:shadow-xl transition-all duration-300 transform hover:scale-105"
               >
                 {/* Doctor Header */}
@@ -386,9 +425,7 @@ export default function Doctors() {
                     <h4 className="text-xl font-bold text-gray-800">
                       {doctor.name}
                     </h4>
-                    <p className="text-blue-600 font-medium">
-                      {doctor.specialization}
-                    </p>
+                    <p className="text-blue-600 font-medium">{doctor.type}</p>
                     <div className="flex items-center space-x-1 mt-1">
                       {/* <span className="text-yellow-500">⭐</span>
                       <span className="text-sm text-gray-600">
@@ -412,23 +449,23 @@ export default function Doctors() {
                     <span>🏥</span>
                     <span>{doctor.hospital}</span>
                   </div>
-                  <div className="flex items-center space-x-2 text-sm text-gray-600">
+                  {/* <div className="flex items-center space-x-2 text-sm text-gray-600">
                     <span>⏰</span>
                     <span>{doctor.availability}</span>
-                  </div>
+                  </div> */}
                   <div className="flex items-center space-x-2 text-sm text-gray-600">
                     <span>💰</span>
-                    <span>Consultation: {doctor.consultationFee}</span>
+                    <span>Consultation:₹{doctor.consultationFee}</span>
                   </div>
                 </div>
 
                 {/* Action Buttons */}
                 <div className="flex space-x-2">
                   <button
-                    onClick={() => handleBookAppointment(doctor.name)}
+                    onClick={() => handleBookAppointment(doctor)}
                     className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-medium"
                   >
-                    📅 Book Appointment
+                    Book Appointment
                   </button>
                   <button className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition">
                     📞
@@ -492,7 +529,7 @@ export default function Doctors() {
 
                   <div>
                     <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      👤 Full Name
+                      Patient Full Name
                     </label>
                     <input
                       type="text"
@@ -507,7 +544,7 @@ export default function Doctors() {
 
                   <div>
                     <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      📧 Email Address
+                      Email Address
                     </label>
                     <input
                       type="email"
@@ -522,7 +559,7 @@ export default function Doctors() {
 
                   <div>
                     <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      💊 Type of Disease/Issue
+                      Type of Disease/Issue
                     </label>
                     <input
                       type="text"
@@ -537,7 +574,7 @@ export default function Doctors() {
 
                   <div>
                     <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      👨‍⚕️ Doctor
+                      Doctor
                     </label>
                     <input
                       type="text"
@@ -550,7 +587,7 @@ export default function Doctors() {
 
                   <div>
                     <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      📅 Preferred Date
+                      Preferred Date
                     </label>
                     <input
                       type="date"
@@ -565,7 +602,7 @@ export default function Doctors() {
 
                   <div>
                     <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      ⏰ Preferred Time
+                      Preferred Time
                     </label>
                     <select
                       name="time"
@@ -587,15 +624,16 @@ export default function Doctors() {
 
                   <div className="flex space-x-4 pt-6">
                     <button
+                      // onClick={handleSubmit}
                       type="submit"
-                      className="flex-1 px-6 py-3 bg-gradient-to-r from-blue-600 to-green-600 text-white rounded-xl hover:from-blue-700 hover:to-green-700 transition-all font-semibold shadow-lg hover:shadow-xl transform hover:scale-105"
+                      className="flex-1 px-1 py-2 bg-gradient-to-r from-blue-600 to-green-600 text-white rounded-xl hover:from-blue-700 hover:to-green-700 transition-all font-semibold shadow-lg"
                     >
-                      📅 Book Appointment
+                      Book Appointment
                     </button>
                     <button
                       type="button"
                       onClick={() => setShowBookingForm(false)}
-                      className="flex-1 px-6 py-3 bg-gray-500 text-white rounded-xl hover:bg-gray-600 transition-all font-semibold shadow-lg"
+                      className="flex-1 px-1 py-2 bg-gray-500 text-white rounded-xl hover:bg-gray-600 transition-all font-semibold shadow-lg"
                     >
                       Cancel
                     </button>
