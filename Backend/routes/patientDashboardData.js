@@ -6,6 +6,7 @@ import { appointment } from "../controllers/appointment.js";
 import { UpcomingAppointments } from "../controllers/UpcomingAppointments.js";
 import { UpdateAppointment } from "../controllers/UpdateAppointment.js";
 import { cancelAppointment } from "../controllers/cancelAppointment.js";
+import { UpdateUserDetails } from "../controllers/UpdateUserDetails.js";
 
 const router = express.Router();
 
@@ -18,6 +19,7 @@ router.patch(
   verifyToken,
   UpdateAppointment
 );
+router.patch("/update-profile", verifyToken, UpdateUserDetails);
 router.delete(
   "/cancel-appointment/:appointmentId",
   verifyToken,

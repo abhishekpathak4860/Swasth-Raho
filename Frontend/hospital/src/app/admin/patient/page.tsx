@@ -7,6 +7,8 @@ export default function PatientDashboard() {
   const [activeTab, setActiveTab] = useState("profile");
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [user, setUser] = useState<any>(null);
+  const [editUserDetails, setEditUserDetails] = useState<any>(null);
+  const [showEditModal, setShowEditModal] = useState(false);
 
   const sidebarItems = [
     {
@@ -41,6 +43,40 @@ export default function PatientDashboard() {
     },
   ];
 
+  const handleEditUserDetails = async () => {
+    setEditUserDetails({ ...user });
+    setShowEditModal(true);
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setEditUserDetails((prev: any) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+  const handleUpdateProfile = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      const res = await axios.patch(
+        "http://localhost:5000/patient/update-profile",
+        editUserDetails,
+        { withCredentials: true }
+      );
+
+      // Update the user state with new data
+      setUser(editUserDetails);
+      setShowEditModal(false);
+      // alert("Profile updated successfully!");
+    } catch (error) {
+      console.error("Error updating profile:", error);
+      alert("Failed to update profile. Please try again.");
+    }
+  };
+  const handleCloseModal = () => {
+    setShowEditModal(false);
+    setEditUserDetails(null);
+  };
   useEffect(() => {
     const fetchProfile = async () => {
       try {
@@ -55,13 +91,30 @@ export default function PatientDashboard() {
 
     fetchProfile();
   }, []);
+
+  const handleLogout = async () => {
+    try {
+      const res = await axios.post(
+        "http://localhost:5000/api/logout",
+        {},
+        { withCredentials: true }
+      );
+
+      // Clear user state and redirect
+      setUser(null);
+      window.location.href = "/login";
+    } catch (error) {
+      console.error("Error logging out:", error);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 flex">
       {/* Sidebar */}
       <div
         className={`bg-white shadow-lg transition-all duration-300 ${
           isSidebarOpen ? "w-64" : "w-20"
-        } md:w-64 flex-shrink-0`}
+        } md:w-64 flex-shrink-0 ${showEditModal ? "blur-sm" : ""}`}
       >
         <div className="p-4 border-b border-gray-200">
           <div className="flex items-center">
@@ -90,7 +143,7 @@ export default function PatientDashboard() {
               }`}
               onClick={() => setActiveTab(item.id)}
             >
-              <span className="text-2xl">{item.icon}</span>
+              {/* <span className="text-2xl">{item.icon}</span> */}
               <span
                 className={`ml-3 font-medium ${
                   isSidebarOpen ? "block" : "hidden"
@@ -104,7 +157,10 @@ export default function PatientDashboard() {
 
         {/* Logout Button */}
         <div className="absolute bottom-4 left-4 right-4">
-          <button className="w-full flex items-center px-4 py-3 text-gray-700 hover:bg-red-50 hover:text-red-600 rounded-lg transition-colors">
+          <button
+            className="w-full flex items-center px-4 py-3 text-gray-700 hover:bg-red-50 hover:text-red-600 rounded-lg transition-colors"
+            onClick={handleLogout}
+          >
             <span className="text-2xl">🚪</span>
             <span
               className={`ml-3 font-medium ${
@@ -148,7 +204,7 @@ export default function PatientDashboard() {
 
             <div className="flex items-center space-x-4">
               {/* Notifications */}
-              <button className="relative p-2 text-gray-600 hover:bg-gray-100 rounded-full">
+              {/* <button className="relative p-2 text-gray-600 hover:bg-gray-100 rounded-full">
                 <svg
                   className="w-6 h-6"
                   fill="none"
@@ -165,16 +221,24 @@ export default function PatientDashboard() {
                 <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
                   3
                 </span>
-              </button>
+              </button> */}
 
               {/* Profile Dropdown */}
               <div className="flex items-center space-x-3">
                 <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center">
-                  <span className="text-white font-semibold">JD</span>
+                  <span className="text-white font-semibold">
+                    {user?.name
+                      .split(" ")
+                      .map((ch: any) => ch[0]?.toUpperCase())
+                      .join("")
+                      .slice(0, 2)}
+                  </span>
                 </div>
                 <div className="hidden md:block">
-                  <p className="text-sm font-medium text-gray-800">John Doe</p>
-                  <p className="text-xs text-gray-500">Patient ID: P001</p>
+                  <p className="text-sm font-medium text-gray-800">
+                    {user?.name}
+                  </p>
+                  <p className="text-xs text-gray-500">{user?.email}</p>
                 </div>
               </div>
             </div>
@@ -187,9 +251,12 @@ export default function PatientDashboard() {
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-2xl font-bold text-gray-800">
-                👤 Profile Information
+                Profile Information
               </h3>
-              <button className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
+              <button
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+                onClick={handleEditUserDetails}
+              >
                 Edit Profile
               </button>
             </div>
@@ -277,19 +344,190 @@ export default function PatientDashboard() {
             </div>
 
             {/* Action Buttons */}
-            <div className="mt-8 flex flex-wrap gap-4">
+            {/* <div className="mt-8 flex flex-wrap gap-4">
               <button className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition">
                 📝 Edit Information
               </button>
               <button className="px-6 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition">
                 🔒 Change Password
               </button>
-              {/* <button className="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition">
-                🗑️ Delete Account
-              </button> */}
-            </div>
+        
+            </div> */}
           </div>
 
+          {/* Edit Profile Modal */}
+          {showEditModal && (
+            <>
+              {/* Overlay */}
+              <div
+                className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50"
+                onClick={handleCloseModal}
+              ></div>
+
+              {/* Modal Content */}
+              <div className="fixed inset-0 flex items-center justify-center z-50 p-4 pointer-events-none">
+                <div className="bg-gradient-to-br from-blue-50 to-white rounded-2xl shadow-2xl w-full max-w-2xl pointer-events-auto border border-blue-200 overflow-hidden">
+                  <div className="p-6">
+                    {/* Header */}
+                    <div className="flex items-center justify-between mb-6 -m-6 p-6 bg-gradient-to-r from-blue-600 to-green-600 text-white">
+                      <div className="flex items-center space-x-3">
+                        <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
+                          <span className="text-2xl">👤</span>
+                        </div>
+                        <div>
+                          <h3 className="text-2xl font-bold">Edit Profile</h3>
+                          <p className="text-blue-100">
+                            Update your personal information
+                          </p>
+                        </div>
+                      </div>
+                      <button
+                        onClick={handleCloseModal}
+                        className="text-white/80 hover:text-white text-2xl hover:bg-white/20 rounded-full w-8 h-8 flex items-center justify-center transition-all"
+                      >
+                        ✕
+                      </button>
+                    </div>
+
+                    {/* Form */}
+                    <form
+                      onSubmit={handleUpdateProfile}
+                      className="space-y-6 max-h-[60vh] overflow-y-auto pr-2"
+                    >
+                      <style jsx>{`
+                        form::-webkit-scrollbar {
+                          display: none;
+                        }
+                      `}</style>
+
+                      <div className="grid md:grid-cols-2 gap-6">
+                        {/* Personal Information */}
+                        <div className="space-y-4">
+                          <h4 className="text-lg font-semibold text-gray-700 border-b pb-2">
+                            Personal Details
+                          </h4>
+
+                          <div>
+                            <label className="block text-sm font-semibold text-gray-700 mb-2">
+                              Full Name
+                            </label>
+                            <input
+                              type="text"
+                              name="name"
+                              value={editUserDetails?.name || ""}
+                              onChange={handleInputChange}
+                              className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-800 bg-white shadow-sm transition-all"
+                              placeholder="Enter your full name"
+                              required
+                            />
+                          </div>
+
+                          <div>
+                            <label className="block text-sm font-semibold text-gray-700 mb-2">
+                              Age
+                            </label>
+                            <input
+                              type="number"
+                              name="age"
+                              value={editUserDetails?.age || ""}
+                              onChange={handleInputChange}
+                              className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-800 bg-white shadow-sm transition-all"
+                              placeholder="Enter your age"
+                              min="1"
+                              max="120"
+                              required
+                            />
+                          </div>
+
+                          <div>
+                            <label className="block text-sm font-semibold text-gray-700 mb-2">
+                              Role
+                            </label>
+                            <input
+                              type="text"
+                              name="role"
+                              value={editUserDetails?.role || ""}
+                              className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl bg-gray-100 text-gray-600"
+                              readOnly
+                            />
+                          </div>
+                        </div>
+
+                        {/* Contact Information */}
+                        <div className="space-y-4">
+                          <h4 className="text-lg font-semibold text-gray-700 border-b pb-2">
+                            Contact Details
+                          </h4>
+
+                          <div>
+                            <label className="block text-sm font-semibold text-gray-700 mb-2">
+                              Email Address
+                            </label>
+                            <input
+                              type="email"
+                              name="email"
+                              value={editUserDetails?.email || ""}
+                              onChange={handleInputChange}
+                              className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-800 bg-white shadow-sm transition-all"
+                              placeholder="your.email@example.com"
+                              required
+                            />
+                          </div>
+
+                          <div>
+                            <label className="block text-sm font-semibold text-gray-700 mb-2">
+                              Phone Number
+                            </label>
+                            <input
+                              type="tel"
+                              name="contact"
+                              value={editUserDetails?.contact || ""}
+                              onChange={handleInputChange}
+                              className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-800 bg-white shadow-sm transition-all"
+                              placeholder="+91 98765 43210"
+                              required
+                            />
+                          </div>
+
+                          <div>
+                            <label className="block text-sm font-semibold text-gray-700 mb-2">
+                              Location
+                            </label>
+                            <input
+                              type="text"
+                              name="location"
+                              value={editUserDetails?.location || ""}
+                              onChange={handleInputChange}
+                              className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-800 bg-white shadow-sm transition-all"
+                              placeholder="Enter your location"
+                              required
+                            />
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Action Buttons */}
+                      <div className="flex space-x-4 pt-6 border-t border-gray-200">
+                        <button
+                          type="submit"
+                          className="flex-1 px-6 py-3 bg-gradient-to-r from-blue-600 to-green-600 text-white rounded-xl hover:from-blue-700 hover:to-green-700 transition-all font-semibold shadow-lg hover:shadow-xl transform hover:scale-105"
+                        >
+                          Update Profile
+                        </button>
+                        <button
+                          type="button"
+                          onClick={handleCloseModal}
+                          className="flex-1 px-6 py-3 bg-gray-500 text-white rounded-xl hover:bg-gray-600 transition-all font-semibold shadow-lg"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </form>
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
           {/* Quick Stats */}
           <div className="grid md:grid-cols-4 gap-4 mt-6">
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">

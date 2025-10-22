@@ -16,6 +16,7 @@ export default function Appointments() {
   const [appointmentToCancel, setAppointmentToCancel] = useState<any>(null);
   const [showReportModal, setShowReportModal] = useState(false);
   const [selectedReport, setSelectedReport] = useState<any>(null);
+  const [user, setUser] = useState<any>(null);
 
   const [formData, setFormData] = useState({
     appointmentId: "",
@@ -60,7 +61,33 @@ export default function Appointments() {
       route: "/admin/patient/chat",
     },
   ];
+  // useEffect(() => {
+  //   const fetchProfile = async () => {
+  //     try {
+  //       const res = await axios.get("http://localhost:5000/patient/profile", {
+  //         withCredentials: true, // send cookies
+  //       });
+  //       setUser(res.data.patient);
+  //     } catch (error) {
+  //       console.error("Error fetching profile:", error);
+  //     }
+  //   };
 
+  //   fetchProfile();
+  // }, []);
+  const handleLogout = async () => {
+    try {
+      const res = await axios.post(
+        "http://localhost:5000/api/logout",
+        {},
+        { withCredentials: true }
+      );
+
+      window.location.href = "/login";
+    } catch (error) {
+      console.error("Error logging out:", error);
+    }
+  };
   // Dummy report data
   const generateDummyReport = (appointment: any) => {
     return {
@@ -353,7 +380,7 @@ Next Appointment: ${selectedReport.nextAppointment}
               }`}
               onClick={() => setActiveTab(item.id)}
             >
-              <span className="text-2xl">{item.icon}</span>
+              {/* <span className="text-2xl">{item.icon}</span> */}
               <span
                 className={`ml-3 font-medium ${
                   isSidebarOpen ? "block" : "hidden"
@@ -366,7 +393,10 @@ Next Appointment: ${selectedReport.nextAppointment}
         </nav>
 
         {/* Logout Button */}
-        <div className="absolute bottom-4 left-4 right-4">
+        <div
+          className="absolute bottom-4 left-4 right-4"
+          onClick={handleLogout}
+        >
           <button className="w-full flex items-center px-4 py-3 text-gray-700 hover:bg-red-50 hover:text-red-600 rounded-lg transition-colors">
             <span className="text-2xl">🚪</span>
             <span
@@ -415,7 +445,7 @@ Next Appointment: ${selectedReport.nextAppointment}
                 </svg>
               </button>
               <h2 className="text-2xl font-bold text-gray-800 ml-44">
-                📅 Appointments
+                Appointments
               </h2>
             </div>
 
@@ -429,7 +459,7 @@ Next Appointment: ${selectedReport.nextAppointment}
               </button>
 
               {/* Notifications */}
-              <button className="relative p-2 text-gray-600 hover:bg-gray-100 rounded-full">
+              {/* <button className="relative p-2 text-gray-600 hover:bg-gray-100 rounded-full">
                 <svg
                   className="w-6 h-6"
                   fill="none"
@@ -446,16 +476,24 @@ Next Appointment: ${selectedReport.nextAppointment}
                 <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
                   3
                 </span>
-              </button>
+              </button> */}
 
               {/* Profile */}
               <div className="flex items-center space-x-3">
                 <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center">
-                  <span className="text-white font-semibold">JD</span>
+                  <span className="text-white font-semibold">
+                    {user?.name
+                      .split(" ")
+                      .map((ch: any) => ch[0]?.toUpperCase())
+                      .join("")
+                      .slice(0, 2)}
+                  </span>
                 </div>
                 <div className="hidden md:block">
-                  <p className="text-sm font-medium text-gray-800">John Doe</p>
-                  <p className="text-xs text-gray-500">Patient ID: P001</p>
+                  <p className="text-sm font-medium text-gray-800">
+                    {user?.name}
+                  </p>
+                  <p className="text-xs text-gray-500">{user?.email}</p>
                 </div>
               </div>
             </div>

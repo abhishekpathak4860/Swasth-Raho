@@ -22,6 +22,7 @@ export default function Doctors() {
   const [selectedFilter, setSelectedFilter] = useState("all");
   const [selectedDoctor, setSelectedDoctor] = useState("");
   const [doctorsData, setDoctorsData] = useState<DoctorType[]>([]);
+  const [user, setUser] = useState<any>(null);
   const [formData, setFormData] = useState({
     doc_id: "",
     name: "",
@@ -65,86 +66,33 @@ export default function Doctors() {
     },
   ];
 
-  // const doctorsData = [
-  //   {
-  //     id: 1,
-  //     name: "Dr. Amit Sharma",
-  //     specialization: "Cardiologist",
-  //     experience: "15 years",
-  //     rating: 4.8,
-  //     image: "👨‍⚕️",
-  //     contact: "+91 98765 43210",
-  //     education: "MBBS, MD Cardiology",
-  //     hospital: "Heart Care Centre",
-  //     availability: "Mon-Fri: 9AM-5PM",
-  //     consultationFee: "₹1500",
-  //   },
-  //   {
-  //     id: 2,
-  //     name: "Dr. Priya Patel",
-  //     specialization: "Dermatologist",
-  //     experience: "12 years",
-  //     rating: 4.9,
-  //     image: "👩‍⚕️",
-  //     contact: "+91 87654 32109",
-  //     education: "MBBS, MD Dermatology",
-  //     hospital: "Skin Care Clinic",
-  //     availability: "Tue-Sat: 10AM-6PM",
-  //     consultationFee: "₹1200",
-  //   },
-  //   {
-  //     id: 3,
-  //     name: "Dr. Rahul Kumar",
-  //     specialization: "Neurologist",
-  //     experience: "18 years",
-  //     rating: 4.7,
-  //     image: "👨‍⚕️",
-  //     contact: "+91 76543 21098",
-  //     education: "MBBS, DM Neurology",
-  //     hospital: "Neuro Care Institute",
-  //     availability: "Mon-Wed-Fri: 11AM-4PM",
-  //     consultationFee: "₹2000",
-  //   },
-  //   {
-  //     id: 4,
-  //     name: "Dr. Sneha Singh",
-  //     specialization: "Orthopedic",
-  //     experience: "10 years",
-  //     rating: 4.6,
-  //     image: "👩‍⚕️",
-  //     contact: "+91 65432 10987",
-  //     education: "MBBS, MS Orthopedics",
-  //     hospital: "Bone & Joint Clinic",
-  //     availability: "Mon-Sat: 8AM-2PM",
-  //     consultationFee: "₹1800",
-  //   },
-  //   {
-  //     id: 5,
-  //     name: "Dr. Vijay Mehta",
-  //     specialization: "Pediatrician",
-  //     experience: "20 years",
-  //     rating: 4.9,
-  //     image: "👨‍⚕️",
-  //     contact: "+91 54321 09876",
-  //     education: "MBBS, MD Pediatrics",
-  //     hospital: "Children's Hospital",
-  //     availability: "Daily: 9AM-7PM",
-  //     consultationFee: "₹1000",
-  //   },
-  //   {
-  //     id: 6,
-  //     name: "Dr. Ravi Gupta",
-  //     specialization: "Ophthalmologist",
-  //     experience: "14 years",
-  //     rating: 4.8,
-  //     image: "👨‍⚕️",
-  //     contact: "+91 43210 98765",
-  //     education: "MBBS, MS Ophthalmology",
-  //     hospital: "Eye Care Centre",
-  //     availability: "Tue-Thu-Sat: 10AM-5PM",
-  //     consultationFee: "₹1300",
-  //   },
-  // ];
+  // useEffect(() => {
+  //   const fetchProfile = async () => {
+  //     try {
+  //       const res = await axios.get("http://localhost:5000/patient/profile", {
+  //         withCredentials: true, // send cookies
+  //       });
+  //       setUser(res.data.patient);
+  //     } catch (error) {
+  //       console.error("Error fetching profile:", error);
+  //     }
+  //   };
+
+  //   fetchProfile();
+  // }, []);
+  const handleLogout = async () => {
+    try {
+      const res = await axios.post(
+        "http://localhost:5000/api/logout",
+        {},
+        { withCredentials: true }
+      );
+
+      window.location.href = "/login";
+    } catch (error) {
+      console.error("Error logging out:", error);
+    }
+  };
 
   const specializations = [
     { id: "all", name: "All Doctors", icon: "🏥" },
@@ -268,7 +216,10 @@ export default function Doctors() {
         </nav>
 
         {/* Logout Button */}
-        <div className="absolute bottom-4 left-4 right-4">
+        <div
+          className="absolute bottom-4 left-4 right-4"
+          onClick={handleLogout}
+        >
           <button className="w-full flex items-center px-4 py-3 text-gray-700 hover:bg-red-50 hover:text-red-600 rounded-lg transition-colors">
             <span className="text-2xl">🚪</span>
             <span
@@ -323,7 +274,7 @@ export default function Doctors() {
 
             <div className="flex items-center space-x-4">
               {/* Notifications */}
-              <button className="relative p-2 text-gray-600 hover:bg-gray-100 rounded-full">
+              {/* <button className="relative p-2 text-gray-600 hover:bg-gray-100 rounded-full">
                 <svg
                   className="w-6 h-6"
                   fill="none"
@@ -340,16 +291,23 @@ export default function Doctors() {
                 <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
                   3
                 </span>
-              </button>
-
+              </button> */}
               {/* Profile */}
               <div className="flex items-center space-x-3">
                 <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center">
-                  <span className="text-white font-semibold">JD</span>
+                  <span className="text-white font-semibold">
+                    {user?.name
+                      .split(" ")
+                      .map((ch: any) => ch[0]?.toUpperCase())
+                      .join("")
+                      .slice(0, 2)}
+                  </span>
                 </div>
                 <div className="hidden md:block">
-                  <p className="text-sm font-medium text-gray-800">John Doe</p>
-                  <p className="text-xs text-gray-500">Patient ID: P001</p>
+                  <p className="text-sm font-medium text-gray-800">
+                    {user?.name}
+                  </p>
+                  <p className="text-xs text-gray-500">{user?.email}</p>
                 </div>
               </div>
             </div>
