@@ -53,6 +53,8 @@ export default function Reports() {
     {
       _id: "rep001",
       p_name: "John Doe",
+      p_id: "p001",
+      doc_id: "doc001",
       doc_name: "Dr. Amit Sharma",
       date: "2025-10-12",
       department: "Cardiology",

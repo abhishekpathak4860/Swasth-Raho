@@ -4,7 +4,8 @@ import dotenv from "dotenv";
 import connectDB from "./config/DB.js";
 import registerRoute from "./routes/registerRoute.js";
 import cookieParser from "cookie-parser";
-import patientDashboardData from "./routes/patientDashboardData.js";
+import patientDashboardDataRoute from "./routes/patientDashboardData.js";
+import doctorDashboardDataRoute from "./routes/doctorDashboardData.js";
 
 dotenv.config();
 const app = express();
@@ -20,7 +21,8 @@ app.use(cookieParser());
 
 // api calls here
 app.use("/api", registerRoute);
-app.use("/patient", patientDashboardData);
+app.use("/patient", patientDashboardDataRoute);
+app.use("/doctor", doctorDashboardDataRoute);
 
 connectDB();
 
