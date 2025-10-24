@@ -43,6 +43,7 @@ export const loginUser = async (req, res) => {
       secure: process.env.NODE_ENV === "production" ? true : false, // true for HTTPS
       sameSite: "None",
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+      domain: ".vercel.app",
     });
 
     res.status(200).json({

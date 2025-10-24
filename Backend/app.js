@@ -11,42 +11,93 @@ dotenv.config();
 const app = express();
 connectDB();
 
-// Simple but effective CORS setup
+// Vercel-specific CORS configuration
+const allowedOrigins = [
+  "https://swasth-raho-9ehr.vercel.app",
+  "http://localhost:3000",
+];
+
+// Use cors middleware first
+app.use(
+  cors({
+    origin: function (origin, callback) {
+      // Allow requests with no origin (like mobile apps, Postman, etc.)
+      if (!origin) return callback(null, true);
+
+      if (allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+
+      callback(new Error("Not allowed by CORS"));
+    },
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allowedHeaders: [
+      "Content-Type",
+      "Authorization",
+      "X-Requested-With",
+      "Accept",
+      "Origin",
+    ],
+    preflightContinue: false,
+    optionsSuccessStatus: 200,
+  })
+);
+
+// Additional manual CORS headers for Vercel
 app.use((req, res, next) => {
   const origin = req.headers.origin;
-  const allowedOrigins = [
-    "https://swasth-raho-9ehr.vercel.app",
-    "http://localhost:3000",
-  ];
 
   if (allowedOrigins.includes(origin)) {
-    res.setHeader("Access-Control-Allow-Origin", origin);
+    res.header("Access-Control-Allow-Origin", origin);
   }
 
-  res.setHeader("Access-Control-Allow-Credentials", "true");
-  res.setHeader(
+  res.header("Access-Control-Allow-Credentials", "true");
+  res.header(
     "Access-Control-Allow-Methods",
     "GET,POST,PUT,PATCH,DELETE,OPTIONS"
   );
-  res.setHeader(
+  res.header(
     "Access-Control-Allow-Headers",
-    "Origin,X-Requested-With,Content-Type,Accept,Authorization"
+    "Content-Type,Authorization,X-Requested-With,Accept,Origin"
   );
 
+  // Handle preflight requests
   if (req.method === "OPTIONS") {
-    return res.status(200).end();
+    res.status(200).end();
+    return;
   }
 
   next();
 });
 
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
 // Routes
-app.get("/", (req, res) => res.send("Swasth-Raho API Running"));
+app.get("/", (req, res) => {
+  res.json({
+    message: "Swasth-Raho API Running",
+    timestamp: new Date().toISOString(),
+    cors: "enabled",
+  });
+});
+
 app.use("/api", registerRoute);
 app.use("/patient", patientDashboardDataRoute);
 app.use("/doctor", doctorDashboardDataRoute);
+
+// Global error handler
+app.use((err, req, res, next) => {
+  console.error("Global error:", err);
+  res.status(500).json({
+    message: "Internal Server Error",
+    error:
+      process.env.NODE_ENV === "development"
+        ? err.message
+        : "Something went wrong",
+  });
+});
 
 export default app;
