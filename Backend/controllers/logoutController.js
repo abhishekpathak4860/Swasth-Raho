@@ -4,7 +4,7 @@ export const logoutUser = async (req, res) => {
     res.clearCookie("token", {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production" ? true : false,
-      sameSite: "strict",
+      sameSite: "none",
     });
 
     res.status(200).json({
