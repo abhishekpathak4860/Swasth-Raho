@@ -1,65 +1,3 @@
-// import express from "express";
-// import cors from "cors";
-// import dotenv from "dotenv";
-// import connectDB from "./config/DB.js";
-// import registerRoute from "./routes/registerRoute.js";
-// import cookieParser from "cookie-parser";
-// import patientDashboardDataRoute from "./routes/patientDashboardData.js";
-// import doctorDashboardDataRoute from "./routes/doctorDashboardData.js";
-
-// dotenv.config();
-
-// const app = express();
-// connectDB();
-// // // Allowed origins
-// // const allowedOrigins = {
-// //   origin: ["https://swasth-raho-9ehr.vercel.app"],
-// // };
-
-// // app.use(cors(allowedOrigins));
-
-// // CORS setup
-// const allowedOrigins = ["https://swasth-raho-9ehr.vercel.app"];
-
-// app.use(
-//   cors({
-//     origin: function (origin, callback) {
-//       if (!origin || allowedOrigins.includes(origin)) {
-//         callback(null, true);
-//       } else {
-//         callback(new Error("Not allowed by CORS"));
-//       }
-//     },
-//     credentials: true,
-//     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-//   })
-// );
-
-// // Explicitly handle preflight OPTIONS requests
-// app.options("*", (req, res) => {
-//   res.header("Access-Control-Allow-Origin", allowedOrigins[0]);
-//   res.header(
-//     "Access-Control-Allow-Methods",
-//     "GET,POST,PUT,PATCH,DELETE,OPTIONS"
-//   );
-//   res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
-//   res.header("Access-Control-Allow-Credentials", "true");
-//   res.sendStatus(200); // important
-// });
-
-// // Handle preflight requests
-// // app.options("*", cors({ origin: allowedOrigins, credentials: true }));
-// app.use(express.json());
-// app.use(cookieParser());
-
-// // Routes
-// app.get("/", (req, res) => res.send("home page"));
-// app.use("/api", registerRoute);
-// app.use("/patient", patientDashboardDataRoute);
-// app.use("/doctor", doctorDashboardDataRoute);
-
-// export default app;
-
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
@@ -73,53 +11,109 @@ dotenv.config();
 const app = express();
 connectDB();
 
-// // Allowed frontend origin
-// const allowedOrigins = ["https://swasth-raho-9ehr.vercel.app"];
+// FIXED: Comprehensive CORS configuration
+const allowedOrigins = [
+  "https://swasth-raho-9ehr.vercel.app",
+  "http://localhost:3000", // for local development
+];
 
-// // CORS middleware
-// app.use((req, res, next) => {
-//   const origin = req.headers.origin;
-//   if (allowedOrigins.includes(origin)) {
-//     res.header("Access-Control-Allow-Origin", origin);
-//     res.header("Access-Control-Allow-Credentials", "true");
-//     res.header(
-//       "Access-Control-Allow-Headers",
-//       "Origin, X-Requested-With, Content-Type, Accept, Authorization"
-//     );
-//     res.header(
-//       "Access-Control-Allow-Methods",
-//       "GET, POST, PUT, PATCH, DELETE, OPTIONS"
-//     );
-//   }
-
-//   // Handle preflight OPTIONS request
-//   if (req.method === "OPTIONS") {
-//     return res.sendStatus(200); // must return 200 for preflight
-//   }
-//   next();
-// });
-
-const allowedOrigin = "https://swasth-raho-9ehr.vercel.app";
-
-// CORS middleware
+// CORS configuration with proper error handling
 app.use(
   cors({
-    origin: allowedOrigin,
-    credentials: true, // allow cookies
+    origin: function (origin, callback) {
+      // Allow requests with no origin (like mobile apps or Postman)
+      if (!origin) return callback(null, true);
+
+      if (allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        console.log(`CORS blocked origin: ${origin}`);
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
+    credentials: true, // Allow cookies
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
+    allowedHeaders: [
+      "Origin",
+      "X-Requested-With",
+      "Content-Type",
+      "Accept",
+      "Authorization",
+      "Cache-Control",
+      "Pragma",
+    ],
+    preflightContinue: false,
+    optionsSuccessStatus: 204,
   })
 );
 
-// Preflight
-app.options("*", cors({ origin: allowedOrigin, credentials: true }));
-app.use(express.json());
+// Explicit preflight handling
+app.options("*", (req, res) => {
+  const origin = req.headers.origin;
+
+  if (!origin || allowedOrigins.includes(origin)) {
+    res.header("Access-Control-Allow-Origin", origin || "*");
+    res.header("Access-Control-Allow-Credentials", "true");
+    res.header(
+      "Access-Control-Allow-Methods",
+      "GET,POST,PUT,PATCH,DELETE,OPTIONS"
+    );
+    res.header(
+      "Access-Control-Allow-Headers",
+      "Origin,X-Requested-With,Content-Type,Accept,Authorization,Cache-Control,Pragma"
+    );
+    res.status(204).send();
+  } else {
+    res.status(403).send("CORS not allowed");
+  }
+});
+
+// Additional middleware for all requests
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+
+  if (allowedOrigins.includes(origin)) {
+    res.header("Access-Control-Allow-Origin", origin);
+    res.header("Access-Control-Allow-Credentials", "true");
+  }
+
+  next();
+});
+
+app.use(express.json({ limit: "10mb" }));
+app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 app.use(cookieParser());
 
 // Routes
-app.get("/", (req, res) => res.send("home page"));
+app.get("/", (req, res) => {
+  res.json({
+    message: "Swasth-Raho Backend API",
+    status: "Running",
+    timestamp: new Date().toISOString(),
+  });
+});
+
 app.use("/api", registerRoute);
 app.use("/patient", patientDashboardDataRoute);
 app.use("/doctor", doctorDashboardDataRoute);
+
+// Error handling middleware
+app.use((err, req, res, next) => {
+  if (err.message === "Not allowed by CORS") {
+    return res.status(403).json({
+      error: "CORS Error",
+      message: "Origin not allowed",
+      origin: req.headers.origin,
+    });
+  }
+
+  console.error(err);
+  res.status(500).json({ error: "Internal Server Error" });
+});
+
+// 404 handler
+app.use("*", (req, res) => {
+  res.status(404).json({ error: "Route not found" });
+});
 
 export default app;
