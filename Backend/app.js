@@ -13,27 +13,23 @@ const app = express();
 // Allowed origins
 const allowedOrigins = [
   "http://localhost:3000",
-  "https://your-frontend.vercel.app", // replace with your deployed frontend URL
+  "https://your-frontend.vercel.app",
 ];
 
 // CORS middleware
 app.use(
   cors({
     origin: function (origin, callback) {
-      if (!origin || allowedOrigins.includes(origin)) {
-        callback(null, true);
-      } else {
-        callback(new Error("Not allowed by CORS"));
-      }
+      if (!origin || allowedOrigins.includes(origin)) callback(null, true);
+      else callback(new Error("Not allowed by CORS"));
     },
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
   })
 );
 
-// Handle preflight requests explicitly
+// Handle preflight requests
 app.options("*", cors({ origin: allowedOrigins, credentials: true }));
-
 app.use(express.json());
 app.use(cookieParser());
 
@@ -43,11 +39,13 @@ app.use("/api", registerRoute);
 app.use("/patient", patientDashboardDataRoute);
 app.use("/doctor", doctorDashboardDataRoute);
 
-// Connect MongoDB
-connectDB();
-
-// Export app for Vercel
-export default app;
-
-// const PORT = process.env.PORT || 5000;
-// app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+// Vercel serverless handler
+export default async function handler(req, res) {
+  try {
+    await connectDB(); // connect or reuse cached DB connection
+    app(req, res); // forward request to Express app
+  } catch (error) {
+    console.error("Serverless Function Error:", error);
+    res.status(500).json({ message: "Server Error", error: error.message });
+  }
+}
