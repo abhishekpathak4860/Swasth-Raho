@@ -8,14 +8,36 @@ import patientDashboardDataRoute from "./routes/patientDashboardData.js";
 import doctorDashboardDataRoute from "./routes/doctorDashboardData.js";
 
 dotenv.config();
+
 const app = express();
 connectDB();
-// Allowed origins
-const allowedOrigins = {
-  origin: ["https://swasth-raho-9ehr.vercel.app"],
-};
+// // Allowed origins
+// const allowedOrigins = {
+//   origin: ["https://swasth-raho-9ehr.vercel.app"],
+// };
 
-app.use(cors(allowedOrigins));
+// app.use(cors(allowedOrigins));
+
+// Allowed frontend origin
+const allowedOrigins = ["https://swasth-raho-9ehr.vercel.app"];
+
+app.use(
+  cors({
+    origin: function (origin, callback) {
+      // allow requests with no origin (like server-to-server or Postman)
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
+    credentials: true, // allow cookies
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+  })
+);
+
+// Handle preflight requests explicitly
+app.options("*", cors({ origin: allowedOrigins, credentials: true }));
 
 // Handle preflight requests
 // app.options("*", cors({ origin: allowedOrigins, credentials: true }));
