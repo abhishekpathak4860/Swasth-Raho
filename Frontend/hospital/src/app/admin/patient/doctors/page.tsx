@@ -69,7 +69,7 @@ export default function Doctors() {
   // useEffect(() => {
   //   const fetchProfile = async () => {
   //     try {
-  //       const res = await axios.get("http://localhost:5000/patient/profile", {
+  //       const res = await axios.get(`${process.env.NEXT_PUBLIC_BACKEND_URL}/patient/profile`, {
   //         withCredentials: true, // send cookies
   //       });
   //       setUser(res.data.patient);
@@ -83,7 +83,7 @@ export default function Doctors() {
   const handleLogout = async () => {
     try {
       const res = await axios.post(
-        "http://localhost:5000/api/logout",
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/logout`,
         {},
         { withCredentials: true }
       );
@@ -130,7 +130,7 @@ export default function Doctors() {
     try {
       e.preventDefault();
       const res = await axios.post(
-        "http://localhost:5000/patient/appointment",
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/patient/appointment`,
         formData,
         {
           withCredentials: true,
@@ -155,7 +155,7 @@ export default function Doctors() {
   useEffect(() => {
     const fetchDoctorData = async () => {
       try {
-        const res = await axios.get("http://localhost:5000/patient/doctors", {
+        const res = await axios.get(`${process.env.NEXT_PUBLIC_BACKEND_URL}/patient/doctors`, {
           withCredentials: true, // send cookies
         });
         setDoctorsData(res.data.doctor);

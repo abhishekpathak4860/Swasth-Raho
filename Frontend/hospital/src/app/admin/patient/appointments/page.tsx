@@ -17,6 +17,7 @@ export default function Appointments() {
   const [showReportModal, setShowReportModal] = useState(false);
   const [selectedReport, setSelectedReport] = useState<any>(null);
   const [user, setUser] = useState<any>(null);
+  const [reportsData, setReportsData] = useState<any[]>([]);
 
   const [formData, setFormData] = useState({
     appointmentId: "",
@@ -64,7 +65,7 @@ export default function Appointments() {
   // useEffect(() => {
   //   const fetchProfile = async () => {
   //     try {
-  //       const res = await axios.get("http://localhost:5000/patient/profile", {
+  //       const res = await axios.get(`${process.env.NEXT_PUBLIC_BACKEND_URL}/patient/profile`, {
   //         withCredentials: true, // send cookies
   //       });
   //       setUser(res.data.patient);
@@ -78,7 +79,7 @@ export default function Appointments() {
   const handleLogout = async () => {
     try {
       const res = await axios.post(
-        "http://localhost:5000/api/logout",
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/logout`,
         {},
         { withCredentials: true }
       );
@@ -89,47 +90,66 @@ export default function Appointments() {
     }
   };
   // Dummy report data
-  const generateDummyReport = (appointment: any) => {
-    return {
-      id: appointment._id,
-      patientName: appointment.p_name || "John Doe",
-      doctorName: appointment.doc_name,
-      date: appointment.date,
-      time: appointment.time,
-      diagnosis: appointment.disease,
-      symptoms: ["Fever", "Headache", "Body ache"],
-      vitals: {
-        bloodPressure: "120/80 mmHg",
-        temperature: "98.6°F",
-        heartRate: "72 bpm",
-        weight: "70 kg",
-      },
-      prescription: [
-        {
-          medicine: "Paracetamol",
-          dosage: "500mg",
-          frequency: "Twice daily",
-          days: "5 days",
-        },
-        {
-          medicine: "Vitamin D",
-          dosage: "1000 IU",
-          frequency: "Once daily",
-          days: "30 days",
-        },
-      ],
-      recommendations: [
-        "Take plenty of rest",
-        "Drink lots of fluids",
-        "Avoid cold foods",
-        "Follow up after 1 week if symptoms persist",
-      ],
-      nextAppointment: "Follow up after 1 week if needed",
-    };
+  // const generateDummyReport = (appointment: any) => {
+  //   return {
+  //     id: appointment._id,
+  //     patientName: appointment.p_name || "John Doe",
+  //     doctorName: appointment.doc_name,
+  //     date: appointment.date,
+  //     time: appointment.time,
+  //     diagnosis: appointment.disease,
+  //     symptoms: ["Fever", "Headache", "Body ache"],
+  //     vitals: {
+  //       bloodPressure: "120/80 mmHg",
+  //       temperature: "98.6°F",
+  //       heartRate: "72 bpm",
+  //       weight: "70 kg",
+  //     },
+  //     prescription: [
+  //       {
+  //         medicine: "Paracetamol",
+  //         dosage: "500mg",
+  //         frequency: "Twice daily",
+  //         days: "5 days",
+  //       },
+  //       {
+  //         medicine: "Vitamin D",
+  //         dosage: "1000 IU",
+  //         frequency: "Once daily",
+  //         days: "30 days",
+  //       },
+  //     ],
+  //     recommendations: [
+  //       "Take plenty of rest",
+  //       "Drink lots of fluids",
+  //       "Avoid cold foods",
+  //       "Follow up after 1 week if symptoms persist",
+  //     ],
+  //     nextAppointment: "Follow up after 1 week if needed",
+  //   };
+  // };
+
+  const getReports = async () => {
+    const res = await axios.get(
+      `${process.env.NEXT_PUBLIC_BACKEND_URL}/patient/get-reports`,
+      { withCredentials: true }
+    );
+    setReportsData(res.data.reports);
+  };
+
+  useEffect(() => {
+    getReports();
+  }, []);
+
+  const getReportByAppointmentId = (appointment: any) => {
+    const filterReport = reportsData?.filter(
+      (report) => report.appointment_id == appointment._id
+    );
+    return filterReport.length > 0 ? filterReport[0] : null;
   };
 
   const handleViewReport = (appointment: any) => {
-    const report = generateDummyReport(appointment);
+    const report = getReportByAppointmentId(appointment);
     setSelectedReport(report);
     setShowReportModal(true);
   };
@@ -138,12 +158,12 @@ export default function Appointments() {
     const reportContent = `
 MEDICAL REPORT
 ================
-Patient: ${selectedReport.patientName}
-Doctor: ${selectedReport.doctorName}
+Patient: ${selectedReport.p_name}
+Doctor: ${selectedReport.doc_name}
 Date: ${selectedReport.date}
-Time: ${selectedReport.time}
 
-DIAGNOSIS: ${selectedReport.diagnosis}
+
+DIAGNOSIS: ${selectedReport.disease}
 
 SYMPTOMS:
 ${selectedReport.symptoms.map((symptom: string) => `- ${symptom}`).join("\n")}
@@ -172,7 +192,7 @@ Next Appointment: ${selectedReport.nextAppointment}
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `Medical_Report_${selectedReport.patientName}_${selectedReport.date}.txt`;
+    a.download = `Medical_Report_${selectedReport.p_name}_${selectedReport.date}.pdf`;
     document.body.appendChild(a);
     a.click();
     window.URL.revokeObjectURL(url);
@@ -228,7 +248,7 @@ Next Appointment: ${selectedReport.nextAppointment}
     try {
       e.preventDefault();
       const res = await axios.post(
-        "http://localhost:5000/patient/appointment",
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/patient/appointment`,
         formData,
         {
           withCredentials: true,
@@ -248,7 +268,7 @@ Next Appointment: ${selectedReport.nextAppointment}
     try {
       e.preventDefault();
       const res = await axios.patch(
-        `http://localhost:5000/patient/UpdateAppointment/${formData.appointmentId}`,
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/patient/UpdateAppointment/${formData.appointmentId}`,
         formData,
         { withCredentials: true }
       );
@@ -278,7 +298,7 @@ Next Appointment: ${selectedReport.nextAppointment}
   useEffect(() => {
     const fetchDoctorData = async () => {
       try {
-        const res = await axios.get("http://localhost:5000/patient/doctors", {
+        const res = await axios.get(`${process.env.NEXT_PUBLIC_BACKEND_URL}/patient/doctors`, {
           withCredentials: true, // send cookies
         });
         setDoctorsData(res.data.doctor);
@@ -292,7 +312,7 @@ Next Appointment: ${selectedReport.nextAppointment}
   const fetchAppointmentData = async () => {
     try {
       const res = await axios.get(
-        "http://localhost:5000/patient/get-appointments",
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/patient/get-appointments`,
         {
           withCredentials: true,
         }
@@ -327,7 +347,7 @@ Next Appointment: ${selectedReport.nextAppointment}
   const deleteAppointment = async (id: any) => {
     try {
       const res = await axios.delete(
-        `http://localhost:5000/patient/cancel-appointment/${id}`,
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/patient/cancel-appointment/${id}`,
         {
           withCredentials: true,
         }
@@ -953,24 +973,24 @@ Next Appointment: ${selectedReport.nextAppointment}
                         Patient Information
                       </h4>
                       <p className="text-sm text-black">
-                        <strong>Name:</strong> {selectedReport?.patientName}
+                        <strong>Name:</strong> {selectedReport?.p_name}
                       </p>
                       <p className="text-sm text-black">
                         <strong>Date:</strong> {selectedReport?.date}
                       </p>
-                      <p className="text-sm text-black">
+                      {/* <p className="text-sm text-black">
                         <strong>Time:</strong> {selectedReport?.time}
-                      </p>
+                      </p> */}
                     </div>
                     <div className="bg-green-50 rounded-lg p-4">
                       <h4 className="font-semibold text-green-800 mb-2">
                         Doctor Information
                       </h4>
                       <p className="text-sm text-black">
-                        <strong>Doctor:</strong> {selectedReport?.doctorName}
+                        <strong>Doctor:</strong> {selectedReport?.doc_name}
                       </p>
                       <p className="text-sm text-black">
-                        <strong>Diagnosis:</strong> {selectedReport?.diagnosis}
+                        <strong>Diagnosis:</strong> {selectedReport?.disease}
                       </p>
                     </div>
                   </div>

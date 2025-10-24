@@ -4,6 +4,6 @@ import { report } from "../controllers/report.js";
 
 const router = express.Router();
 
-router.post("/report", verifyToken, report);
+router.post("/report", report);
 
 export default router;

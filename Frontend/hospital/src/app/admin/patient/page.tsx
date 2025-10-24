@@ -59,7 +59,7 @@ export default function PatientDashboard() {
     e.preventDefault();
     try {
       const res = await axios.patch(
-        "http://localhost:5000/patient/update-profile",
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/patient/update-profile`,
         editUserDetails,
         { withCredentials: true }
       );
@@ -80,9 +80,12 @@ export default function PatientDashboard() {
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        const res = await axios.get("http://localhost:5000/patient/profile", {
-          withCredentials: true, // send cookies
-        });
+        const res = await axios.get(
+          `${process.env.NEXT_PUBLIC_BACKEND_URL}/patient/profile`,
+          {
+            withCredentials: true, // send cookies
+          }
+        );
         setUser(res.data.patient);
       } catch (error) {
         console.error("Error fetching profile:", error);
@@ -95,7 +98,7 @@ export default function PatientDashboard() {
   const handleLogout = async () => {
     try {
       const res = await axios.post(
-        "http://localhost:5000/api/logout",
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/logout`,
         {},
         { withCredentials: true }
       );

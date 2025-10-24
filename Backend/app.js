@@ -20,6 +20,9 @@ app.use(express.json());
 app.use(cookieParser());
 
 // api calls here
+app.get("/", (req, res) => {
+  res.send("home page");
+});
 app.use("/api", registerRoute);
 app.use("/patient", patientDashboardDataRoute);
 app.use("/doctor", doctorDashboardDataRoute);

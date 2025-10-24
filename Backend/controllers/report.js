@@ -3,16 +3,17 @@ import MedicalReport from "../models/MedicalReport.js";
 export const report = async (req, res) => {
   try {
     //  Check role from the decoded token
-    const { role } = req.user;
+    // const { role } = req.user;
 
-    if (role !== "doctor") {
-      return res.status(403).json({
-        message: "Access denied. Only doctors can create medical reports.",
-      });
-    }
+    // if (role !== "doctor") {
+    //   return res.status(403).json({
+    //     message: "Access denied. Only doctors can create medical reports.",
+    //   });
+    // }
 
     // Extract report details from request body (including doc_id)
     const {
+      appointment_id,
       p_id,
       p_name,
       doc_id,
@@ -30,6 +31,7 @@ export const report = async (req, res) => {
 
     // Create and save report
     const newReport = new MedicalReport({
+      appointment_id,
       p_id,
       p_name,
       doc_id, // coming from frontend

@@ -7,6 +7,7 @@ import { UpcomingAppointments } from "../controllers/UpcomingAppointments.js";
 import { UpdateAppointment } from "../controllers/UpdateAppointment.js";
 import { cancelAppointment } from "../controllers/cancelAppointment.js";
 import { UpdateUserDetails } from "../controllers/UpdateUserDetails.js";
+import { getReports } from "../controllers/getReports.js";
 
 const router = express.Router();
 
@@ -14,6 +15,7 @@ router.get("/profile", verifyToken, patientProfile);
 router.get("/doctors", verifyToken, doctorsData);
 router.post("/appointment", verifyToken, appointment);
 router.get("/get-appointments", verifyToken, UpcomingAppointments);
+router.get("/get-reports", verifyToken, getReports);
 router.patch(
   "/UpdateAppointment/:appointmentId",
   verifyToken,

@@ -2,6 +2,7 @@ import mongoose from "mongoose";
 
 const medicalReportSchema = new mongoose.Schema(
   {
+    appointment_id: { type: String, required: true }, //appointment_id
     p_id: { type: String, required: true }, // Patient ID
     p_name: { type: String, required: true }, // Patient name
     doc_id: { type: String, required: true }, // Doctor ID
