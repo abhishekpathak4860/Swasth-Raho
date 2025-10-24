@@ -66,7 +66,8 @@ export default function Login() {
         {
           ...formData,
           role,
-        }
+        },
+        { withCredentials: true }
       );
 
       if (response.status === 200) {
