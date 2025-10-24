@@ -38,14 +38,16 @@ export default function Login() {
       const data = await res.json();
 
       if (res.ok) {
-        // Redirect based on role
-        if (data.user.role === "doctor") {
-          router.push("/admin/doctor");
-        } else if (data.user.role === "patient") {
-          router.push("/admin/patient");
-        } else {
-          router.push("/"); // fallback
-        }
+        // Wait 50ms to ensure cookie is set
+        setTimeout(() => {
+          if (data.user.role === "doctor") {
+            router.push("/admin/doctor");
+          } else if (data.user.role === "patient") {
+            router.push("/admin/patient");
+          } else {
+            router.push("/"); // fallback
+          }
+        }, 50);
       } else {
         alert(data.message || "Login failed");
       }
