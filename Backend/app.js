@@ -11,10 +11,9 @@ dotenv.config();
 const app = express();
 connectDB();
 // Allowed origins
-const allowedOrigins = [
-  "http://localhost:3000",
-  "https://your-frontend.vercel.app",
-];
+const allowedOrigins = {
+  origin: ["http://localhost:3000"],
+};
 
 app.use(cors(allowedOrigins));
 
