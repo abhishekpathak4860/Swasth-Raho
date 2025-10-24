@@ -10,11 +10,7 @@
     {
       "src": "/(.*)",
       "dest": "app.js",
-      "methods": ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-      "headers": {
-        "Access-Control-Allow-Origin": "https://swasth-raho-9ehr.vercel.app",
-        "Access-Control-Allow-Credentials": "true"
-      }
+      "methods": ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"]
     }
   ]
 }

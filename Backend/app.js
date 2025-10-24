@@ -18,26 +18,34 @@ connectDB();
 
 // app.use(cors(allowedOrigins));
 
-// Allowed frontend origin
+// CORS setup
 const allowedOrigins = ["https://swasth-raho-9ehr.vercel.app"];
 
 app.use(
   cors({
     origin: function (origin, callback) {
-      // allow requests with no origin (like server-to-server or Postman)
       if (!origin || allowedOrigins.includes(origin)) {
         callback(null, true);
       } else {
         callback(new Error("Not allowed by CORS"));
       }
     },
-    credentials: true, // allow cookies
+    credentials: true,
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
   })
 );
 
-// Handle preflight requests explicitly
-app.options("*", cors({ origin: allowedOrigins, credentials: true }));
+// Explicitly handle preflight OPTIONS requests
+app.options("*", (req, res) => {
+  res.header("Access-Control-Allow-Origin", allowedOrigins[0]);
+  res.header(
+    "Access-Control-Allow-Methods",
+    "GET,POST,PUT,PATCH,DELETE,OPTIONS"
+  );
+  res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
+  res.header("Access-Control-Allow-Credentials", "true");
+  res.sendStatus(200); // important
+});
 
 // Handle preflight requests
 // app.options("*", cors({ origin: allowedOrigins, credentials: true }));
