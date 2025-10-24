@@ -73,32 +73,46 @@ dotenv.config();
 const app = express();
 connectDB();
 
-// Allowed frontend origin
-const allowedOrigins = ["https://swasth-raho-9ehr.vercel.app"];
+// // Allowed frontend origin
+// const allowedOrigins = ["https://swasth-raho-9ehr.vercel.app"];
+
+// // CORS middleware
+// app.use((req, res, next) => {
+//   const origin = req.headers.origin;
+//   if (allowedOrigins.includes(origin)) {
+//     res.header("Access-Control-Allow-Origin", origin);
+//     res.header("Access-Control-Allow-Credentials", "true");
+//     res.header(
+//       "Access-Control-Allow-Headers",
+//       "Origin, X-Requested-With, Content-Type, Accept, Authorization"
+//     );
+//     res.header(
+//       "Access-Control-Allow-Methods",
+//       "GET, POST, PUT, PATCH, DELETE, OPTIONS"
+//     );
+//   }
+
+//   // Handle preflight OPTIONS request
+//   if (req.method === "OPTIONS") {
+//     return res.sendStatus(200); // must return 200 for preflight
+//   }
+//   next();
+// });
+
+const allowedOrigin = "https://swasth-raho-9ehr.vercel.app";
 
 // CORS middleware
-app.use((req, res, next) => {
-  const origin = req.headers.origin;
-  if (allowedOrigins.includes(origin)) {
-    res.header("Access-Control-Allow-Origin", origin);
-    res.header("Access-Control-Allow-Credentials", "true");
-    res.header(
-      "Access-Control-Allow-Headers",
-      "Origin, X-Requested-With, Content-Type, Accept, Authorization"
-    );
-    res.header(
-      "Access-Control-Allow-Methods",
-      "GET, POST, PUT, PATCH, DELETE, OPTIONS"
-    );
-  }
+app.use(
+  cors({
+    origin: allowedOrigin,
+    credentials: true, // allow cookies
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+  })
+);
 
-  // Handle preflight OPTIONS request
-  if (req.method === "OPTIONS") {
-    return res.sendStatus(200); // must return 200 for preflight
-  }
-  next();
-});
-
+// Preflight
+app.options("*", cors({ origin: allowedOrigin, credentials: true }));
 app.use(express.json());
 app.use(cookieParser());
 
