@@ -12,7 +12,7 @@ const app = express();
 connectDB();
 // Allowed origins
 const allowedOrigins = {
-  origin: ["http://localhost:3000"],
+  origin: ["https://swasth-raho-9ehr.vercel.app"],
 };
 
 app.use(cors(allowedOrigins));
