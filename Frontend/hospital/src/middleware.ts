@@ -24,7 +24,7 @@ export async function middleware(req: NextRequest) {
   try {
     // Verify and decode token
     const { payload } = await jwtVerify(token, secret);
-    const { id, role } = payload as any;
+    const {id,role } = payload as any;
 
     // Check role and redirect accordingly
     if (role === "patient") {
