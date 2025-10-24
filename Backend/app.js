@@ -18,7 +18,7 @@ const allowedOrigins = {
 app.use(cors(allowedOrigins));
 
 // Handle preflight requests
-app.options("*", cors({ origin: allowedOrigins, credentials: true }));
+// app.options("*", cors({ origin: allowedOrigins, credentials: true }));
 app.use(express.json());
 app.use(cookieParser());
 

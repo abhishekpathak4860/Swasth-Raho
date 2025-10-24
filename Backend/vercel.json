@@ -10,10 +10,8 @@
     {
       "src": "/(.*)",
       "dest": "app.js",
-      "methods": ["GET", "POST", "OPTIONS", "PUT", "DELETE", "PATCH"],
-      "headers": {
-        "Access-Control-Allow-Origin": "*"
-      }
+      "methods": ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+      "headers": { "Access-Control-Allow-Origin": "http://localhost:3000" }
     }
   ]
 }
