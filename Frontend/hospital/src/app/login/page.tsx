@@ -1,6 +1,7 @@
 "use client";
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
+import axios from "axios";
 
 export default function Login() {
   const router = useRouter();
@@ -19,44 +20,71 @@ export default function Login() {
   };
 
   // Handle submit
+  // const handleSubmit = async (e: React.FormEvent) => {
+  //   e.preventDefault();
+
+  //   try {
+  //     const res = await fetch(
+  //       `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/login`,
+  //       {
+  //         method: "POST",
+  //         headers: {
+  //           "Content-Type": "application/json",
+  //         },
+  //         credentials: "include",
+  //         body: JSON.stringify({ ...formData, role }),
+  //       }
+  //     );
+
+  //     const data = await res.json();
+
+  //     if (res.ok) {
+  //       // Wait 50ms to ensure cookie is set
+  //       setTimeout(() => {
+  //         if (data.user.role === "doctor") {
+  //           router.push("/admin/doctor");
+  //         } else if (data.user.role === "patient") {
+  //           router.push("/admin/patient");
+  //         } else {
+  //           router.push("/"); // fallback
+  //         }
+  //       }, 50);
+  //     } else {
+  //       alert(data.message || "Login failed");
+  //     }
+  //   } catch (error) {
+  //     console.error(error);
+  //     alert("Something went wrong!");
+  //   }
+  // };
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     try {
-      const res = await fetch(
+      const response = await axios.post(
         `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/login`,
         {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          credentials: "include",
-          body: JSON.stringify({ ...formData, role }),
+          ...formData,
+          role,
         }
       );
 
-      const data = await res.json();
+      if (response.status === 200) {
+        const data = response.data;
 
-      if (res.ok) {
-        // Wait 50ms to ensure cookie is set
-        setTimeout(() => {
-          if (data.user.role === "doctor") {
-            router.push("/admin/doctor");
-          } else if (data.user.role === "patient") {
-            router.push("/admin/patient");
-          } else {
-            router.push("/"); // fallback
-          }
-        }, 50);
-      } else {
-        alert(data.message || "Login failed");
+        // Redirect based on role
+        if (data.user.role === "doctor") {
+          window.location.href = "/admin/doctor";
+        } else if (data.user.role === "patient") {
+          window.location.href = "/admin/patient";
+        }
       }
-    } catch (error) {
-      console.error(error);
-      alert("Something went wrong!");
+    } catch (error: any) {
+      console.error("Login error:", error);
+      const errorMessage = error.response?.data?.message || "Login failed";
+      alert(errorMessage);
     }
   };
-
   return (
     <div className="flex justify-center items-center min-h-screen bg-gradient-to-br from-green-50 to-blue-50">
       <div className="bg-white rounded-2xl shadow-lg p-8 w-[90%] max-w-md">
