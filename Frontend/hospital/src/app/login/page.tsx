@@ -59,24 +59,20 @@ export default function Login() {
   // };
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
     try {
-      const response = await axios.post(
+      const { data } = await axios.post(
         `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/login`,
-        {
-          ...formData,
-          role,
-        },
+        { ...formData, role },
         { withCredentials: true }
       );
 
-      const data = response.data;
       console.log("api data", data);
-      if (data.user.role === "doctor") {
-        router.replace("/admin/doctor");
-      } else if (data.user.role === "patient") {
-        router.replace("/admin/patient");
-      }
+
+      // Use setTimeout to ensure cookie is set before redirect (optional)
+      setTimeout(() => {
+        if (data.user.role === "doctor") router.push("/admin/doctor");
+        else if (data.user.role === "patient") router.push("/admin/patient");
+      }, 50);
     } catch (error: any) {
       console.error("Login error:", error);
       const errorMessage = error.response?.data?.message || "Login failed";
