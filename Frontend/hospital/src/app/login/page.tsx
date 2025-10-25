@@ -70,13 +70,13 @@ export default function Login() {
         { withCredentials: true }
       );
 
-      if (response.status === 200) {
+      if (response.data.success) {
         const data = response.data;
 
         if (data.user.role === "doctor") {
-          router.push("/admin/doctor");
+          router.replace("/admin/doctor");
         } else if (data.user.role === "patient") {
-          router.push("/admin/patient");
+          router.replace("/admin/patient");
         }
       }
       console.log("api called");

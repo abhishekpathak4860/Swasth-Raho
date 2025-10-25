@@ -11,7 +11,7 @@ const app = express();
 connectDB();
 const PORT = process.env.PORT || 5000;
 
-// ✅ Allowed Origins
+//  Allowed Origins
 const allowedOrigins = [
   "https://swasth-raho-9ehr.vercel.app", // frontend (Vercel)
   "http://localhost:3000", // local dev
