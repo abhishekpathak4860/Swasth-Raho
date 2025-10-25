@@ -70,16 +70,13 @@ export default function Login() {
         { withCredentials: true }
       );
 
-      if (response.data.success) {
-        const data = response.data;
-
-        if (data.user.role === "doctor") {
-          router.replace("/admin/doctor");
-        } else if (data.user.role === "patient") {
-          router.replace("/admin/patient");
-        }
+      const data = response.data;
+      console.log("api data", data);
+      if (data.user.role === "doctor") {
+        router.replace("/admin/doctor");
+      } else if (data.user.role === "patient") {
+        router.replace("/admin/patient");
       }
-      console.log("api called");
     } catch (error: any) {
       console.error("Login error:", error);
       const errorMessage = error.response?.data?.message || "Login failed";
