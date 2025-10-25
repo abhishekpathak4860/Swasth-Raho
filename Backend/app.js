@@ -9,18 +9,17 @@ import doctorDashboardDataRoute from "./routes/doctorDashboardData.js";
 dotenv.config();
 const app = express();
 connectDB();
-const PORT = process.env.PORT || 5000;
 
-//  Allowed Origins
+// Allowed Origins
 const allowedOrigins = [
-  "https://swasth-raho-9ehr.vercel.app", // frontend (Vercel)
-  "http://localhost:3000", // local dev
+  "https://swasth-raho-9ehr.vercel.app",
+  "http://localhost:3000",
 ];
 
+// Middleware to handle CORS and preflight
 app.use((req, res, next) => {
   const origin = req.headers.origin;
 
-  // Always allow allowedOrigins
   if (origin && allowedOrigins.includes(origin)) {
     res.setHeader("Access-Control-Allow-Origin", origin);
     res.setHeader("Access-Control-Allow-Credentials", "true");
@@ -34,51 +33,33 @@ app.use((req, res, next) => {
     );
   }
 
-  // Handle OPTIONS preflight requests
   if (req.method === "OPTIONS") {
-    // Send 204 No Content
-    res.status(204).end();
+    // Must respond 200 or 204 for preflight
+    res.status(200).send("OK");
     return;
   }
 
   next();
 });
 
-// ✅ Middleware setup
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
-// ✅ Health check route
+// Health check
 app.get("/", (req, res) => {
-  res.json({
-    message: "🩺 Swasth-Raho API Running Successfully",
-    timestamp: new Date().toISOString(),
-    cors: "Enabled",
-  });
+  res.json({ message: "API Running", timestamp: new Date().toISOString() });
 });
 
-// ✅ Main routes
+// Routes
 app.use("/api", registerRoute);
 app.use("/patient", patientDashboardDataRoute);
 app.use("/doctor", doctorDashboardDataRoute);
 
-// ✅ Global Error Handler
+// Global error handler
 app.use((err, req, res, next) => {
-  console.error("🔥 Global error:", err);
-  res.status(500).json({
-    message: "Internal Server Error",
-    error:
-      process.env.NODE_ENV === "development"
-        ? err.message
-        : "Something went wrong",
-  });
+  console.error(err);
+  res.status(500).json({ message: "Internal Server Error" });
 });
 
-// ✅ For Vercel (no listen)
 export default app;
-
-// ✅ Uncomment this if running locally
-// app.listen(PORT, () => {
-//   console.log(`Server running on port ${PORT}`);
-// });
