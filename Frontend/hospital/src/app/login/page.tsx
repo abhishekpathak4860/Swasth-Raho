@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import axios from "axios";
+import { startTransition } from "react";
 
 export default function Login() {
   const router = useRouter();
@@ -70,12 +71,10 @@ export default function Login() {
 
       console.log("api data", data);
 
-      // Redirect immediately
-      if (data.user.role === "doctor") {
-        router.push("/admin/doctor");
-      } else if (data.user.role === "patient") {
-        router.push("/admin/patient");
-      }
+      startTransition(() => {
+        if (data.user.role === "doctor") router.push("/admin/doctor");
+        else if (data.user.role === "patient") router.push("/admin/patient");
+      });
     } catch (error: any) {
       console.error("Login error:", error);
       const errorMessage = error.response?.data?.message || "Login failed";
