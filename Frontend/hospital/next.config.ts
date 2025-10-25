@@ -14,7 +14,7 @@ const nextConfig = {
     return [
       {
         source: "/api/:path*",
-        destination: "https://swasth-raho.onrender.com/api/:path*",
+        destination: "https://swasth-hospital.onrender.com/api/:path*",
       },
     ];
   },
