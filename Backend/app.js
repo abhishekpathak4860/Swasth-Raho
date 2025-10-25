@@ -10,7 +10,7 @@ import doctorDashboardDataRoute from "./routes/doctorDashboardData.js";
 dotenv.config();
 const app = express();
 connectDB();
-
+const PORT = process.env.PORT || 5000;
 // Vercel-specific CORS configuration
 const allowedOrigins = [
   "https://swasth-raho-9ehr.vercel.app",
@@ -99,5 +99,7 @@ app.use((err, req, res, next) => {
         : "Something went wrong",
   });
 });
-
+// app.listen(PORT, () => {
+//   console.log(`Server started successfully on port ${PORT}`);
+// });
 export default app;

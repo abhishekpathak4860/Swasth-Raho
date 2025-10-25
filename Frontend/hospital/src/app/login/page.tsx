@@ -73,13 +73,13 @@ export default function Login() {
       if (response.status === 200) {
         const data = response.data;
 
-        // Redirect based on role
         if (data.user.role === "doctor") {
-          window.location.href = "/admin/doctor";
+          router.push("/admin/doctor");
         } else if (data.user.role === "patient") {
-          window.location.href = "/admin/patient";
+          router.push("/admin/patient");
         }
       }
+      console.log("api called");
     } catch (error: any) {
       console.error("Login error:", error);
       const errorMessage = error.response?.data?.message || "Login failed";
