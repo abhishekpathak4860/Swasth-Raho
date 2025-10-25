@@ -11,38 +11,17 @@ const app = express();
 await connectDB();
 const PORT = process.env.PORT || 5000;
 
-// Allowed Origins
-const allowedOrigins = [
-  "https://swasth-raho-9ehr.vercel.app",
-  "http://localhost:3000",
-];
-
-app.use((req, res, next) => {
-  const origin = req.headers.origin;
-  if (origin && allowedOrigins.includes(origin)) {
-    res.setHeader("Access-Control-Allow-Origin", origin);
-    res.setHeader("Access-Control-Allow-Credentials", "true");
-    res.setHeader(
-      "Access-Control-Allow-Methods",
-      "GET,POST,PUT,PATCH,DELETE,OPTIONS"
-    );
-    res.setHeader(
-      "Access-Control-Allow-Headers",
-      "Content-Type,Authorization,X-Requested-With,Accept,Origin"
-    );
-  }
-
-  if (req.method === "OPTIONS") {
-    // preflight must return 204 NO CONTENT
-    res.status(204).end();
-    return;
-  }
-  next();
-});
-
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
+
+// Allowed Origins
+app.use(
+  cors({
+    origin: "https://swasth-raho-9ehr.vercel.app", // your frontend URL
+    credentials: true,
+  })
+);
 
 // Health check
 app.get("/", (req, res) => {
