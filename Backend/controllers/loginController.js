@@ -40,8 +40,8 @@ export const loginUser = async (req, res) => {
     // Store token in cookie
     res.cookie("token", token, {
       httpOnly: true, // cannot be accessed by JS
-      Secure: process.env.NODE_ENV === "production" ? true : false, // true for HTTPS
-      SameSite: "None",
+      secure: process.env.NODE_ENV === "production" ? true : false, // true for HTTPS
+      sameSite: "none",
       path: "/",
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
     });
