@@ -16,10 +16,8 @@ const allowedOrigins = [
   "http://localhost:3000",
 ];
 
-// Middleware to handle CORS and preflight
 app.use((req, res, next) => {
   const origin = req.headers.origin;
-
   if (origin && allowedOrigins.includes(origin)) {
     res.setHeader("Access-Control-Allow-Origin", origin);
     res.setHeader("Access-Control-Allow-Credentials", "true");
@@ -34,11 +32,10 @@ app.use((req, res, next) => {
   }
 
   if (req.method === "OPTIONS") {
-    // Must respond 200 or 204 for preflight
-    res.status(200).send("OK");
+    // preflight must return 204 NO CONTENT
+    res.status(204).end();
     return;
   }
-
   next();
 });
 
