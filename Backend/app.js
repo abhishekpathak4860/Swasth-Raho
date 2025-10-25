@@ -17,26 +17,27 @@ const allowedOrigins = [
   "http://localhost:3000", // local dev
 ];
 
-// ✅ Manual CORS Middleware (Best for Vercel)
 app.use((req, res, next) => {
   const origin = req.headers.origin;
 
+  // Always allow allowedOrigins
   if (origin && allowedOrigins.includes(origin)) {
-    res.header("Access-Control-Allow-Origin", origin);
-    res.header("Access-Control-Allow-Credentials", "true");
-    res.header(
+    res.setHeader("Access-Control-Allow-Origin", origin);
+    res.setHeader("Access-Control-Allow-Credentials", "true");
+    res.setHeader(
       "Access-Control-Allow-Methods",
       "GET,POST,PUT,PATCH,DELETE,OPTIONS"
     );
-    res.header(
+    res.setHeader(
       "Access-Control-Allow-Headers",
       "Content-Type,Authorization,X-Requested-With,Accept,Origin"
     );
   }
 
-  // Handle preflight (OPTIONS) requests
+  // Handle OPTIONS preflight requests
   if (req.method === "OPTIONS") {
-    res.sendStatus(200);
+    // Send 204 No Content
+    res.status(204).end();
     return;
   }
 
