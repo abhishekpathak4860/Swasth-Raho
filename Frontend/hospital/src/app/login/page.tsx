@@ -67,8 +67,6 @@ export default function Login() {
         { withCredentials: true }
       );
 
-      console.log("api data", data);
-
       // // Direct redirect without startTransition
       // if (data.user.role === "doctor") {
       //   router.push("/admin/doctor");
@@ -76,6 +74,7 @@ export default function Login() {
       //   router.push("/admin/patient");
       // }
       router.push("/admin/patient");
+      console.log("api data", data);
     } catch (err: any) {
       console.error("Login error:", err);
       alert(err.response?.data?.message || "Login failed");
