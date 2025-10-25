@@ -68,12 +68,12 @@ export default function Login() {
       );
 
       // // Direct redirect without startTransition
-      // if (data.user.role === "doctor") {
-      //   router.push("/admin/doctor");
-      // } else if (data.user.role === "patient") {
-      //   router.push("/admin/patient");
-      // }
-      router.replace("/");
+      if (data.user.role === "doctor") {
+        router.push("/admin/doctor");
+      } else if (data.user.role === "patient") {
+        router.push("/admin/patient");
+      }
+
       console.log("api data", data);
     } catch (err: any) {
       console.error("Login error:", err);
