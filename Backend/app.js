@@ -8,7 +8,7 @@ import doctorDashboardDataRoute from "./routes/doctorDashboardData.js";
 
 dotenv.config();
 const app = express();
-connectDB();
+await connectDB();
 
 // Allowed Origins
 const allowedOrigins = [
