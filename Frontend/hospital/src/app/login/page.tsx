@@ -3,7 +3,6 @@
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import axios from "axios";
-import { startTransition } from "react";
 
 export default function Login() {
   const router = useRouter();
@@ -61,7 +60,6 @@ export default function Login() {
   // };
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
     try {
       const { data } = await axios.post(
         `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/login`,
@@ -71,16 +69,19 @@ export default function Login() {
 
       console.log("api data", data);
 
-      startTransition(() => {
-        if (data.user.role === "doctor") router.push("/admin/doctor");
-        else if (data.user.role === "patient") router.push("/admin/patient");
-      });
-    } catch (error: any) {
-      console.error("Login error:", error);
-      const errorMessage = error.response?.data?.message || "Login failed";
-      alert(errorMessage);
+      // // Direct redirect without startTransition
+      // if (data.user.role === "doctor") {
+      //   router.push("/admin/doctor");
+      // } else if (data.user.role === "patient") {
+      //   router.push("/admin/patient");
+      // }
+      router.push("/admin/patient");
+    } catch (err: any) {
+      console.error("Login error:", err);
+      alert(err.response?.data?.message || "Login failed");
     }
   };
+
   return (
     <div className="flex justify-center items-center min-h-screen bg-gradient-to-br from-green-50 to-blue-50">
       <div className="bg-white rounded-2xl shadow-lg p-8 w-[90%] max-w-md">
