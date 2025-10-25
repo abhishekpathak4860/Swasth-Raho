@@ -1,4 +1,5 @@
 "use client";
+
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import axios from "axios";
@@ -59,6 +60,7 @@ export default function Login() {
   // };
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
     try {
       const { data } = await axios.post(
         `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/login`,
@@ -68,11 +70,12 @@ export default function Login() {
 
       console.log("api data", data);
 
-      // Use setTimeout to ensure cookie is set before redirect (optional)
-      setTimeout(() => {
-        if (data.user.role === "doctor") router.push("/admin/doctor");
-        else if (data.user.role === "patient") router.push("/admin/patient");
-      }, 50);
+      // Redirect immediately
+      if (data.user.role === "doctor") {
+        router.push("/admin/doctor");
+      } else if (data.user.role === "patient") {
+        router.push("/admin/patient");
+      }
     } catch (error: any) {
       console.error("Login error:", error);
       const errorMessage = error.response?.data?.message || "Login failed";
