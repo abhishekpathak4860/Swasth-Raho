@@ -10,6 +10,14 @@ const nextConfig = {
   eslint: {
     ignoreDuringBuilds: true, // Ignore ESLint issues during production build
   },
+    async rewrites() {
+    return [
+      {
+        source: "/api/:path*",
+        destination: "https://swasth-raho.onrender.com/api/:path*",
+      },
+    ];
+  },
 };
 
 export default nextConfig;

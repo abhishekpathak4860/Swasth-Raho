@@ -58,11 +58,12 @@ export default function Login() {
   //     alert("Something went wrong!");
   //   }
   // };
+  // ${process.env.NEXT_PUBLIC_BACKEND_URL}
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
       const { data } = await axios.post(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/login`,
+        `/api/login`,
         { ...formData, role },
         { withCredentials: true }
       );

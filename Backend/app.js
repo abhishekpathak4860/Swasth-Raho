@@ -9,7 +9,7 @@ import doctorDashboardDataRoute from "./routes/doctorDashboardData.js";
 
 dotenv.config();
 const app = express();
-await connectDB();
+
 const PORT = process.env.PORT || 5000;
 
 app.use(express.json());
@@ -40,6 +40,7 @@ app.use((err, req, res, next) => {
   res.status(500).json({ message: "Internal Server Error" });
 });
 
+await connectDB();
 // export default app;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
