@@ -51,6 +51,22 @@
 const nextConfig = {
   eslint: { ignoreDuringBuilds: true },
   async rewrites() {
+        if (process.env.NODE_ENV === "development") {
+      return [  {
+        source: "/api/:path*",
+        destination: "http://localhost:5000/api/:path*",
+      },
+       {
+        source: "/patient/:path*",
+        destination: "http://localhost:5000/patient/:path*",
+      },
+        {
+        source: "/doctor/:path*",
+        destination: "http://localhost:5000/doctor/:path*",
+      },];
+
+}
+
     return [
       {
         source: "/api/:path*",

@@ -79,7 +79,7 @@ export default function Appointments() {
   const handleLogout = async () => {
     try {
       const res = await axios.post(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/logout`,
+        `/api/logout`,
         {},
         { withCredentials: true }
       );
@@ -131,7 +131,7 @@ export default function Appointments() {
 
   const getReports = async () => {
     const res = await axios.get(
-      `${process.env.NEXT_PUBLIC_BACKEND_URL}/patient/get-reports`,
+      `/patient/get-reports`,
       { withCredentials: true }
     );
     setReportsData(res.data.reports);
@@ -248,7 +248,7 @@ Next Appointment: ${selectedReport.nextAppointment}
     try {
       e.preventDefault();
       const res = await axios.post(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/patient/appointment`,
+        `/patient/appointment`,
         formData,
         {
           withCredentials: true,
@@ -268,7 +268,7 @@ Next Appointment: ${selectedReport.nextAppointment}
     try {
       e.preventDefault();
       const res = await axios.patch(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/patient/UpdateAppointment/${formData.appointmentId}`,
+        `/patient/UpdateAppointment/${formData.appointmentId}`,
         formData,
         { withCredentials: true }
       );
@@ -298,7 +298,7 @@ Next Appointment: ${selectedReport.nextAppointment}
   useEffect(() => {
     const fetchDoctorData = async () => {
       try {
-        const res = await axios.get(`${process.env.NEXT_PUBLIC_BACKEND_URL}/patient/doctors`, {
+        const res = await axios.get(`/patient/doctors`, {
           withCredentials: true, // send cookies
         });
         setDoctorsData(res.data.doctor);
@@ -312,7 +312,7 @@ Next Appointment: ${selectedReport.nextAppointment}
   const fetchAppointmentData = async () => {
     try {
       const res = await axios.get(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/patient/get-appointments`,
+        `/patient/get-appointments`,
         {
           withCredentials: true,
         }
@@ -347,7 +347,7 @@ Next Appointment: ${selectedReport.nextAppointment}
   const deleteAppointment = async (id: any) => {
     try {
       const res = await axios.delete(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/patient/cancel-appointment/${id}`,
+        `/patient/cancel-appointment/${id}`,
         {
           withCredentials: true,
         }

@@ -242,7 +242,7 @@ export default function Reports() {
 
   const getReports = async () => {
     const res = await axios.get(
-      `${process.env.NEXT_PUBLIC_BACKEND_URL}/patient/get-reports`,
+      `/patient/get-reports`,
       { withCredentials: true }
     );
     setReportsData(res.data.reports);
@@ -437,7 +437,7 @@ Swasth-Raho Medical Center
   const handleLogout = async () => {
     try {
       await axios.post(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/logout`,
+        `/api/logout`,
         {},
         { withCredentials: true }
       );

@@ -83,7 +83,7 @@ export default function Doctors() {
   const handleLogout = async () => {
     try {
       const res = await axios.post(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/logout`,
+        `/api/logout`,
         {},
         { withCredentials: true }
       );
@@ -129,13 +129,9 @@ export default function Doctors() {
   const handleSubmit = async (e: { preventDefault: () => void }) => {
     try {
       e.preventDefault();
-      const res = await axios.post(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/patient/appointment`,
-        formData,
-        {
-          withCredentials: true,
-        }
-      );
+      const res = await axios.post(`/patient/appointment`, formData, {
+        withCredentials: true,
+      });
       setShowBookingForm(false);
       setFormData({
         doc_id: "",
@@ -155,9 +151,12 @@ export default function Doctors() {
   useEffect(() => {
     const fetchDoctorData = async () => {
       try {
-        const res = await axios.get(`${process.env.NEXT_PUBLIC_BACKEND_URL}/patient/doctors`, {
-          withCredentials: true, // send cookies
-        });
+        const res = await axios.get(
+          `/patient/doctors`,
+          {
+            withCredentials: true, // send cookies
+          }
+        );
         setDoctorsData(res.data.doctor);
       } catch (error) {
         console.error("Error fetching profile:", error);

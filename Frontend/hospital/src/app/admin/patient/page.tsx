@@ -59,7 +59,7 @@ export default function PatientDashboard() {
     e.preventDefault();
     try {
       const res = await axios.patch(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/patient/update-profile`,
+        `/patient/update-profile`,
         editUserDetails,
         { withCredentials: true }
       );
@@ -77,7 +77,7 @@ export default function PatientDashboard() {
     setShowEditModal(false);
     setEditUserDetails(null);
   };
-  //${process.env.NEXT_PUBLIC_BACKEND_URL}
+  
   useEffect(() => {
     const fetchProfile = async () => {
       try {
@@ -96,7 +96,7 @@ export default function PatientDashboard() {
   const handleLogout = async () => {
     try {
       const res = await axios.post(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/logout`,
+        `/api/logout`,
         {},
         { withCredentials: true }
       );

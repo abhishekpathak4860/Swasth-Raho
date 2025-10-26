@@ -58,7 +58,7 @@ export default function Register() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const apiUrl = `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/register`;
+      const apiUrl = `/api/register`;
       const data = role === "doctor" ? formDataDoctor : formDataPatient;
       const res = await axios.post(apiUrl, data);
       // alert(res.data.message);
