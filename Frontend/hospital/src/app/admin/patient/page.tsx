@@ -77,15 +77,13 @@ export default function PatientDashboard() {
     setShowEditModal(false);
     setEditUserDetails(null);
   };
+  //${process.env.NEXT_PUBLIC_BACKEND_URL}
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        const res = await axios.get(
-          `${process.env.NEXT_PUBLIC_BACKEND_URL}/patient/profile`,
-          {
-            withCredentials: true, // send cookies
-          }
-        );
+        const res = await axios.get(`/patient/profile`, {
+          withCredentials: true, // send cookies
+        });
         setUser(res.data.patient);
       } catch (error) {
         console.error("Error fetching profile:", error);
