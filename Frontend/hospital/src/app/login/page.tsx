@@ -74,8 +74,6 @@ export default function Login() {
       } else if (data.user.role === "patient") {
         router.push("/admin/patient");
       }
-
-      console.log("api data", data);
     } catch (err: any) {
       console.error("Login error:", err);
       alert(err.response?.data?.message || "Login failed");
