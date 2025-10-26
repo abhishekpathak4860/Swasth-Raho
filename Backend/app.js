@@ -19,7 +19,7 @@ app.use(cookieParser());
 // Allowed Origins
 app.use(
   cors({
-    origin: "https://swasth-raho-9ehr.vercel.app", // your frontend URL
+    origin: ["https://swasth-raho-9ehr.vercel.app", "http://localhost:3000"], // your frontend URL
     credentials: true,
   })
 );
