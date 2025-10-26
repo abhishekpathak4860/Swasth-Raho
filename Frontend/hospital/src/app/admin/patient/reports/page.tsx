@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import axios from "axios";
+import Footer from "../../../../components/Footer";
 
 export default function Reports() {
   const [activeTab, setActiveTab] = useState("reports");
@@ -241,10 +242,9 @@ export default function Reports() {
   // ];
 
   const getReports = async () => {
-    const res = await axios.get(
-      `/patient/get-reports`,
-      { withCredentials: true }
-    );
+    const res = await axios.get(`/patient/get-reports`, {
+      withCredentials: true,
+    });
     setReportsData(res.data.reports);
     setFilteredReports(res.data.reports);
   };
@@ -436,11 +436,7 @@ Swasth-Raho Medical Center
 
   const handleLogout = async () => {
     try {
-      await axios.post(
-        `/api/logout`,
-        {},
-        { withCredentials: true }
-      );
+      await axios.post(`/api/logout`, {}, { withCredentials: true });
       window.location.href = "/login";
     } catch (error) {
       console.error("Error logging out:", error);
@@ -459,141 +455,153 @@ Swasth-Raho Medical Center
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
-      {/* Sidebar */}
-      <div
-        className={`bg-white shadow-lg transition-all duration-300 ${
-          isSidebarOpen ? "w-64" : "w-20"
-        } md:w-64 flex-shrink-0 fixed h-full z-40`}
+    <div className="min-h-screen bg-gray-50">
+      {/* Mobile overlay sidebar */}
+      {isSidebarOpen && (
+        <div
+          className="fixed inset-0 bg-black/40 z-40 md:hidden"
+          onClick={() => setIsSidebarOpen(false)}
+        ></div>
+      )}
+
+      {/* Mobile Sidebar Drawer */}
+      <aside
+        className={`fixed top-0 left-0 z-50 h-full w-64 bg-white shadow-lg transform transition-transform md:hidden ${
+          isSidebarOpen ? "translate-x-0" : "-translate-x-full"
+        }`}
       >
-        <div className="p-4 border-b border-gray-200">
+        <div className="p-4 border-b border-gray-200 flex items-center justify-between">
           <div className="flex items-center">
             <div className="w-10 h-10 bg-gradient-to-r from-blue-600 to-green-600 rounded-full flex items-center justify-center">
               <span className="text-white font-bold text-xl">S</span>
             </div>
-            <div
-              className={`ml-3 ${isSidebarOpen ? "block" : "hidden"} md:block`}
-            >
+            <div className="ml-3">
               <h1 className="text-xl font-bold text-gray-800">Swasth-Raho</h1>
               <p className="text-sm text-gray-500">Patient Portal</p>
             </div>
           </div>
+          <button
+            className="p-2 rounded-md hover:bg-gray-100"
+            onClick={() => setIsSidebarOpen(false)}
+          >
+            ✕
+          </button>
         </div>
-
-        {/* Navigation Menu */}
-        <nav className="mt-8">
+        <nav className="mt-6 px-2">
           {sidebarItems.map((item) => (
             <Link
               key={item.id}
               href={item.route}
-              className={`flex items-center px-4 py-3 mx-2 rounded-lg transition-colors ${
+              className={`flex items-center px-3 py-3 rounded-lg transition-colors ${
                 activeTab === item.id
-                  ? "bg-blue-50 text-blue-600 border-r-4 border-blue-600"
+                  ? "bg-blue-50 text-blue-600"
                   : "text-gray-700 hover:bg-gray-50"
               }`}
-              onClick={() => setActiveTab(item.id)}
+              onClick={() => {
+                setActiveTab(item.id);
+                setIsSidebarOpen(false);
+              }}
             >
-              {/* <span className="text-2xl">{item.icon}</span> */}
-              <span
-                className={`ml-3 font-medium ${
-                  isSidebarOpen ? "block" : "hidden"
-                } md:block`}
-              >
-                {item.label}
-              </span>
+              {/* <span className="text-lg">{item.icon}</span> */}
+              <span className="ml-3 font-medium">{item.label}</span>
             </Link>
           ))}
         </nav>
-
-        {/* Logout Button */}
         <div className="absolute bottom-4 left-4 right-4">
           <button
-            onClick={handleLogout}
             className="w-full flex items-center px-4 py-3 text-gray-700 hover:bg-red-50 hover:text-red-600 rounded-lg transition-colors"
+            onClick={handleLogout}
           >
-            <span
-              className={`ml-3 font-medium ${
-                isSidebarOpen ? "block" : "hidden"
-              } md:block`}
-            >
-              Logout
-            </span>
+            {/* <span className="text-2xl">🚪</span> */}
+            <span className="ml-3 font-medium">Logout</span>
           </button>
         </div>
-      </div>
+      </aside>
 
-      {/* Main Content */}
-      <div
-        className={`flex-1 flex flex-col ${
-          isSidebarOpen ? "ml-64" : "ml-20"
-        } md:ml-64`}
-      >
-        {/* Header */}
-        <header
-          className="bg-white shadow-sm border-b border-gray-200 px-6 py-4 fixed w-full z-30"
-          style={{
-            left: isSidebarOpen ? "256px" : "80px",
-            width: `calc(100% - ${isSidebarOpen ? "256px" : "80px"})`,
-          }}
-        >
-          <div className="flex items-center justify-between">
+      <div className="md:flex">
+        {/* Desktop Sidebar */}
+        <aside className="hidden md:flex flex-col w-64 bg-white shadow-lg transition-all duration-300 flex-shrink-0 min-h-screen overflow-y-auto">
+          <div className="p-4 border-b border-gray-200">
             <div className="flex items-center">
-              <button
-                onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-                className="md:hidden p-2 rounded-md text-gray-600 hover:bg-gray-100"
-              >
-                <svg
-                  className="w-6 h-6"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M4 6h16M4 12h16M4 18h16"
-                  />
-                </svg>
-              </button>
-              <h2 className="text-2xl font-bold text-gray-800 ml-44">
-                Medical Reports
-              </h2>
+              <div className="w-10 h-10 bg-gradient-to-r from-blue-600 to-green-600 rounded-full flex items-center justify-center">
+                <span className="text-white font-bold text-xl">S</span>
+              </div>
+              <div className="ml-3">
+                <h1 className="text-xl font-bold text-gray-800">Swasth-Raho</h1>
+                <p className="text-sm text-gray-500">Patient Portal</p>
+              </div>
             </div>
+          </div>
 
-            <div className="flex items-center space-x-4">
-              {/* Notifications */}
-              {/* <button className="relative p-2 text-gray-600 hover:bg-gray-100 rounded-full">
-                <svg
-                  className="w-6 h-6"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
+          <nav className="mt-8 flex-1 px-2">
+            {sidebarItems.map((item) => (
+              <Link
+                key={item.id}
+                href={item.route}
+                className={`flex items-center px-4 py-3 mx-2 rounded-lg transition-colors ${
+                  activeTab === item.id
+                    ? "bg-blue-50 text-blue-600 border-r-4 border-blue-600"
+                    : "text-gray-700 hover:bg-gray-50"
+                }`}
+                onClick={() => setActiveTab(item.id)}
+              >
+                <span className="text-2xl">{item.icon}</span>
+                <span className="ml-3 font-medium">{item.label}</span>
+              </Link>
+            ))}
+          </nav>
+
+          <div className="p-4">
+            <button
+              className="w-full flex items-center px-4 py-3 text-gray-700 hover:bg-red-50 hover:text-red-600 rounded-lg transition-colors"
+              onClick={handleLogout}
+            >
+              <span className="text-2xl">🚪</span>
+              <span className="ml-3 font-medium">Logout</span>
+            </button>
+          </div>
+        </aside>
+
+        {/* Main Content */}
+        <div className="flex-1 flex flex-col">
+          {/* Header */}
+          <header className="bg-white shadow-sm border-b border-gray-200 px-4 md:px-6 py-3 sticky top-0 z-30">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center">
+                <button
+                  onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+                  className="md:hidden p-2 rounded-md text-gray-600 hover:bg-gray-100"
                 >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M15 17h5l-3.405-3.405A9.037 9.037 0 0118 9c0-4.418-3.582-8-8-8S2 4.582 2 9c0 1.847.56 3.564 1.521 4.992L6 17h4m0 0v1a3 3 0 106 0v-1m-6 0h6"
-                  />
-                </svg>
-                <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
-                  3
-                </span>
-              </button> */}
+                  <svg
+                    className="w-6 h-6"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M4 6h16M4 12h16M4 18h16"
+                    />
+                  </svg>
+                </button>
+                <h2 className="text-lg md:text-2xl font-bold text-gray-800 ml-2">
+                  Medical Reports
+                </h2>
+              </div>
 
-              {/* Profile */}
               <div className="flex items-center space-x-3">
                 <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center">
                   <span className="text-white font-semibold">
                     {user?.name
-                      .split(" ")
+                      ?.split(" ")
                       .map((ch: any) => ch[0]?.toUpperCase())
                       .join("")
                       .slice(0, 2)}
                   </span>
                 </div>
-                <div className="hidden md:block">
+                <div className="hidden md:block text-right">
                   <p className="text-sm font-medium text-gray-800">
                     {user?.name}
                   </p>
@@ -601,233 +609,274 @@ Swasth-Raho Medical Center
                 </div>
               </div>
             </div>
-          </div>
-        </header>
+          </header>
 
-        {/* Main Content Area */}
-        <main className="flex-1 p-6 mt-20 overflow-y-auto">
-          {/* Summary Cards */}
-          <div className="grid md:grid-cols-4 gap-6 mb-6">
-            <div className="bg-blue-50 border border-blue-200 rounded-xl p-6">
-              <div className="flex items-center">
-                <div className="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center">
-                  <span className="text-white text-xl">📊</span>
+          {/* Main Content Area */}
+          <main className="flex-1 p-6 mt-2 overflow-y-auto">
+            {/* Summary Cards */}
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-6 mb-6">
+              <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 md:p-6">
+                <div className="flex items-center">
+                  <div className="w-10 h-10 md:w-12 md:h-12 bg-blue-600 rounded-full flex items-center justify-center">
+                    <span className="text-white text-lg md:text-xl">📊</span>
+                  </div>
+                  <div className="ml-3 md:ml-4">
+                    <p className="text-xs md:text-sm text-blue-600 font-medium">
+                      Total Reports
+                    </p>
+                    <p className="text-lg md:text-2xl font-bold text-blue-800">
+                      {reportsData.length}
+                    </p>
+                  </div>
                 </div>
-                <div className="ml-4">
-                  <p className="text-sm text-blue-600 font-medium">
-                    Total Reports
-                  </p>
-                  <p className="text-2xl font-bold text-blue-800">
-                    {reportsData.length}
-                  </p>
+              </div>
+
+              <div className="bg-green-50 border border-green-200 rounded-xl p-4 md:p-6">
+                <div className="flex items-center">
+                  <div className="w-10 h-10 md:w-12 md:h-12 bg-green-600 rounded-full flex items-center justify-center">
+                    <span className="text-white text-lg md:text-xl">📅</span>
+                  </div>
+                  <div className="ml-3 md:ml-4">
+                    <p className="text-xs md:text-sm text-green-600 font-medium">
+                      Latest Report
+                    </p>
+                    <p className="text-sm md:text-lg font-bold text-green-800">
+                      {reportsData[0]?.date || "N/A"}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-purple-50 border border-purple-200 rounded-xl p-4 md:p-6">
+                <div className="flex items-center">
+                  <div className="w-10 h-10 md:w-12 md:h-12 bg-purple-600 rounded-full flex items-center justify-center">
+                    <span className="text-white text-lg md:text-xl">👨‍⚕️</span>
+                  </div>
+                  <div className="ml-3 md:ml-4">
+                    <p className="text-xs md:text-sm text-purple-600 font-medium">
+                      Doctors
+                    </p>
+                    <p className="text-lg md:text-2xl font-bold text-purple-800">
+                      {uniqueDoctors.length}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-orange-50 border border-orange-200 rounded-xl p-4 md:p-6">
+                <div className="flex items-center">
+                  <div className="w-10 h-10 md:w-12 md:h-12 bg-orange-600 rounded-full flex items-center justify-center">
+                    <span className="text-white text-lg md:text-xl">🔬</span>
+                  </div>
+                  <div className="ml-3 md:ml-4">
+                    <p className="text-xs md:text-sm text-orange-600 font-medium">
+                      Report Types
+                    </p>
+                    <p className="text-lg md:text-2xl font-bold text-orange-800">
+                      {uniqueReportTypes.length}
+                    </p>
+                  </div>
                 </div>
               </div>
             </div>
 
-            <div className="bg-green-50 border border-green-200 rounded-xl p-6">
-              <div className="flex items-center">
-                <div className="w-12 h-12 bg-green-600 rounded-full flex items-center justify-center">
-                  <span className="text-white text-xl">📅</span>
-                </div>
-                <div className="ml-4">
-                  <p className="text-sm text-green-600 font-medium">
-                    Latest Report
-                  </p>
-                  <p className="text-lg font-bold text-green-800">
-                    {reportsData[0]?.date || "N/A"}
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-purple-50 border border-purple-200 rounded-xl p-6">
-              <div className="flex items-center">
-                <div className="w-12 h-12 bg-purple-600 rounded-full flex items-center justify-center">
-                  <span className="text-white text-xl">👨‍⚕️</span>
-                </div>
-                <div className="ml-4">
-                  <p className="text-sm text-purple-600 font-medium">
-                    Different Doctors
-                  </p>
-                  <p className="text-2xl font-bold text-purple-800">
-                    {uniqueDoctors.length}
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-orange-50 border border-orange-200 rounded-xl p-6">
-              <div className="flex items-center">
-                <div className="w-12 h-12 bg-orange-600 rounded-full flex items-center justify-center">
-                  <span className="text-white text-xl">🔬</span>
-                </div>
-                <div className="ml-4">
-                  <p className="text-sm text-orange-600 font-medium">
-                    Report Types
-                  </p>
-                  <p className="text-2xl font-bold text-orange-800">
-                    {uniqueReportTypes.length}
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Filters */}
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
-            <h3 className="text-lg font-bold text-gray-800 mb-4">
-              Filter Reports
-            </h3>
-            <div className="grid md:grid-cols-4 gap-4">
-              {" "}
-              {/* CHANGED: Updated grid to 4 columns */}
-              {/* Doctor Filter */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Filter by Doctor
-                </label>
-                <select
-                  value={selectedFilter.doctor}
-                  onChange={(e) => handleFilterChange("doctor", e.target.value)}
-                  className="text-black w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  <option className="text-gray-500 " value="all">
-                    All Doctors
-                  </option>
-                  {uniqueDoctors.map((doctor) => (
-                    <option key={doctor} value={doctor}>
-                      {doctor}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              {/* NEW: Doctor Name Search Filter - CHANGE 4: Added doctor name search input */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Search by Doctor Name
-                </label>
-                <input
-                  type="text"
-                  value={selectedFilter.doctorName}
-                  onChange={(e) =>
-                    handleFilterChange("doctorName", e.target.value)
-                  }
-                  placeholder="Type doctor name..."
-                  className="text-black w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder-gray-400"
-                />
-              </div>
-              {/* Report Type Filter */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Filter by Report Type
-                </label>
-                <select
-                  value={selectedFilter.reportType}
-                  onChange={(e) =>
-                    handleFilterChange("reportType", e.target.value)
-                  }
-                  className="text-black w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value="all">All Report Types</option>
-                  {uniqueReportTypes.map((type) => (
-                    <option key={type} value={type}>
-                      {type}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              {/* Date Range Filter */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Filter by Date Range
-                </label>
-                <select
-                  value={selectedFilter.dateRange}
-                  onChange={(e) =>
-                    handleFilterChange("dateRange", e.target.value)
-                  }
-                  className="text-black w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value="all">All Time</option>
-                  <option value="lastWeek">Last Week</option>
-                  <option value="lastMonth">Last Month</option>
-                  <option value="last3Months">Last 3 Months</option>
-                </select>
-              </div>
-            </div>
-          </div>
-          {/* Reports Table */}
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-            <div className="px-6 py-4 border-b border-gray-200">
-              <h3 className="text-xl font-bold text-gray-800">
-                📋 Your Medical Reports
+            {/* Filters */}
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 md:p-6 mb-6">
+              <h3 className="text-lg font-bold text-gray-800 mb-4">
+                Filter Reports
               </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                {/* Doctor Filter */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Filter by Doctor
+                  </label>
+                  <select
+                    value={selectedFilter.doctor}
+                    onChange={(e) =>
+                      handleFilterChange("doctor", e.target.value)
+                    }
+                    className="text-black w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option className="text-gray-500" value="all">
+                      All Doctors
+                    </option>
+                    {uniqueDoctors.map((doctor) => (
+                      <option key={doctor} value={doctor}>
+                        {doctor}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                {/* Doctor Name Search */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Search by Doctor Name
+                  </label>
+                  <input
+                    type="text"
+                    value={selectedFilter.doctorName}
+                    onChange={(e) =>
+                      handleFilterChange("doctorName", e.target.value)
+                    }
+                    placeholder="Type doctor name..."
+                    className="text-black w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder-gray-400"
+                  />
+                </div>
+                {/* Report Type Filter */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Filter by Report Type
+                  </label>
+                  <select
+                    value={selectedFilter.reportType}
+                    onChange={(e) =>
+                      handleFilterChange("reportType", e.target.value)
+                    }
+                    className="text-black w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="all">All Report Types</option>
+                    {uniqueReportTypes.map((type) => (
+                      <option key={type} value={type}>
+                        {type}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                {/* Date Range Filter */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Filter by Date Range
+                  </label>
+                  <select
+                    value={selectedFilter.dateRange}
+                    onChange={(e) =>
+                      handleFilterChange("dateRange", e.target.value)
+                    }
+                    className="text-black w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="all">All Time</option>
+                    <option value="lastWeek">Last Week</option>
+                    <option value="lastMonth">Last Month</option>
+                    <option value="last3Months">Last 3 Months</option>
+                  </select>
+                </div>
+              </div>
             </div>
+            {/* Reports Table */}
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+              <div className="px-4 md:px-6 py-4 border-b border-gray-200">
+                <h3 className="text-lg md:text-xl font-bold text-gray-800">
+                  📋 Your Medical Reports
+                </h3>
+              </div>
 
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Date
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Doctor
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Department
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Report Type
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Status
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Actions
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {filteredReports.map((report) => (
-                    <tr
-                      key={report._id}
-                      className="hover:bg-gray-50 transition-colors"
-                    >
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {report.date}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {report.doc_name}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {report.department}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {report.disease}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span
-                          className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full border ${getStatusBadge(
-                            report.status
-                          )}`}
-                        >
-                          {report.status === "completed" ? "" : "⏳"}{" "}
-                          {report.status.toUpperCase()}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                        <button
-                          onClick={() => downloadReport(report)}
-                          className="cursor-pointer px-3 py-1 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors"
-                        >
-                          Download
-                        </button>
-                      </td>
+              {/* Desktop Table */}
+              <div className="hidden md:block overflow-x-auto">
+                <table className="w-full">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Date
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Doctor
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Department
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Report Type
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Status
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Actions
+                      </th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {filteredReports.map((report) => (
+                      <tr
+                        key={report._id}
+                        className="hover:bg-gray-50 transition-colors"
+                      >
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          {report.date}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          {report.doc_name}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          {report.department}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          {report.disease}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <span
+                            className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full border ${getStatusBadge(
+                              report.status
+                            )}`}
+                          >
+                            {report.status === "completed" ? "" : "⏳"}{" "}
+                            {report.status.toUpperCase()}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                          <button
+                            onClick={() => downloadReport(report)}
+                            className="cursor-pointer px-3 py-1 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors"
+                          >
+                            Download
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Mobile Cards View */}
+              <div className="md:hidden divide-y divide-gray-200">
+                {filteredReports.map((report) => (
+                  <div key={report._id} className="p-4 hover:bg-gray-50">
+                    <div className="flex justify-between items-start mb-2">
+                      <div>
+                        <h4 className="font-medium text-gray-900">
+                          {report.doc_name}
+                        </h4>
+                        <p className="text-sm text-gray-500">{report.date}</p>
+                      </div>
+                      <span
+                        className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full border ${getStatusBadge(
+                          report.status
+                        )}`}
+                      >
+                        {report.status === "completed" ? "" : "⏳"}{" "}
+                        {report.status.toUpperCase()}
+                      </span>
+                    </div>
+                    <div className="space-y-1 mb-3">
+                      <p className="text-sm text-gray-600">
+                        <span className="font-medium">Department:</span>{" "}
+                        {report.department}
+                      </p>
+                      <p className="text-sm text-gray-600">
+                        <span className="font-medium">Report Type:</span>{" "}
+                        {report.disease}
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => downloadReport(report)}
+                      className="w-full cursor-pointer px-3 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors"
+                    >
+                      Download Report
+                    </button>
+                  </div>
+                ))}
+              </div>
 
               {filteredReports.length === 0 && (
                 <div className="text-center py-12">
@@ -841,14 +890,17 @@ Swasth-Raho Medical Center
                 </div>
               )}
             </div>
-          </div>
-        </main>
+          </main>
+        </div>
       </div>
 
       {/* Floating AI Chat Button */}
       <button className="fixed bottom-6 right-6 w-14 h-14 bg-gradient-to-r from-blue-600 to-green-600 text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center z-50">
         <span className="text-2xl">💬</span>
       </button>
+      <div className="block md:hidden">
+        <Footer />
+      </div>
     </div>
   );
 }

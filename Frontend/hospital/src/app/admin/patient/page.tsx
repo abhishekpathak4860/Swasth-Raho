@@ -112,9 +112,7 @@ export default function PatientDashboard() {
 
   return (
     <div
-      className={`min-h-screen bg-gray-50 ${
-        showEditModal ? "overflow-hidden" : ""
-      }`}
+      className={`h-full bg-gray-50 ${showEditModal ? "overflow-hidden" : ""}`}
     >
       {/* Mobile overlay sidebar */}
       {isSidebarOpen && (
@@ -162,7 +160,7 @@ export default function PatientDashboard() {
                 setIsSidebarOpen(false);
               }}
             >
-              <span className="text-lg">{item.icon}</span>
+              {/* <span className="text-lg">{item.icon}</span> */}
               <span className="ml-3 font-medium">{item.label}</span>
             </Link>
           ))}
@@ -172,7 +170,7 @@ export default function PatientDashboard() {
             className="w-full flex items-center px-4 py-3 text-gray-700 hover:bg-red-50 hover:text-red-600 rounded-lg transition-colors"
             onClick={handleLogout}
           >
-            <span className="text-2xl">🚪</span>
+            {/* <span className="text-2xl">🚪</span> */}
             <span className="ml-3 font-medium">Logout</span>
           </button>
         </div>
@@ -181,9 +179,10 @@ export default function PatientDashboard() {
       <div className="md:flex">
         {/* Desktop Sidebar */}
         <aside
-          className={`hidden md:flex flex-col w-64 bg-white shadow-lg transition-all duration-300 flex-shrink-0 ${
+          className={`hidden md:flex flex-col w-64 bg-white shadow-lg transition-all duration-300 flex-shrink-0 min-h-screen overflow-y-auto ${
             showEditModal ? "blur-sm" : ""
           }`}
+          style={{ top: 0 }}
         >
           <div className="p-4 border-b border-gray-200">
             <div className="flex items-center">
