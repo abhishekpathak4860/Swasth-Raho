@@ -41,7 +41,7 @@ app.use((err, req, res, next) => {
 });
 
 await connectDB();
-// export default app;
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
+export default app;
+// app.listen(PORT, () => {
+//   console.log(`Server running on port ${PORT}`);
+// });
