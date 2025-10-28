@@ -14,7 +14,7 @@ export async function middleware(req: NextRequest) {
   }
 
   const token = req.cookies.get("token")?.value;
-  console.log("value",token)
+  // console.log("value",token)
 
   // If no token, redirect to login
   if (!token) {
@@ -42,6 +42,23 @@ export async function middleware(req: NextRequest) {
       }
       return NextResponse.next();
     }
+    
+    if (role === "hospital_admin") {
+      // if user is on /admin or invalid section, redirect to /admin/doctor
+      if (path === "/admin") {
+        return NextResponse.redirect(new URL("/admin/hospitalAdmin", req.url));
+      }
+      return NextResponse.next();
+    }
+
+    if (role === "super_admin") {
+      // if user is on /admin or invalid section, redirect to /admin/doctor
+      if (path === "/admin") {
+        return NextResponse.redirect(new URL("/admin/superAdmin", req.url));
+      }
+      return NextResponse.next();
+    }
+
 
     // if role is invalid or not matched
     return NextResponse.redirect(new URL("/login", req.url));

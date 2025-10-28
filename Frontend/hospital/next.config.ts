@@ -63,7 +63,11 @@ const nextConfig = {
         {
         source: "/doctor/:path*",
         destination: "http://localhost:5000/doctor/:path*",
-      },];
+      },
+       {
+        source: "/hospital/:path*",
+        destination: "http://localhost:5000/hospital/:path*",
+      }];
 
 }
 
@@ -80,8 +84,12 @@ const nextConfig = {
         source: "/doctor/:path*",
         destination: "https://swasth-raho-qd56.vercel.app/doctor/:path*",
       },
+          {
+        source: "/hospital/:path*",
+        destination: "https://swasth-raho-qd56.vercel.app/hospital/:path*",
+      },
     ];
   },
 };
-
+// /hospital
 export default nextConfig;

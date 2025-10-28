@@ -6,6 +6,7 @@ import connectDB from "./config/DB.js";
 import registerRoute from "./routes/registerRoute.js";
 import patientDashboardDataRoute from "./routes/patientDashboardData.js";
 import doctorDashboardDataRoute from "./routes/doctorDashboardData.js";
+import hospitalDashboardDataRoute from "./routes/hospitalDashboardDataRoute.js";
 
 dotenv.config();
 const app = express();
@@ -33,7 +34,8 @@ app.get("/", (req, res) => {
 app.use("/api", registerRoute);
 app.use("/patient", patientDashboardDataRoute);
 app.use("/doctor", doctorDashboardDataRoute);
-
+app.use("/hospital", hospitalDashboardDataRoute);
+// /hospital/get-hospitalData
 // Global error handler
 app.use((err, req, res, next) => {
   console.error(err);

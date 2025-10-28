@@ -12,20 +12,10 @@ const doctorSchema = new mongoose.Schema({
   education: { type: String, required: true },
   hospital: { type: String, required: true },
   consultationFee: { type: String, required: true },
+  Total_Revenue: { type: Number, required: true },
+  patient_ids: { type: [String], required: true },
+  hospital_id: { type: String, required: true },
 });
 
 const Doctor = mongoose.model("Doctor", doctorSchema);
 export default Doctor;
-// {
-//   id: 1,
-//   name: "Dr. Amit Sharma",
-//   specialization: "Cardiologist",
-//   experience: "15 years",
-//   rating: 4.8,
-//   image: "👨‍⚕️",
-//   contact: "+91 98765 43210",
-//   education: "MBBS, MD Cardiology",
-//   hospital: "Heart Care Centre",
-//   availability: "Mon-Fri: 9AM-5PM",
-//   consultationFee: "₹1500",
-// },

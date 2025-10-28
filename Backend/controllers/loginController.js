@@ -2,13 +2,21 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import Doctor from "../models/Doctor.js";
 import Patient from "../models/Patient.js";
+import HospitalAdmin from "../models/HospitalAdmin.js";
+import SuperAdmin from "../models/SuperAdmin.js";
 
 export const loginUser = async (req, res) => {
   try {
     const { email, password, role } = req.body;
 
     // Check role validity
-    if (!role || (role !== "doctor" && role !== "patient")) {
+    if (
+      !role ||
+      (role !== "doctor" &&
+        role !== "patient" &&
+        role !== "hospital_admin" &&
+        role !== "super_admin")
+    ) {
       return res.status(400).json({ message: "Invalid role selected" });
     }
 
@@ -18,6 +26,10 @@ export const loginUser = async (req, res) => {
       user = await Doctor.findOne({ email });
     } else if (role === "patient") {
       user = await Patient.findOne({ email });
+    } else if (role === "hospital_admin") {
+      user = await HospitalAdmin.findOne({ email });
+    } else if (role === "super_admin") {
+      user = await SuperAdmin.findOne({ email });
     }
 
     if (!user) {
