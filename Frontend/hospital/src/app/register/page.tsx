@@ -121,6 +121,7 @@ export default function Register() {
       console.log(error);
     }
   };
+
   useEffect(() => {
     fetchHospitalData();
   }, []);

@@ -35,7 +35,7 @@ app.use("/api", registerRoute);
 app.use("/patient", patientDashboardDataRoute);
 app.use("/doctor", doctorDashboardDataRoute);
 app.use("/hospital", hospitalDashboardDataRoute);
-// /hospital/get-hospitalData
+
 // Global error handler
 app.use((err, req, res, next) => {
   console.error(err);
