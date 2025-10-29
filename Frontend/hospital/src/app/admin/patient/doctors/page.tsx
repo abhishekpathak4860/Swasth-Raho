@@ -60,6 +60,12 @@ export default function Doctors() {
       route: "/admin/patient/reports",
     },
     {
+      id: "hospitals",
+      label: "Hospitals",
+      icon: "💬",
+      route: "/admin/patient/hospitals",
+    },
+    {
       id: "chat",
       label: "AI Assistant",
       icon: "💬",
