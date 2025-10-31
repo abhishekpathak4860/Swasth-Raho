@@ -86,7 +86,7 @@ const nextConfig = {
         destination: "https://swasth-raho-qd56.vercel.app/doctor/:path*",
       },
           {
-        source: "/hospital/:path*",
+        source: "/api/hospital/:path*",
         destination: "https://swasth-raho-qd56.vercel.app/hospital/:path*",
       },
     ];
