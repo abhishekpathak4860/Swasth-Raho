@@ -30,11 +30,18 @@ export default function Header() {
             About
           </Link>
           <Link
+            href="/hospitals"
+            className="text-gray-700 hover:text-blue-600 transition font-medium"
+          >
+            Our Hospitals
+          </Link>
+          <Link
             href="/contact"
             className="text-gray-700 hover:text-blue-600 transition font-medium"
           >
             Contact
           </Link>
+
           <div className="flex space-x-3">
             <Link href="/login">
               <button className="px-5 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-medium">

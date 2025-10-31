@@ -1,30 +1,18 @@
 "use client";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import Footer from "../../../../components/Footer";
 import axios from "axios";
-
-interface HospitalType {
-  _id: string;
-  name: string;
-  email: string;
-  hospital_name: string;
-  hospital_type: string;
-  hospital_address: string;
-  total_rooms: number;
-  ac_rooms: number;
-  non_ac_rooms: number;
-  connected_pharmacies: string[];
-  hospital_duration: string;
-  organisation_type: string;
-}
+import { HospitalAdminFormData } from "../../../register/page";
 
 export default function Hospitals() {
   const [activeTab, setActiveTab] = useState("hospitals");
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedFilter, setSelectedFilter] = useState("all");
-
+  const [hospitalsData, setHospitalsData] = useState<HospitalAdminFormData[]>(
+    []
+  );
   const handleLogout = async () => {
     try {
       const res = await axios.post(
@@ -38,65 +26,78 @@ export default function Hospitals() {
     }
   };
 
+  const fetchHospitalData = async () => {
+    try {
+      const apiUrl = `/api/hospital/get-hospitalData`;
+      const res = await axios.get(apiUrl);
+      setHospitalsData(res.data);
+      console.log(res.data);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  useEffect(() => {
+    fetchHospitalData();
+  }, []);
   // Dummy data for hospitals
-  const hospitalsData: HospitalType[] = [
-    {
-      _id: "1",
-      name: "Dr. David Anderson",
-      email: "david@hospital.com",
-      hospital_name: "City Heart Hospital",
-      hospital_type: "Cardiology",
-      hospital_address: "123 Health Avenue, Mumbai Central, Mumbai - 400008",
-      total_rooms: 50,
-      ac_rooms: 30,
-      non_ac_rooms: 20,
-      connected_pharmacies: ["MedPlus", "Apollo Pharmacy"],
-      hospital_duration: "24/7",
-      organisation_type: "private",
-    },
-    {
-      _id: "2",
-      name: "Dr. Sarah Miller",
-      email: "sarah@hospital.com",
-      hospital_name: "Mind & Brain Care Center",
-      hospital_type: "Neurology",
-      hospital_address: "456 Brain Street, Bandra West, Mumbai - 400050",
-      total_rooms: 40,
-      ac_rooms: 25,
-      non_ac_rooms: 15,
-      connected_pharmacies: ["NetMeds", "1mg"],
-      hospital_duration: "9 AM - 9 PM",
-      organisation_type: "private",
-    },
-    {
-      _id: "3",
-      name: "Dr. Rajesh Kumar",
-      email: "rajesh@hospital.com",
-      hospital_name: "Bone & Joint Specialty Hospital",
-      hospital_type: "Orthopedic",
-      hospital_address: "789 Joint Road, Andheri East, Mumbai - 400069",
-      total_rooms: 35,
-      ac_rooms: 20,
-      non_ac_rooms: 15,
-      connected_pharmacies: ["PharmEasy", "MedLife"],
-      hospital_duration: "8 AM - 10 PM",
-      organisation_type: "government",
-    },
-    {
-      _id: "4",
-      name: "Dr. Emily Johnson",
-      email: "emily@hospital.com",
-      hospital_name: "Children's Care Hospital",
-      hospital_type: "Pediatric",
-      hospital_address: "321 Kid's Lane, Powai, Mumbai - 400076",
-      total_rooms: 45,
-      ac_rooms: 30,
-      non_ac_rooms: 15,
-      connected_pharmacies: ["Apollo Pharmacy", "MedPlus"],
-      hospital_duration: "24/7",
-      organisation_type: "private",
-    },
-  ];
+  // const hospitalsData: HospitalAdminFormData[] = [
+  //   {
+  //     _id: "1",
+  //     name: "Dr. Rohan Kapoor",
+  //     email: "rohan.kapoor@citycarehospital.com",
+  //     password: "CityCare@123",
+  //     hospital_name: "CityCare Multispeciality Hospital",
+  //     hospital_type: "Multispeciality",
+  //     hospital_description:
+  //       "CityCare Multispeciality Hospital is known for its advanced healthcare facilities, experienced doctors, and 24x7 emergency care services. It offers top-notch treatment across 12 departments with state-of-the-art medical equipment.",
+  //     year_established: 2012,
+  //     hospital_address:
+  //       "22 Health Avenue, Gomti Nagar, Lucknow, Uttar Pradesh - 226010",
+  //     contact_number: "+91-9123456789",
+  //     emergency_number: "+91-9876543210",
+  //     hospital_duration: "8 AM - 10 PM",
+  //     organisation_type: "private",
+  //     total_rooms: 80,
+  //     ac_rooms: 50,
+  //     non_ac_rooms: 30,
+  //     icu_beds: 12,
+  //     ambulances: 4,
+  //     departments: [
+  //       "Cardiology",
+  //       "Neurology",
+  //       "Orthopedics",
+  //       "Pediatrics",
+  //       "Dermatology",
+  //       "ENT",
+  //     ],
+  //     lab_facilities: [
+  //       "Pathology Lab",
+  //       "MRI",
+  //       "CT Scan",
+  //       "X-Ray",
+  //       "Blood Bank",
+  //     ],
+  //     connected_pharmacies: ["Apollo Pharmacy", "MedPlus"],
+  //     payment_modes: ["Cash", "Card", "UPI", "Netbanking"],
+  //     insurance_partners: [
+  //       "Star Health",
+  //       "ICICI Lombard",
+  //       "HDFC Ergo",
+  //       "Care Health",
+  //     ],
+  //     emergency_available: true,
+  //     teleconsultation_available: true,
+  //     parking_available: true,
+  //     canteen_available: true,
+  //     accreditation: "NABH",
+  //     license_number: "UP-HSP-2025-0098",
+  //     rating: 4.6,
+  //     total_reviews: 312,
+  //     role: "hospital_admin",
+  //     Total_Revenue_Hospital: 8500000,
+  //   },
+  // ];
 
   const specializations = [
     { id: "all", name: "All Hospitals", icon: "🏥" },
@@ -287,7 +288,7 @@ export default function Hospitals() {
           {/* Main Content Area */}
           <main className="flex-1 p-4 md:p-6 overflow-y-auto bg-gray-50">
             {/* Search Section */}
-            <div className="bg-white rounded-xl shadow-lg p-4 md:p-6 mb-6">
+            <div className="bg-white text-black rounded-xl shadow-lg p-4 md:p-6 mb-6">
               <div className="max-w-4xl mx-auto">
                 <div className="relative">
                   <input
@@ -319,7 +320,7 @@ export default function Hospitals() {
                         : "bg-gray-100 text-gray-700 hover:bg-blue-50 hover:text-blue-600"
                     }`}
                   >
-                    {spec.icon} {spec.name}
+                    {spec.name}
                   </button>
                 ))}
               </div>
@@ -439,13 +440,17 @@ export default function Hospitals() {
                       </div>
                     </div>
 
-                    {/* View Doctors Button */}
-                    <button className="w-full mt-6 py-3 bg-gradient-to-r from-blue-600 to-green-600 text-white rounded-xl font-semibold hover:opacity-90 transition-all flex items-center justify-center group">
-                      <span>View Doctors</span>
-                      <span className="ml-2 transform group-hover:translate-x-1 transition-transform">
-                        →
-                      </span>
-                    </button>
+                    <div className="flex items-center justify-between  mt-6">
+                      {/* View Doctors Button */}
+                      <Link href={`/admin/patient/doctors`} className="w-full">
+                        <button className="w-full py-3 bg-linear-to-r from-blue-600 to-green-600 text-white rounded-xl font-semibold hover:opacity-90 transition-all flex items-center justify-center group">
+                          <span>View Doctors</span>
+                          <span className="ml-2 transform group-hover:translate-x-1 transition-transform">
+                            →
+                          </span>
+                        </button>
+                      </Link>
+                    </div>
                   </div>
                 </div>
               ))}

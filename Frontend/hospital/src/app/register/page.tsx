@@ -30,20 +30,40 @@ interface PatientFormData {
   role: string;
 }
 
-interface HospitalAdminFormData {
+export interface HospitalAdminFormData {
+  _id: string;
   name: string;
   email: string;
   password: string;
   hospital_name: string;
-  hospital_address: string;
   hospital_type: string;
+  hospital_description: string;
+  year_established: number | "";
+  hospital_address: string;
+  contact_number: string;
+  emergency_number: string;
+  hospital_duration: string;
+  organisation_type: "government" | "private";
   total_rooms: number | "";
   ac_rooms: number | "";
   non_ac_rooms: number | "";
+  icu_beds: number | "";
+  ambulances: number | "";
+  departments: string[];
+  lab_facilities: string[];
   connected_pharmacies: string[];
-  hospital_duration: string;
-  organisation_type: "government" | "private";
+  payment_modes: string[];
+  insurance_partners: string[];
+  emergency_available: boolean;
+  teleconsultation_available: boolean;
+  parking_available: boolean;
+  canteen_available: boolean;
+  accreditation: string;
+  license_number: string;
+  rating: number | "";
+  total_reviews: number | "";
   role: string;
+  Total_Revenue_Hospital: number;
 }
 
 interface SuperAdminFormData {
@@ -87,19 +107,39 @@ export default function Register() {
 
   const [formDataHospitalAdmin, setFormDataHospitalAdmin] =
     useState<HospitalAdminFormData>({
+      _id: "",
       name: "",
       email: "",
       password: "",
       hospital_name: "",
-      hospital_address: "",
       hospital_type: "",
-      total_rooms: "",
-      ac_rooms: "",
-      non_ac_rooms: "",
-      connected_pharmacies: [],
+      hospital_description: "",
+      year_established: "",
+      hospital_address: "",
+      contact_number: "",
+      emergency_number: "",
       hospital_duration: "",
       organisation_type: "private",
+      total_rooms: 0,
+      ac_rooms: 0,
+      non_ac_rooms: 0,
+      icu_beds: 0,
+      ambulances: 0,
+      departments: [],
+      lab_facilities: [],
+      connected_pharmacies: [],
+      payment_modes: [],
+      insurance_partners: [],
+      emergency_available: false,
+      teleconsultation_available: false,
+      parking_available: false,
+      canteen_available: false,
+      accreditation: "",
+      license_number: "",
+      rating: 0,
+      total_reviews: 0,
       role: "hospital_admin",
+      Total_Revenue_Hospital: 0,
     });
 
   const [formDataSuperAdmin, setFormDataSuperAdmin] =
@@ -113,7 +153,7 @@ export default function Register() {
   // fetch hospital data for the doctors to choose their hospital during registrations
   const fetchHospitalData = async () => {
     try {
-      const apiUrl = `/hospital/get-hospitalData`;
+      const apiUrl = `/api/hospital/get-hospitalData`;
       const res = await axios.get(apiUrl);
       setHospitalData(res.data);
       console.log(res.data);
@@ -152,6 +192,7 @@ export default function Register() {
       alert(error.response?.data?.message || "Registration failed");
     }
   };
+  // scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-200
 
   return (
     <div className="min-h-screen flex justify-center items-center bg-gradient-to-br from-[#0f2027] via-[#203a43] to-[#2c5364]">
@@ -380,76 +421,25 @@ export default function Register() {
             )}
 
             {role === "hospital_admin" && (
-              <>
-                <div>
-                  <label className="block text-gray-200 font-medium mb-1">
-                    Hospital Name
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="Enter hospital name"
-                    value={formDataHospitalAdmin.hospital_name}
-                    onChange={(e) =>
-                      setFormDataHospitalAdmin({
-                        ...formDataHospitalAdmin,
-                        hospital_name: e.target.value,
-                      })
-                    }
-                    className="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-purple-500 outline-none text-gray-200 text-sm"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-gray-200 font-medium mb-1">
-                    Hospital Address
-                  </label>
-                  <textarea
-                    placeholder="Enter complete hospital address"
-                    value={formDataHospitalAdmin.hospital_address}
-                    onChange={(e) =>
-                      setFormDataHospitalAdmin({
-                        ...formDataHospitalAdmin,
-                        hospital_address: e.target.value,
-                      })
-                    }
-                    className="w-full p-3 rounded-md bg-white/20 text-white placeholder-gray-300 focus:ring-2 focus:ring-cyan-400 outline-none min-h-[80px]"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label className="block mb-1 text-gray-200 text-sm">
-                    Hospital Type
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="e.g. Cardiology Center, Multi-Specialty"
-                    value={formDataHospitalAdmin.hospital_type}
-                    onChange={(e) =>
-                      setFormDataHospitalAdmin({
-                        ...formDataHospitalAdmin,
-                        hospital_type: e.target.value,
-                      })
-                    }
-                    className="w-full p-3 rounded-md bg-white/20 text-white placeholder-gray-300 focus:ring-2 focus:ring-cyan-400 outline-none"
-                    required
-                  />
-                </div>
-
+              <div className="space-y-6">
+                {/* Basic Information Section */}
                 <div className="space-y-4">
+                  <h3 className="text-lg font-semibold text-cyan-400 mb-3 border-b border-cyan-400/30 pb-1">
+                    Basic Information
+                  </h3>
+
                   <div>
-                    <label className="block mb-1 text-gray-200 text-sm">
-                      Total Rooms
+                    <label className="block text-gray-200 font-medium mb-1">
+                      Hospital Name
                     </label>
                     <input
-                      type="number"
-                      placeholder="Total rooms"
-                      value={formDataHospitalAdmin.total_rooms}
+                      type="text"
+                      placeholder="Enter hospital name"
+                      value={formDataHospitalAdmin.hospital_name}
                       onChange={(e) =>
                         setFormDataHospitalAdmin({
                           ...formDataHospitalAdmin,
-                          total_rooms: Number(e.target.value),
+                          hospital_name: e.target.value,
                         })
                       }
                       className="w-full p-3 rounded-md bg-white/20 text-white placeholder-gray-300 focus:ring-2 focus:ring-cyan-400 outline-none"
@@ -457,9 +447,199 @@ export default function Register() {
                     />
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-gray-200 font-medium mb-1">
+                      Hospital Type
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="e.g. Neurology, Multi-Specialty"
+                      value={formDataHospitalAdmin.hospital_type}
+                      onChange={(e) =>
+                        setFormDataHospitalAdmin({
+                          ...formDataHospitalAdmin,
+                          hospital_type: e.target.value,
+                        })
+                      }
+                      className="w-full p-3 rounded-md bg-white/20 text-white placeholder-gray-300 focus:ring-2 focus:ring-cyan-400 outline-none"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-gray-200 font-medium mb-1">
+                      Hospital Description
+                    </label>
+                    <textarea
+                      placeholder="Brief description of your hospital"
+                      value={formDataHospitalAdmin.hospital_description}
+                      onChange={(e) =>
+                        setFormDataHospitalAdmin({
+                          ...formDataHospitalAdmin,
+                          hospital_description: e.target.value,
+                        })
+                      }
+                      className="w-full p-3 rounded-md bg-white/20 text-white placeholder-gray-300 focus:ring-2 focus:ring-cyan-400 outline-none min-h-[80px]"
+                      required
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <label className="block mb-1 text-gray-200 text-sm">
+                      <label className="block text-gray-200 font-medium mb-1">
+                        Year Established
+                      </label>
+                      <input
+                        type="number"
+                        placeholder="e.g. 2010"
+                        value={formDataHospitalAdmin.year_established}
+                        onChange={(e) =>
+                          setFormDataHospitalAdmin({
+                            ...formDataHospitalAdmin,
+                            year_established: Number(e.target.value),
+                          })
+                        }
+                        className="w-full p-3 rounded-md bg-white/20 text-white placeholder-gray-300 focus:ring-2 focus:ring-cyan-400 outline-none"
+                        required
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-gray-200 font-medium mb-1">
+                        Organization Type
+                      </label>
+                      <select
+                        value={formDataHospitalAdmin.organisation_type}
+                        onChange={(e) =>
+                          setFormDataHospitalAdmin({
+                            ...formDataHospitalAdmin,
+                            organisation_type: e.target.value as
+                              | "government"
+                              | "private",
+                          })
+                        }
+                        className="w-full p-3 rounded-md bg-white/20 text-white focus:ring-2 focus:ring-cyan-400 outline-none"
+                        required
+                      >
+                        <option value="private">Private</option>
+                        <option value="government">Government</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Contact Information Section */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold text-cyan-400 mb-3 border-b border-cyan-400/30 pb-1">
+                    Contact Information
+                  </h3>
+
+                  <div>
+                    <label className="block text-gray-200 font-medium mb-1">
+                      Hospital Address
+                    </label>
+                    <textarea
+                      placeholder="Enter complete hospital address"
+                      value={formDataHospitalAdmin.hospital_address}
+                      onChange={(e) =>
+                        setFormDataHospitalAdmin({
+                          ...formDataHospitalAdmin,
+                          hospital_address: e.target.value,
+                        })
+                      }
+                      className="w-full p-3 rounded-md bg-white/20 text-white placeholder-gray-300 focus:ring-2 focus:ring-cyan-400 outline-none min-h-[80px]"
+                      required
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-gray-200 font-medium mb-1">
+                        Contact Number
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="+91-9876543210"
+                        value={formDataHospitalAdmin.contact_number}
+                        onChange={(e) =>
+                          setFormDataHospitalAdmin({
+                            ...formDataHospitalAdmin,
+                            contact_number: e.target.value,
+                          })
+                        }
+                        className="w-full p-3 rounded-md bg-white/20 text-white placeholder-gray-300 focus:ring-2 focus:ring-cyan-400 outline-none"
+                        required
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-gray-200 font-medium mb-1">
+                        Emergency Number
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="+91-9999999999"
+                        value={formDataHospitalAdmin.emergency_number}
+                        onChange={(e) =>
+                          setFormDataHospitalAdmin({
+                            ...formDataHospitalAdmin,
+                            emergency_number: e.target.value,
+                          })
+                        }
+                        className="w-full p-3 rounded-md bg-white/20 text-white placeholder-gray-300 focus:ring-2 focus:ring-cyan-400 outline-none"
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-gray-200 font-medium mb-1">
+                      Hospital Duration
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="e.g. 24/7, 9 AM - 9 PM"
+                      value={formDataHospitalAdmin.hospital_duration}
+                      onChange={(e) =>
+                        setFormDataHospitalAdmin({
+                          ...formDataHospitalAdmin,
+                          hospital_duration: e.target.value,
+                        })
+                      }
+                      className="w-full p-3 rounded-md bg-white/20 text-white placeholder-gray-300 focus:ring-2 focus:ring-cyan-400 outline-none"
+                      required
+                    />
+                  </div>
+                </div>
+
+                {/* Facility Information Section */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold text-cyan-400 mb-3 border-b border-cyan-400/30 pb-1">
+                    Facility Information
+                  </h3>
+
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                      <label className="block text-gray-200 font-medium mb-1">
+                        Total Rooms
+                      </label>
+                      <input
+                        type="number"
+                        placeholder="Total rooms"
+                        value={formDataHospitalAdmin.total_rooms}
+                        onChange={(e) =>
+                          setFormDataHospitalAdmin({
+                            ...formDataHospitalAdmin,
+                            total_rooms: Number(e.target.value),
+                          })
+                        }
+                        className="w-full p-3 rounded-md bg-white/20 text-white placeholder-gray-300 focus:ring-2 focus:ring-cyan-400 outline-none"
+                        required
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-gray-200 font-medium mb-1">
                         AC Rooms
                       </label>
                       <input
@@ -478,7 +658,7 @@ export default function Register() {
                     </div>
 
                     <div>
-                      <label className="block mb-1 text-gray-200 text-sm">
+                      <label className="block text-gray-200 font-medium mb-1">
                         Non-AC Rooms
                       </label>
                       <input
@@ -496,113 +676,538 @@ export default function Register() {
                       />
                     </div>
                   </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-gray-200 font-medium mb-1">
+                        ICU Beds
+                      </label>
+                      <input
+                        type="number"
+                        placeholder="ICU beds available"
+                        value={formDataHospitalAdmin.icu_beds}
+                        onChange={(e) =>
+                          setFormDataHospitalAdmin({
+                            ...formDataHospitalAdmin,
+                            icu_beds: Number(e.target.value),
+                          })
+                        }
+                        className="w-full p-3 rounded-md bg-white/20 text-white placeholder-gray-300 focus:ring-2 focus:ring-cyan-400 outline-none"
+                        required
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-gray-200 font-medium mb-1">
+                        Ambulances
+                      </label>
+                      <input
+                        type="number"
+                        placeholder="Number of ambulances"
+                        value={formDataHospitalAdmin.ambulances}
+                        onChange={(e) =>
+                          setFormDataHospitalAdmin({
+                            ...formDataHospitalAdmin,
+                            ambulances: Number(e.target.value),
+                          })
+                        }
+                        className="w-full p-3 rounded-md bg-white/20 text-white placeholder-gray-300 focus:ring-2 focus:ring-cyan-400 outline-none"
+                        required
+                      />
+                    </div>
+                  </div>
                 </div>
 
-                <div>
-                  <label className="block text-gray-200 font-medium mb-1">
-                    Hospital Duration
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="e.g. 24/7, 9 AM - 9 PM"
-                    value={formDataHospitalAdmin.hospital_duration}
-                    onChange={(e) =>
-                      setFormDataHospitalAdmin({
-                        ...formDataHospitalAdmin,
-                        hospital_duration: e.target.value,
-                      })
-                    }
-                    className="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-purple-500 outline-none text-gray-200 text-sm"
-                    required
-                  />
-                </div>
+                {/* Departments and Services Section */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold text-cyan-400 mb-3 border-b border-cyan-400/30 pb-1">
+                    Departments & Services
+                  </h3>
 
-                <div>
-                  <label className="block text-gray-200 font-medium mb-1">
-                    Organization Type
-                  </label>
-                  <select
-                    value={formDataHospitalAdmin.organisation_type}
-                    onChange={(e) =>
-                      setFormDataHospitalAdmin({
-                        ...formDataHospitalAdmin,
-                        organisation_type: e.target.value as
-                          | "government"
-                          | "private",
-                      })
-                    }
-                    className="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-purple-500 outline-none text-gray-200 text-sm"
-                    required
-                  >
-                    <option value="private">Private</option>
-                    <option value="government">Government</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-gray-200 font-medium mb-1">
-                    Connected Pharmacies
-                  </label>
-                  <div className="space-y-2">
-                    {formDataHospitalAdmin.connected_pharmacies.map(
-                      (pharmacy, index) => (
+                  <div>
+                    <label className="block text-gray-200 font-medium mb-1">
+                      Departments
+                    </label>
+                    <div className="space-y-2">
+                      {formDataHospitalAdmin.departments.map((dept, index) => (
                         <div
                           key={index}
                           className="flex items-center space-x-2"
                         >
                           <input
                             type="text"
-                            value={pharmacy}
+                            value={dept}
                             onChange={(e) => {
-                              const newPharmacies = [
-                                ...formDataHospitalAdmin.connected_pharmacies,
+                              const newDepts = [
+                                ...formDataHospitalAdmin.departments,
                               ];
-                              newPharmacies[index] = e.target.value;
+                              newDepts[index] = e.target.value;
                               setFormDataHospitalAdmin({
                                 ...formDataHospitalAdmin,
-                                connected_pharmacies: newPharmacies,
+                                departments: newDepts,
                               });
                             }}
-                            placeholder="Enter pharmacy name"
+                            placeholder="Enter department name"
                             className="flex-1 p-3 rounded-md bg-white/20 text-white placeholder-gray-300 focus:ring-2 focus:ring-cyan-400 outline-none"
                           />
                           <button
                             type="button"
                             onClick={() => {
-                              const newPharmacies =
-                                formDataHospitalAdmin.connected_pharmacies.filter(
+                              const newDepts =
+                                formDataHospitalAdmin.departments.filter(
                                   (_, i) => i !== index
                                 );
                               setFormDataHospitalAdmin({
                                 ...formDataHospitalAdmin,
-                                connected_pharmacies: newPharmacies,
+                                departments: newDepts,
                               });
                             }}
-                            className="p-2 text-red-600 hover:bg-red-50 rounded"
+                            className="p-2 text-red-400 hover:text-red-300 rounded"
                           >
                             ✕
                           </button>
                         </div>
-                      )
-                    )}
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setFormDataHospitalAdmin({
-                          ...formDataHospitalAdmin,
-                          connected_pharmacies: [
-                            ...formDataHospitalAdmin.connected_pharmacies,
-                            "",
-                          ],
-                        })
-                      }
-                      className="text-purple-600 hover:text-purple-700 text-sm font-medium"
-                    >
-                      + Add Pharmacy
-                    </button>
+                      ))}
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setFormDataHospitalAdmin({
+                            ...formDataHospitalAdmin,
+                            departments: [
+                              ...formDataHospitalAdmin.departments,
+                              "",
+                            ],
+                          })
+                        }
+                        className="text-cyan-400 hover:text-cyan-300 text-sm font-medium"
+                      >
+                        + Add Department
+                      </button>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-gray-200 font-medium mb-1">
+                      Lab Facilities
+                    </label>
+                    <div className="space-y-2">
+                      {formDataHospitalAdmin.lab_facilities.map(
+                        (lab, index) => (
+                          <div
+                            key={index}
+                            className="flex items-center space-x-2"
+                          >
+                            <input
+                              type="text"
+                              value={lab}
+                              onChange={(e) => {
+                                const newLabs = [
+                                  ...formDataHospitalAdmin.lab_facilities,
+                                ];
+                                newLabs[index] = e.target.value;
+                                setFormDataHospitalAdmin({
+                                  ...formDataHospitalAdmin,
+                                  lab_facilities: newLabs,
+                                });
+                              }}
+                              placeholder="Enter lab facility"
+                              className="flex-1 p-3 rounded-md bg-white/20 text-white placeholder-gray-300 focus:ring-2 focus:ring-cyan-400 outline-none"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const newLabs =
+                                  formDataHospitalAdmin.lab_facilities.filter(
+                                    (_, i) => i !== index
+                                  );
+                                setFormDataHospitalAdmin({
+                                  ...formDataHospitalAdmin,
+                                  lab_facilities: newLabs,
+                                });
+                              }}
+                              className="p-2 text-red-400 hover:text-red-300 rounded"
+                            >
+                              ✕
+                            </button>
+                          </div>
+                        )
+                      )}
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setFormDataHospitalAdmin({
+                            ...formDataHospitalAdmin,
+                            lab_facilities: [
+                              ...formDataHospitalAdmin.lab_facilities,
+                              "",
+                            ],
+                          })
+                        }
+                        className="text-cyan-400 hover:text-cyan-300 text-sm font-medium"
+                      >
+                        + Add Lab Facility
+                      </button>
+                    </div>
                   </div>
                 </div>
-              </>
+
+                {/* Connected Services Section */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold text-cyan-400 mb-3 border-b border-cyan-400/30 pb-1">
+                    Connected Services
+                  </h3>
+
+                  <div>
+                    <label className="block text-gray-200 font-medium mb-1">
+                      Connected Pharmacies
+                    </label>
+                    <div className="space-y-2">
+                      {formDataHospitalAdmin.connected_pharmacies.map(
+                        (pharmacy, index) => (
+                          <div
+                            key={index}
+                            className="flex items-center space-x-2"
+                          >
+                            <input
+                              type="text"
+                              value={pharmacy}
+                              onChange={(e) => {
+                                const newPharmacies = [
+                                  ...formDataHospitalAdmin.connected_pharmacies,
+                                ];
+                                newPharmacies[index] = e.target.value;
+                                setFormDataHospitalAdmin({
+                                  ...formDataHospitalAdmin,
+                                  connected_pharmacies: newPharmacies,
+                                });
+                              }}
+                              placeholder="Enter pharmacy name"
+                              className="flex-1 p-3 rounded-md bg-white/20 text-white placeholder-gray-300 focus:ring-2 focus:ring-cyan-400 outline-none"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const newPharmacies =
+                                  formDataHospitalAdmin.connected_pharmacies.filter(
+                                    (_, i) => i !== index
+                                  );
+                                setFormDataHospitalAdmin({
+                                  ...formDataHospitalAdmin,
+                                  connected_pharmacies: newPharmacies,
+                                });
+                              }}
+                              className="p-2 text-red-400 hover:text-red-300 rounded"
+                            >
+                              ✕
+                            </button>
+                          </div>
+                        )
+                      )}
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setFormDataHospitalAdmin({
+                            ...formDataHospitalAdmin,
+                            connected_pharmacies: [
+                              ...formDataHospitalAdmin.connected_pharmacies,
+                              "",
+                            ],
+                          })
+                        }
+                        className="text-cyan-400 hover:text-cyan-300 text-sm font-medium"
+                      >
+                        + Add Pharmacy
+                      </button>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-gray-200 font-medium mb-1">
+                      Payment Modes
+                    </label>
+                    <div className="space-y-2">
+                      {formDataHospitalAdmin.payment_modes.map(
+                        (mode, index) => (
+                          <div
+                            key={index}
+                            className="flex items-center space-x-2"
+                          >
+                            <input
+                              type="text"
+                              value={mode}
+                              onChange={(e) => {
+                                const newModes = [
+                                  ...formDataHospitalAdmin.payment_modes,
+                                ];
+                                newModes[index] = e.target.value;
+                                setFormDataHospitalAdmin({
+                                  ...formDataHospitalAdmin,
+                                  payment_modes: newModes,
+                                });
+                              }}
+                              placeholder="Enter payment mode"
+                              className="flex-1 p-3 rounded-md bg-white/20 text-white placeholder-gray-300 focus:ring-2 focus:ring-cyan-400 outline-none"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const newModes =
+                                  formDataHospitalAdmin.payment_modes.filter(
+                                    (_, i) => i !== index
+                                  );
+                                setFormDataHospitalAdmin({
+                                  ...formDataHospitalAdmin,
+                                  payment_modes: newModes,
+                                });
+                              }}
+                              className="p-2 text-red-400 hover:text-red-300 rounded"
+                            >
+                              ✕
+                            </button>
+                          </div>
+                        )
+                      )}
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setFormDataHospitalAdmin({
+                            ...formDataHospitalAdmin,
+                            payment_modes: [
+                              ...formDataHospitalAdmin.payment_modes,
+                              "",
+                            ],
+                          })
+                        }
+                        className="text-cyan-400 hover:text-cyan-300 text-sm font-medium"
+                      >
+                        + Add Payment Mode
+                      </button>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-gray-200 font-medium mb-1">
+                      Insurance Partners
+                    </label>
+                    <div className="space-y-2">
+                      {formDataHospitalAdmin.insurance_partners.map(
+                        (partner, index) => (
+                          <div
+                            key={index}
+                            className="flex items-center space-x-2"
+                          >
+                            <input
+                              type="text"
+                              value={partner}
+                              onChange={(e) => {
+                                const newPartners = [
+                                  ...formDataHospitalAdmin.insurance_partners,
+                                ];
+                                newPartners[index] = e.target.value;
+                                setFormDataHospitalAdmin({
+                                  ...formDataHospitalAdmin,
+                                  insurance_partners: newPartners,
+                                });
+                              }}
+                              placeholder="Enter insurance partner"
+                              className="flex-1 p-3 rounded-md bg-white/20 text-white placeholder-gray-300 focus:ring-2 focus:ring-cyan-400 outline-none"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const newPartners =
+                                  formDataHospitalAdmin.insurance_partners.filter(
+                                    (_, i) => i !== index
+                                  );
+                                setFormDataHospitalAdmin({
+                                  ...formDataHospitalAdmin,
+                                  insurance_partners: newPartners,
+                                });
+                              }}
+                              className="p-2 text-red-400 hover:text-red-300 rounded"
+                            >
+                              ✕
+                            </button>
+                          </div>
+                        )
+                      )}
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setFormDataHospitalAdmin({
+                            ...formDataHospitalAdmin,
+                            insurance_partners: [
+                              ...formDataHospitalAdmin.insurance_partners,
+                              "",
+                            ],
+                          })
+                        }
+                        className="text-cyan-400 hover:text-cyan-300 text-sm font-medium"
+                      >
+                        + Add Insurance Partner
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Available Services Section */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold text-cyan-400 mb-3 border-b border-cyan-400/30 pb-1">
+                    Available Services
+                  </h3>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <label className="flex items-center space-x-2 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={formDataHospitalAdmin.emergency_available}
+                        onChange={(e) =>
+                          setFormDataHospitalAdmin({
+                            ...formDataHospitalAdmin,
+                            emergency_available: e.target.checked,
+                          })
+                        }
+                        className="w-4 h-4 text-cyan-400 bg-transparent border-gray-300 rounded focus:ring-cyan-400"
+                      />
+                      <span className="text-gray-200">Emergency Services</span>
+                    </label>
+
+                    <label className="flex items-center space-x-2 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={
+                          formDataHospitalAdmin.teleconsultation_available
+                        }
+                        onChange={(e) =>
+                          setFormDataHospitalAdmin({
+                            ...formDataHospitalAdmin,
+                            teleconsultation_available: e.target.checked,
+                          })
+                        }
+                        className="w-4 h-4 text-cyan-400 bg-transparent border-gray-300 rounded focus:ring-cyan-400"
+                      />
+                      <span className="text-gray-200">Teleconsultation</span>
+                    </label>
+
+                    <label className="flex items-center space-x-2 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={formDataHospitalAdmin.parking_available}
+                        onChange={(e) =>
+                          setFormDataHospitalAdmin({
+                            ...formDataHospitalAdmin,
+                            parking_available: e.target.checked,
+                          })
+                        }
+                        className="w-4 h-4 text-cyan-400 bg-transparent border-gray-300 rounded focus:ring-cyan-400"
+                      />
+                      <span className="text-gray-200">Parking Available</span>
+                    </label>
+
+                    <label className="flex items-center space-x-2 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={formDataHospitalAdmin.canteen_available}
+                        onChange={(e) =>
+                          setFormDataHospitalAdmin({
+                            ...formDataHospitalAdmin,
+                            canteen_available: e.target.checked,
+                          })
+                        }
+                        className="w-4 h-4 text-cyan-400 bg-transparent border-gray-300 rounded focus:ring-cyan-400"
+                      />
+                      <span className="text-gray-200">Canteen Available</span>
+                    </label>
+                  </div>
+                </div>
+
+                {/* Additional Information Section */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold text-cyan-400 mb-3 border-b border-cyan-400/30 pb-1">
+                    Additional Information
+                  </h3>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-gray-200 font-medium mb-1">
+                        Accreditation
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="e.g. NABH, JCI"
+                        value={formDataHospitalAdmin.accreditation}
+                        onChange={(e) =>
+                          setFormDataHospitalAdmin({
+                            ...formDataHospitalAdmin,
+                            accreditation: e.target.value,
+                          })
+                        }
+                        className="w-full p-3 rounded-md bg-white/20 text-white placeholder-gray-300 focus:ring-2 focus:ring-cyan-400 outline-none"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-gray-200 font-medium mb-1">
+                        License Number
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="Hospital license number"
+                        value={formDataHospitalAdmin.license_number}
+                        onChange={(e) =>
+                          setFormDataHospitalAdmin({
+                            ...formDataHospitalAdmin,
+                            license_number: e.target.value,
+                          })
+                        }
+                        className="w-full p-3 rounded-md bg-white/20 text-white placeholder-gray-300 focus:ring-2 focus:ring-cyan-400 outline-none"
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-gray-200 font-medium mb-1">
+                        Rating (out of 5)
+                      </label>
+                      <input
+                        type="number"
+                        min="0"
+                        max="5"
+                        step="0.1"
+                        placeholder="e.g. 4.7"
+                        value={formDataHospitalAdmin.rating}
+                        onChange={(e) =>
+                          setFormDataHospitalAdmin({
+                            ...formDataHospitalAdmin,
+                            rating: Number(e.target.value),
+                          })
+                        }
+                        className="w-full p-3 rounded-md bg-white/20 text-white placeholder-gray-300 focus:ring-2 focus:ring-cyan-400 outline-none"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-gray-200 font-medium mb-1">
+                        Total Reviews
+                      </label>
+                      <input
+                        type="number"
+                        placeholder="Number of reviews"
+                        value={formDataHospitalAdmin.total_reviews}
+                        onChange={(e) =>
+                          setFormDataHospitalAdmin({
+                            ...formDataHospitalAdmin,
+                            total_reviews: Number(e.target.value),
+                          })
+                        }
+                        className="w-full p-3 rounded-md bg-white/20 text-white placeholder-gray-300 focus:ring-2 focus:ring-cyan-400 outline-none"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
             )}
 
             {role === "doctor" && (

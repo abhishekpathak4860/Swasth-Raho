@@ -65,9 +65,10 @@ const nextConfig = {
         destination: "http://localhost:5000/doctor/:path*",
       },
        {
-        source: "/hospital/:path*",
-        destination: "http://localhost:5000/hospital/:path*",
-      }];
+        source: "/api/hospital/:path*",
+        destination: "http://localhost:5000/api/hospital/:path*",
+      }
+    ];
 
 }
 
@@ -90,6 +91,7 @@ const nextConfig = {
       },
     ];
   },
+
 };
 // /hospital
 export default nextConfig;
