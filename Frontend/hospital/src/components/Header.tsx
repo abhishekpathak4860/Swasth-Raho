@@ -1,46 +1,47 @@
+"use client";
+
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import React from "react";
+import { Home, Info, Building2, Phone, User } from "lucide-react"; // Lucide icons
 
 export default function Header() {
+  const pathname = usePathname(); // current route path
+
   return (
-    <div>
-      {/* Enhanced Navbar */}{" "}
-      <nav className="w-full flex justify-between items-center px-4 md:px-8 py-4 bg-white shadow-lg sticky top-0 z-50">
+    <header>
+      {/* ---- Top Navbar for Desktop ---- */}
+      <nav className="hidden md:flex w-full justify-between items-center px-8 py-4 bg-white shadow-md sticky top-0 z-50">
         <div className="flex items-center">
           <div className="w-10 h-10 bg-gradient-to-r from-blue-600 to-green-600 rounded-full flex items-center justify-center mr-3">
             <span className="text-white font-bold text-xl">S</span>
           </div>
-          <h1 className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-blue-600 to-green-600 bg-clip-text text-transparent">
-            Swasth-Raho
-          </h1>
+          <Link href="/">
+            <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-green-600 bg-clip-text text-transparent">
+              Swasth-Raho
+            </h1>
+          </Link>
         </div>
 
-        {/* Desktop Navigation */}
-        <div className="hidden md:flex items-center space-x-8">
-          <Link
-            href="/"
-            className="text-gray-700 hover:text-blue-600 transition font-medium"
-          >
-            Home
-          </Link>
-          <Link
-            href="/about"
-            className="text-gray-700 hover:text-blue-600 transition font-medium"
-          >
-            About
-          </Link>
-          <Link
-            href="/hospitals"
-            className="text-gray-700 hover:text-blue-600 transition font-medium"
-          >
-            Our Hospitals
-          </Link>
-          <Link
-            href="/contact"
-            className="text-gray-700 hover:text-blue-600 transition font-medium"
-          >
-            Contact
-          </Link>
+        <div className="flex items-center space-x-8">
+          {[
+            { href: "/", label: "Home" },
+            { href: "/about", label: "About" },
+            { href: "/hospitals", label: "Our Hospitals" },
+            { href: "/contact", label: "Contact" },
+          ].map((item) => (
+            <Link
+              key={item.href}
+              href={item.href}
+              className={`font-medium transition ${
+                pathname === item.href
+                  ? "text-blue-600"
+                  : "text-gray-700 hover:text-blue-600"
+              }`}
+            >
+              {item.label}
+            </Link>
+          ))}
 
           <div className="flex space-x-3">
             <Link href="/login">
@@ -55,26 +56,51 @@ export default function Header() {
             </Link>
           </div>
         </div>
+      </nav>
 
-        {/* Mobile Menu Button */}
-        <div className="md:hidden">
-          <button className="text-gray-700 hover:text-blue-600">
-            <svg
-              className="w-6 h-6"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M4 6h16M4 12h16M4 18h16"
-              />
-            </svg>
-          </button>
+      {/* ---- Mobile Top Logo ---- */}
+      <div className="md:hidden fixed top-0 left-0 right-0 bg-white shadow-md py-3 flex items-center pl-4 z-50">
+        <div className="flex items-center">
+          <div className="w-9 h-9 bg-gradient-to-r from-blue-600 to-green-600 rounded-full flex items-center justify-center mr-2">
+            <span className="text-white font-bold text-lg">S</span>
+          </div>
+          <Link href="/">
+            <h1 className="text-xl font-bold bg-gradient-to-r from-blue-600 to-green-600 bg-clip-text text-transparent">
+              Swasth-Raho
+            </h1>
+          </Link>
+        </div>
+      </div>
+
+      {/* ---- Mobile Bottom Fixed Navbar ---- */}
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg z-50">
+        <div className="flex justify-around items-center py-5">
+          {[
+            { href: "/", label: "Home", icon: Home },
+            { href: "/about", label: "About", icon: Info },
+            { href: "/hospitals", label: "Hospitals", icon: Building2 },
+            { href: "/contact", label: "Contact", icon: Phone },
+            { href: "/login", label: "Profile", icon: User },
+          ].map((item) => {
+            const isActive = pathname === item.href;
+            const Icon = item.icon;
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={`flex flex-col items-center text-xs font-medium transition ${
+                  isActive
+                    ? "text-blue-600"
+                    : "text-gray-700 hover:text-blue-600"
+                }`}
+              >
+                <Icon className="w-5 h-5 mb-1" />
+                <span>{item.label}</span>
+              </Link>
+            );
+          })}
         </div>
       </nav>
-    </div>
+    </header>
   );
 }
