@@ -188,15 +188,12 @@ export default function Appointments() {
   ) => {
     try {
       // placeholder API call
-      await axios
-        .post(
-          `/doctor/create-report`,
-          { appointment_id: appointment._id, ...reportData },
-          { withCredentials: true }
-        )
-        .catch(() => {});
-      // after creating report, you may mark appointment completed if needed
-      // close modal
+      await axios.post(
+        `/doctor/report`,
+        { ...reportData },
+        { withCredentials: true }
+      );
+
       setShowReportModal(false);
       setSelectedAppointmentForReport(null);
       alert("Report created (dummy). Later this will be persisted to backend.");
@@ -670,25 +667,30 @@ export default function Appointments() {
 // Small report form component (local only)
 function ReportForm({ appointment, onCreate, onCancel }: any) {
   const [form, setForm] = useState<any>({
-    symptoms: "",
-    diagnosis: "",
+    date: "",
+    department: "",
+    disease: appointment?.disease || "",
+    status: "completed",
+    symptoms: [] as string[],
     vitals: { bloodPressure: "", temperature: "", heartRate: "", weight: "" },
-    prescription: "",
-    recommendations: "",
+    prescription: [] as any[],
+    recommendations: [] as string[],
+    nextAppointment: "",
   });
 
-  useEffect(() => {
-    if (appointment) {
-      setForm((f: any) => ({
-        ...f,
-        patientName: appointment.p_name,
-        date: appointment.date,
-        time: appointment.time,
-      }));
-    }
-  }, [appointment]);
+  // useEffect(() => {
+  //   if (appointment) {
+  //     setForm((f: any) => ({
+  //       ...f,
+  //       date: appointment.date || f.date,
+  //       department: appointment.type || f.department,
+  //       disease: appointment.disease || f.disease,
+  //     }));
+  //   }
+  //   // eslint-disable-next-line react-hooks/exhaustive-deps
+  // }, [appointment]);
 
-  const handleChange = (e: any) => {
+  const handleFieldChange = (e: any) => {
     const { name, value } = e.target;
     if (name.startsWith("vitals.")) {
       const key = name.split(".")[1];
@@ -696,112 +698,363 @@ function ReportForm({ appointment, onCreate, onCancel }: any) {
         ...prev,
         vitals: { ...prev.vitals, [key]: value },
       }));
-    } else setForm((prev: any) => ({ ...prev, [name]: value }));
+    } else {
+      setForm((prev: any) => ({ ...prev, [name]: value }));
+    }
   };
+
+  // Symptoms handlers
+  const addSymptom = () =>
+    setForm((p: any) => ({ ...p, symptoms: [...p.symptoms, ""] }));
+  const updateSymptom = (idx: number, value: string) =>
+    setForm((p: any) => ({
+      ...p,
+      symptoms: p.symptoms.map((s: string, i: number) =>
+        i === idx ? value : s
+      ),
+    }));
+  const removeSymptom = (idx: number) =>
+    setForm((p: any) => ({
+      ...p,
+      symptoms: p.symptoms.filter((_: any, i: number) => i !== idx),
+    }));
+
+  // Prescription handlers (array of objects)
+  const addPrescription = () =>
+    setForm((p: any) => ({
+      ...p,
+      prescription: [
+        ...p.prescription,
+        { medicine: "", dosage: "", frequency: "", days: "" },
+      ],
+    }));
+  const updatePrescription = (idx: number, key: string, value: string) =>
+    setForm((p: any) => ({
+      ...p,
+      prescription: p.prescription.map((pres: any, i: number) =>
+        i === idx ? { ...pres, [key]: value } : pres
+      ),
+    }));
+  const removePrescription = (idx: number) =>
+    setForm((p: any) => ({
+      ...p,
+      prescription: p.prescription.filter((_: any, i: number) => i !== idx),
+    }));
+
+  // Recommendations handlers
+  const addRecommendation = () =>
+    setForm((p: any) => ({
+      ...p,
+      recommendations: [...p.recommendations, ""],
+    }));
+  const updateRecommendation = (idx: number, value: string) =>
+    setForm((p: any) => ({
+      ...p,
+      recommendations: p.recommendations.map((r: string, i: number) =>
+        i === idx ? value : r
+      ),
+    }));
+  const removeRecommendation = (idx: number) =>
+    setForm((p: any) => ({
+      ...p,
+      recommendations: p.recommendations.filter(
+        (_: any, i: number) => i !== idx
+      ),
+    }));
 
   const handleSubmit = (e: any) => {
     e.preventDefault();
-    onCreate(appointment, form);
+    // Build report payload matching schema
+    const payload = {
+      appointment_id: appointment?._id,
+      p_id: appointment?.p_id,
+      p_name: appointment?.p_name,
+      doc_id: appointment?.doc_id,
+      doc_name: appointment?.doc_name,
+      date: form.date,
+      department: form.department,
+      disease: form.disease,
+      status: form.status,
+      symptoms: form.symptoms.filter((s: string) => s && s.trim().length > 0),
+      vitals: form.vitals,
+      prescription: form.prescription.filter(
+        (p: any) => p.medicine && p.medicine.trim().length > 0
+      ),
+      recommendations: form.recommendations.filter(
+        (r: string) => r && r.trim().length > 0
+      ),
+      nextAppointment: form.nextAppointment,
+    };
+    console.log("your data", payload);
+    onCreate(appointment, payload);
   };
 
   return (
     <form
       onSubmit={handleSubmit}
-      className="space-y-4 max-h-[60vh] overflow-y-auto pr-2"
+      className="space-y-4 max-h-[70vh] overflow-y-auto pr-2"
     >
-      <div>
-        <label className="block text-sm font-semibold text-gray-700 mb-2">
-          Patient
-        </label>
-        <input
-          className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl"
-          value={appointment?.p_name || ""}
-          readOnly
-        />
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div>
+          <label className="block text-sm font-semibold text-gray-700 mb-2">
+            Patient
+          </label>
+          <input
+            className="w-full px-4 py-3 border-2 border-gray-200 text-black rounded-xl"
+            value={appointment?.p_name || ""}
+            readOnly
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-semibold text-gray-700 mb-2">
+            Date
+          </label>
+          <input
+            name="date"
+            type="date"
+            value={form.date}
+            onChange={handleFieldChange}
+            className="w-full px-4 py-3 border-2 border-gray-200 text-black rounded-xl"
+            required
+          />
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div>
+          <label className="block text-sm font-semibold text-gray-700 mb-2">
+            Department
+          </label>
+          <input
+            name="department"
+            value={form.department}
+            placeholder="enter your department"
+            onChange={handleFieldChange}
+            className="w-full px-4 py-3 border-2 border-gray-200 text-black rounded-xl"
+            required
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-semibold text-gray-700 mb-2">
+            Disease
+          </label>
+          <input
+            name="disease"
+            value={form.disease}
+            onChange={handleFieldChange}
+            className="w-full px-4 py-3 border-2 border-gray-200 text-black rounded-xl"
+            readOnly
+          />
+        </div>
       </div>
 
       <div>
         <label className="block text-sm font-semibold text-gray-700 mb-2">
-          Symptoms (comma separated)
+          Status
         </label>
-        <input
-          name="symptoms"
-          value={form.symptoms}
-          onChange={handleChange}
-          className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl"
-        />
+        <select
+          name="status"
+          value={form.status}
+          onChange={handleFieldChange}
+          className="w-full px-4 py-3 border-2 border-gray-200 text-black rounded-xl"
+        >
+          <option value="completed">Completed</option>
+          <option value="pending">Pending</option>
+        </select>
+      </div>
+
+      <div>
+        <div className="flex items-center justify-between mb-2">
+          <label className="block text-sm font-semibold text-gray-700">
+            Symptoms
+          </label>
+          <button
+            type="button"
+            onClick={addSymptom}
+            className="text-sm text-blue-600"
+          >
+            + Add
+          </button>
+        </div>
+        <div className="space-y-2">
+          {form.symptoms.map((s: string, idx: number) => (
+            <div key={idx} className="flex items-center gap-2">
+              <input
+                placeholder="add symptoms"
+                value={s}
+                onChange={(e) => updateSymptom(idx, e.target.value)}
+                className="flex-1 px-3 py-2 border border-gray-200 text-black rounded-lg"
+              />
+              <button
+                type="button"
+                onClick={() => removeSymptom(idx)}
+                className="px-3 py-1 bg-red-100 text-red-600 rounded"
+              >
+                Remove
+              </button>
+            </div>
+          ))}
+          {form.symptoms.length === 0 && (
+            <p className="text-sm text-gray-500">No symptoms added yet.</p>
+          )}
+        </div>
       </div>
 
       <div>
         <label className="block text-sm font-semibold text-gray-700 mb-2">
-          Diagnosis
+          Vitals
         </label>
-        <input
-          name="diagnosis"
-          value={form.diagnosis}
-          onChange={handleChange}
-          className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl"
-        />
+        <div className="grid grid-cols-2 gap-2">
+          <input
+            name="vitals.bloodPressure"
+            value={form.vitals.bloodPressure}
+            onChange={handleFieldChange}
+            placeholder="Blood Pressure"
+            className="px-4 py-3 border-2 border-gray-200 text-black rounded-xl"
+          />
+          <input
+            name="vitals.temperature"
+            value={form.vitals.temperature}
+            onChange={handleFieldChange}
+            placeholder="Temperature"
+            className="px-4 py-3 border-2 border-gray-200 text-black rounded-xl"
+          />
+          <input
+            name="vitals.heartRate"
+            value={form.vitals.heartRate}
+            onChange={handleFieldChange}
+            placeholder="Heart Rate"
+            className="px-4 py-3 border-2 border-gray-200 text-black rounded-xl"
+          />
+          <input
+            name="vitals.weight"
+            value={form.vitals.weight}
+            onChange={handleFieldChange}
+            placeholder="Weight"
+            className="px-4 py-3 border-2 border-gray-200 text-black rounded-xl"
+          />
+        </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-2">
-        <input
-          name="vitals.bloodPressure"
-          value={form.vitals.bloodPressure}
-          onChange={handleChange}
-          placeholder="Blood Pressure"
-          className="px-4 py-3 border-2 border-gray-200 rounded-xl"
-        />
-        <input
-          name="vitals.temperature"
-          value={form.vitals.temperature}
-          onChange={handleChange}
-          placeholder="Temperature"
-          className="px-4 py-3 border-2 border-gray-200 rounded-xl"
-        />
-        <input
-          name="vitals.heartRate"
-          value={form.vitals.heartRate}
-          onChange={handleChange}
-          placeholder="Heart Rate"
-          className="px-4 py-3 border-2 border-gray-200 rounded-xl"
-        />
-        <input
-          name="vitals.weight"
-          value={form.vitals.weight}
-          onChange={handleChange}
-          placeholder="Weight"
-          className="px-4 py-3 border-2 border-gray-200 rounded-xl"
-        />
+      <div>
+        <div className="flex items-center justify-between mb-2">
+          <label className="block text-sm font-semibold text-gray-700">
+            Prescription
+          </label>
+          <button
+            type="button"
+            onClick={addPrescription}
+            className="text-sm text-blue-600"
+          >
+            + Add
+          </button>
+        </div>
+        <div className="space-y-2">
+          {form.prescription.map((pres: any, idx: number) => (
+            <div
+              key={idx}
+              className="grid grid-cols-1 sm:grid-cols-3 gap-2 items-center"
+            >
+              <input
+                placeholder="Medicine"
+                value={pres.medicine}
+                onChange={(e) =>
+                  updatePrescription(idx, "medicine", e.target.value)
+                }
+                className="px-3 py-2 border border-gray-200 text-black rounded"
+              />
+              <input
+                placeholder="Dosage"
+                value={pres.dosage}
+                onChange={(e) =>
+                  updatePrescription(idx, "dosage", e.target.value)
+                }
+                className="px-3 py-2 border border-gray-200 text-black rounded"
+              />
+              <div className="flex gap-2">
+                <input
+                  placeholder="Frequency"
+                  value={pres.frequency}
+                  onChange={(e) =>
+                    updatePrescription(idx, "frequency", e.target.value)
+                  }
+                  className="px-3 py-2 border border-gray-200 text-black rounded flex-1"
+                />
+                <input
+                  placeholder="Days"
+                  value={pres.days}
+                  onChange={(e) =>
+                    updatePrescription(idx, "days", e.target.value)
+                  }
+                  className="px-3 py-2 border border-gray-200 text-black rounded w-24"
+                />
+                <button
+                  type="button"
+                  onClick={() => removePrescription(idx)}
+                  className="px-3 py-1 bg-red-100 text-red-600 rounded"
+                >
+                  Remove
+                </button>
+              </div>
+            </div>
+          ))}
+          {form.prescription.length === 0 && (
+            <p className="text-sm text-gray-500">No prescription items yet.</p>
+          )}
+        </div>
+      </div>
+
+      <div>
+        <div className="flex items-center justify-between mb-2">
+          <label className="block text-sm font-semibold text-gray-700">
+            Recommendations
+          </label>
+          <button
+            type="button"
+            onClick={addRecommendation}
+            className="text-sm text-blue-600"
+          >
+            + Add
+          </button>
+        </div>
+        <div className="space-y-2">
+          {form.recommendations.map((r: string, idx: number) => (
+            <div key={idx} className="flex items-center gap-2">
+              <input
+                placeholder="add recommendations"
+                value={r}
+                onChange={(e) => updateRecommendation(idx, e.target.value)}
+                className="flex-1 px-3 py-2 border border-gray-200 text-black rounded-lg"
+              />
+              <button
+                type="button"
+                onClick={() => removeRecommendation(idx)}
+                className="px-3 py-1 bg-red-100 text-red-600 rounded"
+              >
+                Remove
+              </button>
+            </div>
+          ))}
+          {form.recommendations.length === 0 && (
+            <p className="text-sm text-gray-500">No recommendations yet.</p>
+          )}
+        </div>
       </div>
 
       <div>
         <label className="block text-sm font-semibold text-gray-700 mb-2">
-          Prescription (one per line)
+          Next Appointment (optional)
         </label>
-        <textarea
-          name="prescription"
-          value={form.prescription}
-          onChange={handleChange}
-          className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl"
-          rows={3}
-        ></textarea>
+        <input
+          name="nextAppointment"
+          value={form.nextAppointment}
+          onChange={handleFieldChange}
+          placeholder="e.g., Follow up after 2 weeks"
+          className="w-full px-4 py-3 border-2 border-gray-200 text-black rounded-xl"
+        />
       </div>
 
-      <div>
-        <label className="block text-sm font-semibold text-gray-700 mb-2">
-          Recommendations
-        </label>
-        <textarea
-          name="recommendations"
-          value={form.recommendations}
-          onChange={handleChange}
-          className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl"
-          rows={3}
-        ></textarea>
-      </div>
-
-      <div className="flex space-x-3">
+      <div className="flex space-x-3 pt-3">
         <button
           type="submit"
           className="flex-1 px-4 py-3 bg-gradient-to-r from-green-600 to-blue-600 text-white rounded-xl"

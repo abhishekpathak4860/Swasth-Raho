@@ -8,7 +8,7 @@ import { UpdateAppointmentStatus } from "../controllers/UpdateAppointmentStatus.
 
 const router = express.Router();
 
-router.post("/report", report);
+router.post("/report", verifyToken, report);
 router.get("/profile", verifyToken, doctorProfile);
 router.patch("/update-profile", verifyToken, UpdateDoctorDetails);
 router.get("/get-appointments", verifyToken, UpcomingAppointmentsForDoctor);

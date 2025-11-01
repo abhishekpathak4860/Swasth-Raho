@@ -1,19 +1,35 @@
 import Appointment from "../models/Appointment.js";
+import Doctor from "../models/Doctor.js";
 
 export const UpdateAppointmentStatus = async (req, res) => {
   try {
-    const { appointmentId } = req.params; // get id from URL
-    const updatedData = req.body; // get new data from frontend
+    const { appointmentId } = req.params;
+    const updatedData = req.body;
 
-    // find and update the appointment
+    // Update appointment
     const updatedAppointment = await Appointment.findByIdAndUpdate(
       appointmentId,
       { $set: updatedData },
-      { new: true } // returns updated document
+      { new: true }
     );
 
     if (!updatedAppointment) {
       return res.status(404).json({ message: "Appointment not found" });
+    }
+
+    //  If status is 'completed', link patient to doctor
+    if (updatedAppointment.status === "completed") {
+      const { doc_id, p_id } = updatedAppointment;
+
+      // Find the doctor by doc_id
+      const doctor = await Doctor.findById(doc_id);
+      if (doctor) {
+        // Only push p_id if not already in patient_ids
+        if (!doctor.patient_ids.includes(p_id)) {
+          doctor.patient_ids.push(p_id);
+          await doctor.save();
+        }
+      }
     }
 
     res.status(200).json({
