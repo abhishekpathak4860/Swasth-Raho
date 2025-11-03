@@ -8,7 +8,7 @@ export default function Appointments() {
   const [activeTab, setActiveTab] = useState("appointments");
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
-
+  const [reportsData, setReportsData] = useState<any[]>([]);
   // appointment lists
   const [allAppointments, setAllAppointments] = useState<any[]>([]);
   const [showReportModal, setShowReportModal] = useState(false);
@@ -101,7 +101,7 @@ export default function Appointments() {
 
       // Filter appointments based on status
       const allAppointments = res.data.appointments;
-
+      console.log("hello", allAppointments);
       setAllAppointments(allAppointments);
     } catch (error) {
       console.log(error);
@@ -215,6 +215,18 @@ export default function Appointments() {
       console.error("Error logging out:", error);
     }
   };
+
+  // fetch medical reports data
+  const getReports = async () => {
+    const res = await axios.get(`/doctor/get-reports`, {
+      withCredentials: true,
+    });
+    setReportsData(res.data.reports);
+  };
+
+  useEffect(() => {
+    getReports();
+  }, []);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -579,21 +591,37 @@ export default function Appointments() {
                       </div>
 
                       <div className="flex space-x-2 mt-4 md:mt-0">
-                        {appointment.status === "completed" && (
-                          <>
-                            <button
-                              className="px-3 py-1 bg-indigo-600 text-white text-sm rounded hover:bg-indigo-700 transition"
-                              onClick={() => handleOpenReportForm(appointment)}
-                            >
-                              Create Report
-                            </button>
-                          </>
-                        )}
-                        {appointment.status === "cancelled" && (
+                        {appointment.status === "completed" &&
+                          appointment.report_status === "incompleted" && (
+                            <>
+                              <button
+                                className="px-3 py-1 bg-indigo-600 text-white text-sm rounded hover:bg-indigo-700 transition"
+                                onClick={() =>
+                                  handleOpenReportForm(appointment)
+                                }
+                              >
+                                Create Report
+                              </button>
+                            </>
+                          )}
+                        {appointment.status === "completed" &&
+                          appointment.report_status === "pending" && (
+                            <>
+                              <button
+                                className="px-3 py-1 bg-indigo-600 text-white text-sm rounded hover:bg-indigo-700 transition"
+                                onClick={() =>
+                                  handleOpenReportForm(appointment)
+                                }
+                              >
+                                Complete Report
+                              </button>
+                            </>
+                          )}
+                        {/* {appointment.status === "cancelled" && (
                           <button className="px-3 py-1 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 transition">
                             Book Again
                           </button>
-                        )}
+                        )} */}
                       </div>
                     </div>
                   </div>
@@ -645,11 +673,23 @@ export default function Appointments() {
                 {/* Simple form for report (add fields as needed) */}
                 <ReportForm
                   appointment={selectedAppointmentForReport}
+                  // pass the matching report (if any) so the form can prefill when report_status === 'pending'
+                  initialReport={
+                    selectedAppointmentForReport
+                      ? reportsData.find(
+                          (r: any) =>
+                            r.appointment_id ===
+                            selectedAppointmentForReport._id
+                        )
+                      : undefined
+                  }
                   onCreate={createReportForAppointment}
                   onCancel={() => {
                     setShowReportModal(false);
                     setSelectedAppointmentForReport(null);
                   }}
+                  fetchAppointmentData={fetchAppointmentData}
+                  getReports={getReports}
                 />
               </div>
             </div>
@@ -665,7 +705,14 @@ export default function Appointments() {
 }
 
 // Small report form component (local only)
-function ReportForm({ appointment, onCreate, onCancel }: any) {
+function ReportForm({
+  appointment,
+  initialReport,
+  onCreate,
+  onCancel,
+  fetchAppointmentData,
+  getReports,
+}: any) {
   const [form, setForm] = useState<any>({
     date: "",
     department: "",
@@ -677,6 +724,50 @@ function ReportForm({ appointment, onCreate, onCancel }: any) {
     recommendations: [] as string[],
     nextAppointment: "",
   });
+
+  useEffect(() => {
+    // If appointment has a pending report and we have the report data, prefill the form
+    if (appointment) {
+      // default values from appointment
+      const base = {
+        date: appointment.date || "",
+        department: appointment.type || "",
+        disease: appointment.disease || "",
+      };
+
+      if (appointment.report_status === "pending" && initialReport) {
+        setForm((f: any) => ({
+          ...f,
+          date: initialReport.date || base.date,
+          department: initialReport.department || base.department,
+          disease: initialReport.disease || base.disease,
+          status: initialReport.status || f.status,
+          symptoms: Array.isArray(initialReport.symptoms)
+            ? initialReport.symptoms
+            : f.symptoms,
+          vitals: initialReport.vitals || f.vitals,
+          prescription: Array.isArray(initialReport.prescription)
+            ? initialReport.prescription
+            : f.prescription,
+          recommendations: Array.isArray(initialReport.recommendations)
+            ? initialReport.recommendations
+            : f.recommendations,
+          nextAppointment: initialReport.nextAppointment || f.nextAppointment,
+        }));
+      } else {
+        // For incompleted or new report, just set basic appointment defaults
+        setForm((f: any) => ({
+          ...f,
+          date: base.date || f.date,
+          department: base.department || f.department,
+          disease: base.disease || f.disease,
+        }));
+      }
+    }
+  }, [appointment, initialReport]);
+
+  const isEditingPendingReport =
+    appointment?.report_status === "pending" && initialReport;
 
   // useEffect(() => {
   //   if (appointment) {
@@ -785,6 +876,34 @@ function ReportForm({ appointment, onCreate, onCancel }: any) {
       ),
       nextAppointment: form.nextAppointment,
     };
+    // If this form was opened to complete an existing (pending) report,
+    // make a dummy PATCH request to update that report.
+    const isEditingPendingReport =
+      appointment?.report_status === "pending" && initialReport;
+
+    if (isEditingPendingReport) {
+      (async () => {
+        try {
+          await axios.patch(
+            `/doctor/update-report/${initialReport._id}`,
+            payload,
+            {
+              withCredentials: true,
+            }
+          );
+          // close modal and notify parent (parent will refresh data via its own flows)
+          fetchAppointmentData();
+          getReports();
+          onCancel();
+        } catch (err) {
+          console.error("Failed to PATCH report", err);
+          alert("Failed to update report (dummy). Check console.");
+        }
+      })();
+      return;
+    }
+
+    // otherwise create a new report (existing behavior)
     console.log("your data", payload);
     onCreate(appointment, payload);
   };
@@ -1057,9 +1176,9 @@ function ReportForm({ appointment, onCreate, onCancel }: any) {
       <div className="flex space-x-3 pt-3">
         <button
           type="submit"
-          className="flex-1 px-4 py-3 bg-gradient-to-r from-green-600 to-blue-600 text-white rounded-xl"
+          className="flex-1 px-4 py-3 bg-linear-to-r from-green-600 to-blue-600 text-white rounded-xl"
         >
-          Create Report
+          {isEditingPendingReport ? "Edit Report" : "Create Report"}
         </button>
         <button
           type="button"
