@@ -3,6 +3,7 @@ import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import axios from "axios";
 import Footer from "../../../../components/Footer";
+import { BarChart3, CalendarDays, UserCheck, Microscope } from "lucide-react";
 
 export default function Reports() {
   const [activeTab, setActiveTab] = useState("reports");
@@ -620,7 +621,7 @@ Swasth-Raho Medical Center
           {/* Main Content Area */}
           <main className="flex-1 p-6 mt-2 overflow-y-auto">
             {/* Summary Cards */}
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-6 mb-6">
+            {/* <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-6 mb-6">
               <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 md:p-6">
                 <div className="flex items-center">
                   <div className="w-10 h-10 md:w-12 md:h-12 bg-blue-600 rounded-full flex items-center justify-center">
@@ -673,6 +674,76 @@ Swasth-Raho Medical Center
                 <div className="flex items-center">
                   <div className="w-10 h-10 md:w-12 md:h-12 bg-orange-600 rounded-full flex items-center justify-center">
                     <span className="text-white text-lg md:text-xl">🔬</span>
+                  </div>
+                  <div className="ml-3 md:ml-4">
+                    <p className="text-xs md:text-sm text-orange-600 font-medium">
+                      Report Types
+                    </p>
+                    <p className="text-lg md:text-2xl font-bold text-orange-800">
+                      {uniqueReportTypes.length}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div> */}
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-6 mb-6">
+              {/* Total Reports */}
+              <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 md:p-6">
+                <div className="flex items-center">
+                  <div className="w-10 h-10 md:w-12 md:h-12 bg-blue-600 rounded-full flex items-center justify-center">
+                    <BarChart3 className="text-white w-5 h-5 md:w-6 md:h-6" />
+                  </div>
+
+                  <div className="ml-3 md:ml-4">
+                    <p className="text-xs md:text-sm text-blue-600 font-medium">
+                      Total Reports
+                    </p>
+                    <p className="text-lg md:text-2xl font-bold text-blue-800">
+                      {reportsData.length}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Latest Report */}
+              <div className="bg-green-50 border border-green-200 rounded-xl p-4 md:p-6">
+                <div className="flex items-center">
+                  <div className="w-10 h-10 md:w-12 md:h-12 bg-green-600 rounded-full flex items-center justify-center">
+                    <CalendarDays className="text-white w-5 h-5 md:w-6 md:h-6" />
+                  </div>
+                  <div className="ml-3 md:ml-4">
+                    <p className="text-xs md:text-sm text-green-600 font-medium">
+                      Latest Report
+                    </p>
+                    <p className="text-sm md:text-lg font-bold text-green-800">
+                      {reportsData[0]?.date || "N/A"}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Doctors */}
+              <div className="bg-purple-50 border border-purple-200 rounded-xl p-4 md:p-6">
+                <div className="flex items-center">
+                  <div className="w-10 h-10 md:w-12 md:h-12 bg-purple-600 rounded-full flex items-center justify-center">
+                    <UserCheck className="text-white w-5 h-5 md:w-6 md:h-6" />
+                  </div>
+                  <div className="ml-3 md:ml-4">
+                    <p className="text-xs md:text-sm text-purple-600 font-medium">
+                      Doctors
+                    </p>
+                    <p className="text-lg md:text-2xl font-bold text-purple-800">
+                      {uniqueDoctors.length}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Report Types */}
+              <div className="bg-orange-50 border border-orange-200 rounded-xl p-4 md:p-6">
+                <div className="flex items-center">
+                  <div className="w-10 h-10 md:w-12 md:h-12 bg-orange-600 rounded-full flex items-center justify-center">
+                    <Microscope className="text-white w-5 h-5 md:w-6 md:h-6" />
                   </div>
                   <div className="ml-3 md:ml-4">
                     <p className="text-xs md:text-sm text-orange-600 font-medium">
@@ -830,14 +901,23 @@ Swasth-Raho Medical Center
                             {report.status.toUpperCase()}
                           </span>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                          <button
-                            onClick={() => downloadReport(report)}
-                            className="cursor-pointer px-3 py-1 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors"
-                          >
-                            Download
-                          </button>
-                        </td>
+                        {report.status === "completed" && (
+                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                            <button
+                              onClick={() => downloadReport(report)}
+                              className="cursor-pointer px-3 py-1 bg-green-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors"
+                            >
+                              Download
+                            </button>
+                          </td>
+                        )}
+                        {report.status === "pending" && (
+                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                            <button className="cursor-pointer px-3 py-1 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors">
+                              Please Wait
+                            </button>
+                          </td>
+                        )}
                       </tr>
                     ))}
                   </tbody>

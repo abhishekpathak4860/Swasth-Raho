@@ -19,7 +19,7 @@ export default function Appointments() {
   const [searchQuery, setSearchQuery] = useState("");
   const [filterCategory, setFilterCategory] = useState<
     "upcoming" | "past" | "both"
-  >("upcoming");
+  >("both");
   const [filterStatus, setFilterStatus] = useState<
     "all" | "pending" | "confirmed" | "completed" | "cancelled"
   >("all");
@@ -101,7 +101,7 @@ export default function Appointments() {
 
       // Filter appointments based on status
       const allAppointments = res.data.appointments;
-      console.log("hello", allAppointments);
+
       setAllAppointments(allAppointments);
     } catch (error) {
       console.log(error);
@@ -421,7 +421,7 @@ export default function Appointments() {
                 <button
                   onClick={() => {
                     setSearchQuery("");
-                    setFilterCategory("upcoming");
+                    setFilterCategory("both");
                     setFilterStatus("all");
                   }}
                   className="px-3 py-2 bg-gray-100 rounded-lg text-black text-sm"
@@ -911,7 +911,7 @@ function ReportForm({
   return (
     <form
       onSubmit={handleSubmit}
-      className="space-y-4 max-h-[70vh] overflow-y-auto pr-2"
+      className="space-y-4 max-h-[70vh] overflow-y-auto overflow-x-hidden pr-2"
     >
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div>
@@ -1002,7 +1002,7 @@ function ReportForm({
                 placeholder="add symptoms"
                 value={s}
                 onChange={(e) => updateSymptom(idx, e.target.value)}
-                className="flex-1 px-3 py-2 border border-gray-200 text-black rounded-lg"
+                className="flex-1 min-w-0 px-3 py-2 border border-gray-200 text-black rounded-lg"
               />
               <button
                 type="button"
@@ -1072,32 +1072,39 @@ function ReportForm({
           {form.prescription.map((pres: any, idx: number) => (
             <div
               key={idx}
-              className="grid grid-cols-1 sm:grid-cols-3 gap-2 items-center"
+              className="grid grid-cols-1 sm:grid-cols-3 gap-2 items-start"
             >
-              <input
+              {/* Medicine - allow multiline to avoid overflow */}
+              <textarea
                 placeholder="Medicine"
                 value={pres.medicine}
                 onChange={(e) =>
                   updatePrescription(idx, "medicine", e.target.value)
                 }
-                className="px-3 py-2 border border-gray-200 text-black rounded"
+                rows={2}
+                className="w-full sm:w-auto px-3 py-2 border border-gray-200 text-black rounded min-w-0 resize-none break-words"
               />
-              <input
+
+              {/* Dosage - allow multiline */}
+              <textarea
                 placeholder="Dosage"
                 value={pres.dosage}
                 onChange={(e) =>
                   updatePrescription(idx, "dosage", e.target.value)
                 }
-                className="px-3 py-2 border border-gray-200 text-black rounded"
+                rows={2}
+                className="w-full sm:w-auto px-3 py-2 border border-gray-200 text-black rounded min-w-0 resize-none break-words"
               />
-              <div className="flex gap-2">
-                <input
+
+              <div className="flex flex-wrap items-center gap-2">
+                <textarea
                   placeholder="Frequency"
                   value={pres.frequency}
                   onChange={(e) =>
                     updatePrescription(idx, "frequency", e.target.value)
                   }
-                  className="px-3 py-2 border border-gray-200 text-black rounded flex-1"
+                  rows={2}
+                  className="w-full sm:flex-1 px-3 py-2 border border-gray-200 text-black rounded min-w-0 resize-none break-words"
                 />
                 <input
                   placeholder="Days"
@@ -1110,7 +1117,7 @@ function ReportForm({
                 <button
                   type="button"
                   onClick={() => removePrescription(idx)}
-                  className="px-3 py-1 bg-red-100 text-red-600 rounded"
+                  className="px-3 py-1 bg-red-100 text-red-600 rounded w-full sm:w-auto mt-2 sm:mt-0"
                 >
                   Remove
                 </button>
@@ -1138,17 +1145,18 @@ function ReportForm({
         </div>
         <div className="space-y-2">
           {form.recommendations.map((r: string, idx: number) => (
-            <div key={idx} className="flex items-center gap-2">
-              <input
+            <div key={idx} className="flex flex-wrap items-center gap-2">
+              <textarea
                 placeholder="add recommendations"
                 value={r}
                 onChange={(e) => updateRecommendation(idx, e.target.value)}
-                className="flex-1 px-3 py-2 border border-gray-200 text-black rounded-lg"
+                rows={2}
+                className="w-full sm:flex-1 min-w-0 px-3 py-2 border border-gray-200 text-black rounded-lg resize-none break-words"
               />
               <button
                 type="button"
                 onClick={() => removeRecommendation(idx)}
-                className="px-3 py-1 bg-red-100 text-red-600 rounded"
+                className="px-3 py-1 bg-red-100 text-red-600 rounded w-full sm:w-auto mt-2 sm:mt-0"
               >
                 Remove
               </button>
@@ -1164,12 +1172,13 @@ function ReportForm({
         <label className="block text-sm font-semibold text-gray-700 mb-2">
           Next Appointment (optional)
         </label>
-        <input
+        <textarea
           name="nextAppointment"
           value={form.nextAppointment}
           onChange={handleFieldChange}
           placeholder="e.g., Follow up after 2 weeks"
-          className="w-full px-4 py-3 border-2 border-gray-200 text-black rounded-xl"
+          rows={2}
+          className="w-full px-4 py-3 border-2 border-gray-200 text-black rounded-xl resize-none"
         />
       </div>
 

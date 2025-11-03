@@ -24,7 +24,7 @@ export default function Appointments() {
   const [searchQuery, setSearchQuery] = useState("");
   const [filterCategory, setFilterCategory] = useState<
     "upcoming" | "past" | "both"
-  >("upcoming");
+  >("both");
   const [filterStatus, setFilterStatus] = useState<
     "all" | "pending" | "confirmed" | "completed" | "cancelled"
   >("all");
@@ -662,7 +662,7 @@ Next Appointment: ${selectedReport.nextAppointment}
                 <button
                   onClick={() => {
                     setSearchQuery("");
-                    setFilterCategory("upcoming");
+                    setFilterCategory("both");
                     setFilterStatus("all");
                   }}
                   className="px-3 py-2 bg-gray-100 rounded-lg text-sm"
@@ -800,12 +800,14 @@ Next Appointment: ${selectedReport.nextAppointment}
                       <div className="flex space-x-2 mt-4 md:mt-0">
                         {appointment.status === "completed" && (
                           <>
-                            <button
-                              className="px-3 py-1 bg-green-600 text-white text-sm rounded hover:bg-green-700 transition"
-                              onClick={() => handleViewReport(appointment)}
-                            >
-                              📄 View Report
-                            </button>
+                            <Link href={"/admin/patient/reports"}>
+                              <button
+                                className="px-3 py-1 bg-green-600 text-white text-sm rounded hover:bg-green-700 transition"
+                                // onClick={() => handleViewReport(appointment)}
+                              >
+                                View Report Status
+                              </button>
+                            </Link>
                             {/* <button className="px-3 py-1 bg-yellow-600 text-white text-sm rounded hover:bg-yellow-700 transition">
                             ⭐ Rate Doctor
                           </button> */}

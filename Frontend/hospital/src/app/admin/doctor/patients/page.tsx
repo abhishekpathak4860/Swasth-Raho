@@ -13,68 +13,31 @@ export default function Patients() {
 
   // Dummy patients array (belongs to the doctor)
   const [patients, setPatients] = useState<any[]>([
-    {
-      name: "Ravi Sharma",
-      email: "ravi@example.com",
-      password: "$2b$10$bVxawoMPJbYCnvtwnN5G8uKyeKHWUrS6JEM81e5QEZtxshcsBJi3i",
-      role: "patient",
-      age: 28,
-      location: "Lucknow",
-      contact: "9123456789",
-      __v: 0,
-    },
-    {
-      name: "Priya Singh",
-      email: "priya@example.com",
-      password: "$2b$10$EXAMPLEHASHFORPRIYA",
-      role: "patient",
-      age: 32,
-      location: "Kanpur",
-      contact: "9876543210",
-      __v: 0,
-    },
-    {
-      name: "Priya Singh",
-      email: "priya@example.com",
-      password: "$2b$10$EXAMPLEHASHFORPRIYA",
-      role: "patient",
-      age: 32,
-      location: "Kanpur",
-      contact: "9876543210",
-      __v: 0,
-    },
-    {
-      name: "Priya Singh",
-      email: "priya@example.com",
-      password: "$2b$10$EXAMPLEHASHFORPRIYA",
-      role: "patient",
-      age: 32,
-      location: "Kanpur",
-      contact: "9876543210",
-      __v: 0,
-    },
-    {
-      name: "Priya Singh",
-      email: "priya@example.com",
-      password: "$2b$10$EXAMPLEHASHFORPRIYA",
-      role: "patient",
-      age: 32,
-      location: "Kanpur",
-      contact: "9876543210",
-      __v: 0,
-    },
-    {
-      name: "Priya Singh",
-      email: "priya@example.com",
-      password: "$2b$10$EXAMPLEHASHFORPRIYA",
-      role: "patient",
-      age: 32,
-      location: "Kanpur",
-      contact: "9876543210",
-      __v: 0,
-    },
+    // {
+    //   name: "Ravi Sharma",
+    //   email: "ravi@example.com",
+    //   password: "$2b$10$bVxawoMPJbYCnvtwnN5G8uKyeKHWUrS6JEM81e5QEZtxshcsBJi3i",
+    //   role: "patient",
+    //   age: 28,
+    //   location: "Lucknow",
+    //   contact: "9123456789",
+    //   __v: 0,
+    // },
   ]);
+  const fetchPatients = async () => {
+    try {
+      const res = await axios.get("/doctor/fetchPatients", {
+        withCredentials: true,
+      });
+      setPatients(res.data.patients);
+    } catch (error) {
+      console.log(error);
+    }
+  };
 
+  useEffect(() => {
+    fetchPatients();
+  }, []);
   const sidebarItems = [
     { id: "profile", label: "Profile", icon: "👤", route: "/admin/doctor" },
     {
@@ -318,8 +281,9 @@ export default function Patients() {
                 />
               </div>
             </div>
+            <hr className="text-black" />
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-4">
               {filtered.map((p: any, idx: number) => (
                 <div
                   key={idx}

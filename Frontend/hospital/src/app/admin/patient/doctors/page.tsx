@@ -3,6 +3,7 @@ import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import axios from "axios";
 import Footer from "../../../../components/Footer";
+import { GraduationCap, Briefcase, Hospital, IndianRupee } from "lucide-react";
 
 export interface DoctorType {
   _id: string;
@@ -407,7 +408,7 @@ export default function Doctors() {
                         : "bg-gray-100 text-gray-700 hover:bg-blue-50 hover:text-blue-600"
                     }`}
                   >
-                    {spec.icon} {spec.name}
+                    {spec.name}
                   </button>
                 ))}
               </div>
@@ -441,27 +442,32 @@ export default function Doctors() {
                   {/* Doctor Details */}
                   <div className="space-y-2 mb-4">
                     <div className="flex items-center space-x-2 text-sm text-gray-600">
-                      <span>🎓</span>
+                      <GraduationCap className="w-4 h-4 text-blue-600" />
                       <span>{doctor.education}</span>
                     </div>
+
                     <div className="flex items-center space-x-2 text-sm text-gray-600">
-                      <span>💼</span>
+                      <Briefcase className="w-4 h-4 text-purple-600" />
                       <span>{doctor.experience} experience</span>
                     </div>
+
                     <div className="flex items-center space-x-2 text-sm text-gray-600">
-                      <span>🏥</span>
+                      <Hospital className="w-4 h-4 text-green-600" />
                       <span>{doctor.hospital}</span>
                     </div>
-                    {/* <div className="flex items-center space-x-2 text-sm text-gray-600">
-                    <span>⏰</span>
-                    <span>{doctor.availability}</span>
-                  </div> */}
+
+                    {/* Availability example if you enable it later
+  <div className="flex items-center space-x-2 text-sm text-gray-600">
+    <Clock className="w-4 h-4 text-orange-600" />
+    <span>{doctor.availability}</span>
+  </div> 
+  */}
+
                     <div className="flex items-center space-x-2 text-sm text-gray-600">
-                      <span>💰</span>
-                      <span>Consultation:₹{doctor.consultationFee}</span>
+                      <IndianRupee className="w-4 h-4 text-yellow-600" />
+                      <span>Consultation: ₹{doctor.consultationFee}</span>
                     </div>
                   </div>
-
                   {/* Action Buttons */}
                   <div className="flex space-x-2">
                     <button
