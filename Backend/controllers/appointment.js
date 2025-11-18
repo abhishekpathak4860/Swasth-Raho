@@ -33,6 +33,7 @@ export const appointment = async (req, res) => {
       date,
       time,
       status: "pending",
+      consultationFee,
     });
 
     // 5. Save appointment to DB

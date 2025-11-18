@@ -9,6 +9,7 @@ const appointmentSchema = new mongoose.Schema(
     p_email: { type: String, required: true },
     disease: { type: String, required: true },
     type: { type: String, required: true },
+    consultationFee: { type: String, required: true },
     date: { type: String, required: true },
     time: { type: String, required: true },
     status: { type: String, default: "pending", required: true },

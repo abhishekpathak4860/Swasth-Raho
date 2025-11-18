@@ -20,6 +20,14 @@ export default function Appointments() {
   const [user, setUser] = useState<any>(null);
   const [reportsData, setReportsData] = useState<any[]>([]);
 
+  // Payment modal state
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [paymentAppointment, setPaymentAppointment] = useState<any>(null);
+  const [paymentUrl, setPaymentUrl] = useState<string | null>(null);
+  const [paymentLoading, setPaymentLoading] = useState(false);
+  const [paymentInitiated, setPaymentInitiated] = useState(false);
+  const [paymentVerifyResult, setPaymentVerifyResult] = useState<any>(null);
+
   // Search & filter state
   const [searchQuery, setSearchQuery] = useState("");
   const [filterCategory, setFilterCategory] = useState<
@@ -38,6 +46,7 @@ export default function Appointments() {
     doctor: "",
     date: "",
     time: "",
+    consultationFee: "",
   });
 
   const sidebarItems = [
@@ -213,6 +222,129 @@ Next Appointment: ${selectedReport.nextAppointment}
     window.URL.revokeObjectURL(url);
     document.body.removeChild(a);
   };
+
+  // Payment helpers
+  const openPaymentModal = (appointment: any) => {
+    setPaymentAppointment(appointment);
+    setPaymentUrl(null);
+    setPaymentInitiated(false);
+    setPaymentLoading(false);
+    setShowPaymentModal(true);
+  };
+
+  const closePaymentModal = () => {
+    setShowPaymentModal(false);
+    setPaymentAppointment(null);
+    setPaymentUrl(null);
+    setPaymentInitiated(false);
+    setPaymentLoading(false);
+  };
+
+  const getTodayISO = () => {
+    return new Date().toISOString().split("T")[0];
+  };
+
+  // Call backend to initiate payment and receive redirect URL
+  const handleConfirmPayment = async () => {
+    if (!paymentAppointment) return;
+    setPaymentLoading(true);
+    try {
+      const payload = {
+        appointmentId: paymentAppointment._id,
+        p_id: paymentAppointment.p_id || paymentAppointment.p_id,
+        doc_id: paymentAppointment.doc_id || paymentAppointment.doc_id,
+        p_name: paymentAppointment.p_name,
+        doc_name: paymentAppointment.doc_name,
+        disease: paymentAppointment.disease,
+        consultationFee: paymentAppointment.consultationFee,
+        date: getTodayISO(),
+      };
+
+      // Replace this endpoint with your real initiate-payment endpoint if different
+      const res = await axios.post(`/patient/initiate-payment`, payload, {
+        withCredentials: true,
+      });
+
+      // Expecting backend to return { redirectUrl: 'https://...' }
+      const redirectUrl =
+        res?.data?.redirectUrl || res?.data?.paymentUrl || null;
+      if (redirectUrl) {
+        setPaymentUrl(redirectUrl);
+        setPaymentInitiated(true);
+      } else {
+        // If backend returns some other shape, show a message
+        alert(
+          "Payment initiation returned no redirect URL. Check server response."
+        );
+      }
+    } catch (error: any) {
+      console.error("Payment initiation error:", error);
+      alert(error?.response?.data?.message || "Failed to initiate payment.");
+    } finally {
+      setPaymentLoading(false);
+    }
+  };
+
+  // When user clicks Proceed Payment, redirect to the gateway URL
+  const handleProceedPayment = () => {
+    if (!paymentUrl) {
+      alert("No payment URL available. Please Confirm Payment first.");
+      return;
+    }
+    // navigate to the payment gateway (open in same tab or new tab as you prefer)
+    window.location.href = paymentUrl;
+  };
+
+  const removeQueryParam = (key: string) => {
+    try {
+      const url = new URL(window.location.href);
+      url.searchParams.delete(key);
+      window.history.replaceState({}, "", url.toString());
+    } catch (e) {
+      // fallback: rebuild without search
+      const [base] = window.location.href.split("?");
+      window.history.replaceState({}, "", base);
+    }
+  };
+
+  // On mount: if redirected back from PhonePe (source=phonepe), open modal and call verify API
+  useEffect(() => {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const src = params.get("source");
+      if (src === "phonepe") {
+        // open modal and run verify
+        setShowPaymentModal(true);
+        setPaymentLoading(true);
+        (async () => {
+          try {
+            const res = await axios.get(`/patient/verify-payment`, {
+              withCredentials: true,
+            });
+            // Expecting backend: { status: 'success'|'failed'|'pending', appointment?: {...}, message?: '...' }
+            const data = res?.data || {};
+            if (data.appointment) setPaymentAppointment(data.appointment);
+            setPaymentVerifyResult(data);
+          } catch (err: any) {
+            console.error("verify-payment error:", err);
+            setPaymentVerifyResult({
+              status: "error",
+              message: err?.message || "Verification failed",
+            });
+          } finally {
+            setPaymentLoading(false);
+            // keep result visible for 2 seconds then close modal and remove query param
+            setTimeout(() => {
+              closePaymentModal();
+              removeQueryParam("source");
+            }, 10000);
+          }
+        })();
+      }
+    } catch (e) {
+      console.error("error parsing URL params", e);
+    }
+  }, []);
   const rescheduleAppointment = (appointment: any) => {
     // Set form data to the current appointment’s details
     setFormData({
@@ -224,6 +356,7 @@ Next Appointment: ${selectedReport.nextAppointment}
       doctor: appointment.doc_name || "",
       date: appointment.date || "",
       time: appointment.time || "",
+      consultationFee: appointment.consultationFee,
     });
     setToggleButton(true);
     setShowBookingForm(true);
@@ -240,6 +373,7 @@ Next Appointment: ${selectedReport.nextAppointment}
       doctor: "",
       date: "",
       time: "",
+      consultationFee: "",
     });
   };
   const handleInputChange = (e: { target: { name: any; value: any } }) => {
@@ -808,9 +942,12 @@ Next Appointment: ${selectedReport.nextAppointment}
                                 View Report Status
                               </button>
                             </Link>
-                            {/* <button className="px-3 py-1 bg-yellow-600 text-white text-sm rounded hover:bg-yellow-700 transition">
-                            ⭐ Rate Doctor
-                          </button> */}
+                            <button
+                              className="px-3 py-1  bg-green-600 text-white text-sm rounded hover:bg-green-700 transition"
+                              onClick={() => openPaymentModal(appointment)}
+                            >
+                              Pay
+                            </button>
                           </>
                         )}
                         {appointment.status === "cancelled" && (
@@ -932,6 +1069,7 @@ Next Appointment: ${selectedReport.nextAppointment}
                               ...formData,
                               doc_id: selectedDoctor._id,
                               doctor: selectedDoctor.name,
+                              consultationFee: selectedDoctor.consultationFee,
                             });
                           }
                         }}
@@ -941,7 +1079,8 @@ Next Appointment: ${selectedReport.nextAppointment}
                         <option value="">Select a doctor</option>
                         {doctorsData.map((doctor) => (
                           <option key={doctor._id} value={doctor._id}>
-                            {doctor.name} - {doctor.type}
+                            {doctor.name} - {doctor.type} - Rs.
+                            {doctor.consultationFee}
                           </option>
                         ))}
                       </select>
@@ -1004,6 +1143,132 @@ Next Appointment: ${selectedReport.nextAppointment}
                       </button>
                     </div>
                   </form>
+                </div>
+              </div>
+            </div>
+          </>
+        )}
+        {/* Payment Modal */}
+        {showPaymentModal && (
+          <>
+            {/* Overlay */}
+            <div
+              className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50"
+              onClick={closePaymentModal}
+            ></div>
+
+            {/* Modal */}
+            <div className="fixed inset-0 flex items-center justify-center z-50 p-4 pointer-events-none">
+              <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg pointer-events-auto border border-gray-200">
+                <div className="p-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-xl font-bold">Payment</h3>
+                    <button
+                      onClick={closePaymentModal}
+                      className="text-gray-400 hover:text-gray-600 text-2xl hover:bg-gray-100 rounded-full w-8 h-8 flex items-center justify-center transition-all"
+                    >
+                      ✕
+                    </button>
+                  </div>
+
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div className="p-3 rounded-lg border bg-gray-50">
+                        <p className="text-sm text-gray-500">Doctor</p>
+                        <p className="font-medium text-gray-800">
+                          {paymentAppointment?.doc_name}
+                        </p>
+                      </div>
+                      <div className="p-3 rounded-lg border bg-gray-50">
+                        <p className="text-sm text-gray-500">Patient</p>
+                        <p className="font-medium text-gray-800">
+                          {paymentAppointment?.p_name}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div className="p-3 rounded-lg border bg-gray-50">
+                        <p className="text-sm text-gray-500">Current Date</p>
+                        <p className="font-medium text-gray-800">
+                          {getTodayISO()}
+                        </p>
+                      </div>
+                      <div className="p-3 rounded-lg border bg-gray-50">
+                        <p className="text-sm text-gray-500">Amount</p>
+                        <p className="font-medium text-gray-800">
+                          ₹{paymentAppointment?.consultationFee ?? "0"}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="p-3 rounded-lg border bg-gray-50">
+                      <p className="text-sm text-gray-500">Disease / Reason</p>
+                      <p className="font-medium text-gray-800">
+                        {paymentAppointment?.disease ?? "-"}
+                      </p>
+                    </div>
+
+                    {/* Verification status area (used when redirected back from gateway) */}
+                    <div>
+                      {paymentLoading && (
+                        <div className="p-3 rounded-lg bg-yellow-50 text-yellow-800 border border-yellow-100 text-sm">
+                          Verifying payment, please wait...
+                        </div>
+                      )}
+
+                      {!paymentLoading && paymentVerifyResult && (
+                        <div
+                          className={`p-3 rounded-lg text-sm ${
+                            paymentVerifyResult.status === "success"
+                              ? "bg-green-50 text-green-800 border border-green-100"
+                              : paymentVerifyResult.status === "pending"
+                              ? "bg-yellow-50 text-yellow-800 border border-yellow-100"
+                              : "bg-red-50 text-red-800 border border-red-100"
+                          }`}
+                        >
+                          <p className="font-semibold">
+                            Status:{" "}
+                            {paymentVerifyResult.status ??
+                              paymentVerifyResult.message}
+                          </p>
+                          {paymentVerifyResult.message && (
+                            <p className="mt-1">
+                              {paymentVerifyResult.message}
+                            </p>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="mt-6 pt-4 border-t border-gray-200 flex space-x-3">
+                    {!paymentInitiated ? (
+                      <button
+                        onClick={handleConfirmPayment}
+                        disabled={paymentLoading}
+                        className={`flex-1 px-4 py-3 bg-gradient-to-r from-green-600 to-blue-600 text-white rounded-xl hover:from-green-700 hover:to-blue-700 transition-all font-semibold shadow-lg ${
+                          paymentLoading ? "opacity-60 cursor-wait" : ""
+                        }`}
+                      >
+                        {paymentLoading ? "Processing..." : "Confirm Payment"}
+                      </button>
+                    ) : (
+                      <button
+                        onClick={handleProceedPayment}
+                        className="flex-1 px-4 py-3 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition-all font-semibold shadow-lg"
+                      >
+                        Proceed Payment
+                      </button>
+                    )}
+
+                    <button
+                      onClick={closePaymentModal}
+                      className="flex-1 px-4 py-3 bg-gray-300 text-gray-700 rounded-xl hover:bg-gray-400 transition-all font-semibold"
+                    >
+                      Close
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
