@@ -46,6 +46,7 @@ app.use((err, req, res, next) => {
 
 await connectDB();
 export default app;
+//hello world
 // app.listen(PORT, () => {
 //   console.log(`Server running on port ${PORT}`);
 // });
