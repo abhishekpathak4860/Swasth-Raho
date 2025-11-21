@@ -3,20 +3,22 @@
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import axios from "axios";
+import { User, CalendarDays, Users, Wallet } from "lucide-react";
 
 export default function Revenue() {
   const [activeTab, setActiveTab] = useState("revenue");
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [doctor, setDoctor] = useState<any>(null);
+  const [payments, setPayments] = useState<any>([]);
 
   // Dummy stats and revenue rows
-  const stats = {
-    totalRevenue: 45200,
-    totalPatients: 128,
-    totalTreatments: 76,
-    totalReports: 42,
-  };
+  // const stats = {
+  //   totalRevenue: 45200,
+  //   totalPatients: 128,
+  //   totalTreatments: 76,
+  //   totalReports: 42,
+  // };
 
   const [rows] = useState<any[]>([
     {
@@ -57,37 +59,43 @@ export default function Revenue() {
   const [searchQuery, setSearchQuery] = useState("");
   const [paymentFilter, setPaymentFilter] = useState("all"); // all | paid | pending | failed
 
-  const filteredRows = rows.filter((r) => {
-    const matchesName = r.patient
+  const filteredRows = payments.filter((r) => {
+    const matchesName = r.p_name
       .toLowerCase()
       .includes(searchQuery.trim().toLowerCase());
     const matchesStatus =
-      paymentFilter === "all" ? true : r.paymentStatus === paymentFilter;
+      paymentFilter === "all" ? true : r.status === paymentFilter;
     return matchesName && matchesStatus;
   });
 
   const sidebarItems = [
-    { id: "profile", label: "Profile", icon: "👤", route: "/admin/doctor" },
+    {
+      id: "profile",
+      label: "Profile",
+      icon: User,
+      route: "/admin/doctor",
+    },
     {
       id: "appointments",
       label: "Appointments",
-      icon: "📅",
+      icon: CalendarDays,
       route: "/admin/doctor/appointments",
     },
     {
       id: "patients",
       label: "Patients",
-      icon: "🧑‍🤝‍🧑",
+      icon: Users,
       route: "/admin/doctor/patients",
     },
     {
       id: "revenue",
       label: "Revenue",
-      icon: "💰",
+      icon: Wallet,
       route: "/admin/doctor/revenue",
     },
   ];
 
+  // fetch doctor profile
   useEffect(() => {
     const fetchProfile = async () => {
       try {
@@ -100,6 +108,20 @@ export default function Revenue() {
       }
     };
     fetchProfile();
+  }, []);
+  // fetch doctor payments
+  useEffect(() => {
+    const fetchPayments = async () => {
+      try {
+        const res = await axios.get(`/doctor/payments`, {
+          withCredentials: true,
+        });
+        setPayments(res.data.payments);
+      } catch (err) {
+        // ignore and keep null
+      }
+    };
+    fetchPayments();
   }, []);
 
   const handleLogout = async () => {
@@ -169,6 +191,7 @@ export default function Revenue() {
               }`}
               onClick={() => setIsSidebarOpen(false)}
             >
+              <item.icon className="h-5 w-5" />
               <span className="ml-3 font-medium">{item.label}</span>
             </Link>
           ))}
@@ -209,7 +232,7 @@ export default function Revenue() {
                 }`}
                 onClick={() => setActiveTab(item.id)}
               >
-                <span className="text-2xl">{item.icon}</span>
+                <item.icon className="h-5 w-5" />
                 <span className="ml-3 font-medium">{item.label}</span>
               </Link>
             ))}
@@ -307,25 +330,30 @@ export default function Revenue() {
               <div className="bg-white rounded-lg border border-gray-200 p-4 shadow-sm">
                 <p className="text-sm text-gray-500">Total Revenue</p>
                 <p className="text-2xl font-bold text-gray-800">
-                  ₹ {stats.totalRevenue.toLocaleString()}
+                  ₹{" "}
+                  {payments.reduce(
+                    (total, item) => total + Number(item.amount_received),
+                    0
+                  )}
                 </p>
               </div>
               <div className="bg-white rounded-lg border border-gray-200 p-4 shadow-sm">
                 <p className="text-sm text-gray-500">Total Patients</p>
+                {/* filter unique patients */}
                 <p className="text-2xl font-bold text-gray-800">
-                  {stats.totalPatients}
+                  {new Set(payments.map((item) => item.p_id)).size}
                 </p>
               </div>
               <div className="bg-white rounded-lg border border-gray-200 p-4 shadow-sm">
                 <p className="text-sm text-gray-500">Total Treatments</p>
                 <p className="text-2xl font-bold text-gray-800">
-                  {stats.totalTreatments}
+                  {payments.length}
                 </p>
               </div>
               <div className="bg-white rounded-lg border border-gray-200 p-4 shadow-sm">
                 <p className="text-sm text-gray-500">Total Reports</p>
                 <p className="text-2xl font-bold text-gray-800">
-                  {stats.totalReports}
+                  {payments.length}
                 </p>
               </div>
             </div>
@@ -399,7 +427,7 @@ export default function Revenue() {
                         {r.date}
                       </td>
                       <td className="py-4 px-3 text-sm text-gray-700">
-                        {r.patient}
+                        {r.p_name}
                       </td>
                       <td className="py-4 px-3 text-sm text-gray-700">
                         {r.disease}
@@ -408,15 +436,15 @@ export default function Revenue() {
                         ₹ {r.consultationFee}
                       </td>
                       <td className="py-4 px-3 text-sm text-gray-700">
-                        ₹ {r.amountReceived}
+                        ₹ {r.amount_received}
                       </td>
                       <td className="py-4 px-3 text-sm">
                         <span
                           className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${getStatusClasses(
-                            r.paymentStatus
+                            r.status
                           )}`}
                         >
-                          {r.paymentStatus.toUpperCase()}
+                          {r.status.toUpperCase()}
                         </span>
                       </td>
                     </tr>

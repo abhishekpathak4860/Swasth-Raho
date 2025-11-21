@@ -4,6 +4,15 @@ import Link from "next/link";
 import { DoctorType } from "../doctors/page";
 import axios from "axios";
 import Footer from "../../../../components/Footer";
+import {
+  User,
+  CalendarDays,
+  Stethoscope,
+  FileText,
+  Hospital,
+  Receipt,
+  MessageCircle,
+} from "lucide-react";
 
 export default function Appointments() {
   const [activeTab, setActiveTab] = useState("appointments");
@@ -53,37 +62,43 @@ export default function Appointments() {
     {
       id: "profile",
       label: "Profile",
-      icon: "👤",
+      icon: User,
       route: "/admin/patient",
     },
     {
       id: "appointments",
       label: "Appointments",
-      icon: "📅",
+      icon: CalendarDays,
       route: "/admin/patient/appointments",
     },
     {
       id: "doctors",
       label: "Doctors",
-      icon: "👨‍⚕️",
+      icon: Stethoscope,
       route: "/admin/patient/doctors",
     },
     {
       id: "reports",
       label: "Medical Reports",
-      icon: "📄",
+      icon: FileText,
       route: "/admin/patient/reports",
     },
     {
       id: "hospitals",
       label: "Hospitals",
-      icon: "💬",
+      icon: Hospital,
       route: "/admin/patient/hospitals",
+    },
+    {
+      id: "bills",
+      label: "Bills",
+      icon: Receipt,
+      route: "/admin/patient/bills",
     },
     {
       id: "chat",
       label: "AI Assistant",
-      icon: "💬",
+      icon: MessageCircle,
       route: "/admin/patient/chat",
     },
   ];
@@ -337,7 +352,9 @@ Next Appointment: ${selectedReport.nextAppointment}
             setTimeout(() => {
               closePaymentModal();
               removeQueryParam("source");
-            }, 10000);
+              setPaymentVerifyResult(null);
+              fetchAppointmentData();
+            }, 5000);
           }
         })();
       }
@@ -579,7 +596,7 @@ Next Appointment: ${selectedReport.nextAppointment}
                 setIsSidebarOpen(false);
               }}
             >
-              {/* <span className="text-lg">{item.icon}</span> */}
+              <item.icon className="h-5 w-5" />
               <span className="ml-3 font-medium">{item.label}</span>
             </Link>
           ))}
@@ -625,7 +642,7 @@ Next Appointment: ${selectedReport.nextAppointment}
                 }`}
                 onClick={() => setActiveTab(item.id)}
               >
-                <span className="text-2xl">{item.icon}</span>
+                <item.icon className="h-5 w-5" />
                 <span className="ml-3 font-medium">{item.label}</span>
               </Link>
             ))}
@@ -942,12 +959,18 @@ Next Appointment: ${selectedReport.nextAppointment}
                                 View Report Status
                               </button>
                             </Link>
-                            <button
-                              className="px-3 py-1  bg-green-600 text-white text-sm rounded hover:bg-green-700 transition"
-                              onClick={() => openPaymentModal(appointment)}
-                            >
-                              Pay
-                            </button>
+                            {appointment.paymentStatus === "paid" ? (
+                              <span className="px-3 py-1 bg-blue-500 text-white text-sm rounded">
+                                Payment Done
+                              </span>
+                            ) : (
+                              <button
+                                className="px-3 py-1 bg-green-600 text-white text-sm rounded hover:bg-green-700 transition"
+                                onClick={() => openPaymentModal(appointment)}
+                              >
+                                Pay
+                              </button>
+                            )}
                           </>
                         )}
                         {appointment.status === "cancelled" && (
@@ -1162,7 +1185,7 @@ Next Appointment: ${selectedReport.nextAppointment}
               <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg pointer-events-auto border border-gray-200">
                 <div className="p-6">
                   <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-xl font-bold">Payment</h3>
+                    <h3 className="text-xl text-black font-bold">Payment</h3>
                     <button
                       onClick={closePaymentModal}
                       className="text-gray-400 hover:text-gray-600 text-2xl hover:bg-gray-100 rounded-full w-8 h-8 flex items-center justify-center transition-all"

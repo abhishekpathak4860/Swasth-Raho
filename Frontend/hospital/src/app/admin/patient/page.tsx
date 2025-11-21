@@ -2,6 +2,15 @@
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import axios from "axios";
+import {
+  User,
+  CalendarDays,
+  Stethoscope,
+  FileText,
+  Hospital,
+  Receipt,
+  MessageCircle,
+} from "lucide-react";
 
 export default function PatientDashboard() {
   const [activeTab, setActiveTab] = useState("profile");
@@ -10,42 +19,47 @@ export default function PatientDashboard() {
   const [user, setUser] = useState<any>(null);
   const [editUserDetails, setEditUserDetails] = useState<any>(null);
   const [showEditModal, setShowEditModal] = useState(false);
-
   const sidebarItems = [
     {
       id: "profile",
       label: "Profile",
-      icon: "👤",
+      icon: User,
       route: "/admin/patient",
     },
     {
       id: "appointments",
       label: "Appointments",
-      icon: "📅",
+      icon: CalendarDays,
       route: "/admin/patient/appointments",
     },
     {
       id: "doctors",
       label: "Doctors",
-      icon: "👨‍⚕️",
+      icon: Stethoscope,
       route: "/admin/patient/doctors",
     },
     {
       id: "reports",
       label: "Medical Reports",
-      icon: "📄",
+      icon: FileText,
       route: "/admin/patient/reports",
     },
     {
       id: "hospitals",
       label: "Hospitals",
-      icon: "💬",
+      icon: Hospital,
       route: "/admin/patient/hospitals",
+    },
+    {
+      id: "bills",
+      label: "Bills",
+      icon: Receipt,
+      route: "/admin/patient/bills",
     },
     {
       id: "chat",
       label: "AI Assistant",
-      icon: "💬",
+      icon: MessageCircle,
       route: "/admin/patient/chat",
     },
   ];
@@ -166,7 +180,7 @@ export default function PatientDashboard() {
                 setIsSidebarOpen(false);
               }}
             >
-              {/* <span className="text-lg">{item.icon}</span> */}
+              <item.icon className="h-5 w-5" />
               <span className="ml-3 font-medium">{item.label}</span>
             </Link>
           ))}
@@ -213,7 +227,7 @@ export default function PatientDashboard() {
                 }`}
                 onClick={() => setActiveTab(item.id)}
               >
-                <span className="text-2xl">{item.icon}</span>
+                <item.icon className="h-5 w-5" />
                 <span className={`ml-3 font-medium`}>{item.label}</span>
               </Link>
             ))}

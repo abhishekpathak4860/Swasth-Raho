@@ -10,6 +10,7 @@ import { UpdateUserDetails } from "../controllers/UpdateUserDetails.js";
 import { initiatePayment } from "../controllers/initiatePayment.js";
 import { verifyPayment } from "../controllers/verifyPayment.js";
 import { getReports } from "../controllers/getReports.js";
+import { fetchBills } from "../controllers/fetchBills.js";
 
 const router = express.Router();
 
@@ -20,6 +21,7 @@ router.post("/appointment", verifyToken, appointment);
 router.post("/initiate-payment", verifyToken, initiatePayment);
 router.get("/get-appointments", verifyToken, UpcomingAppointments);
 router.get("/get-reports", verifyToken, getReports);
+router.get("/payments", verifyToken, fetchBills);
 router.patch(
   "/UpdateAppointment/:appointmentId",
   verifyToken,

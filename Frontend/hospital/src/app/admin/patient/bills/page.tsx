@@ -3,88 +3,117 @@
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import axios from "axios";
-import { User, CalendarDays, Users, Wallet } from "lucide-react";
+import {
+  User,
+  CalendarDays,
+  Stethoscope,
+  FileText,
+  Hospital,
+  Receipt,
+  MessageCircle,
+} from "lucide-react";
 
-export default function Patients() {
-  const [activeTab, setActiveTab] = useState("patients");
+export default function Revenue() {
+  const [activeTab, setActiveTab] = useState("bills");
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
-  const [doctor, setDoctor] = useState<any>(null);
-  const [query, setQuery] = useState("");
+  const [patient, setPatient] = useState<any>(null);
+  const [payments, setPayments] = useState<any>([]);
 
-  // Dummy patients array (belongs to the doctor)
-  const [patients, setPatients] = useState<any[]>([
-    // {
-    //   name: "Ravi Sharma",
-    //   email: "ravi@example.com",
-    //   password: "$2b$10$bVxawoMPJbYCnvtwnN5G8uKyeKHWUrS6JEM81e5QEZtxshcsBJi3i",
-    //   role: "patient",
-    //   age: 28,
-    //   location: "Lucknow",
-    //   contact: "9123456789",
-    //   __v: 0,
-    // },
-  ]);
-  const fetchPatients = async () => {
-    try {
-      const res = await axios.get("/doctor/fetchPatients", {
-        withCredentials: true,
-      });
-      setPatients(res.data.patients);
-    } catch (error) {
-      console.log(error);
-    }
-  };
+  // Dummy stats and revenue rows
+  // const stats = {
+  //   totalRevenue: 45200,
+  //   totalPatients: 128,
+  //   totalTreatments: 76,
+  //   totalReports: 42,
+  // };
 
-  useEffect(() => {
-    fetchPatients();
-  }, []);
+  // Filters
+  const [searchQuery, setSearchQuery] = useState("");
+  const [paymentFilter, setPaymentFilter] = useState("all"); // all | paid | pending | failed
+
+  const filteredRows = payments.filter((r) => {
+    const matchesName = r.doc_name
+      .toLowerCase()
+      .includes(searchQuery.trim().toLowerCase());
+    const matchesStatus =
+      paymentFilter === "all" ? true : r.status === paymentFilter;
+    return matchesName && matchesStatus;
+  });
+
+  // fetch doctor profile
   const sidebarItems = [
     {
       id: "profile",
       label: "Profile",
       icon: User,
-      route: "/admin/doctor",
+      route: "/admin/patient",
     },
     {
       id: "appointments",
       label: "Appointments",
       icon: CalendarDays,
-      route: "/admin/doctor/appointments",
+      route: "/admin/patient/appointments",
     },
     {
-      id: "patients",
-      label: "Patients",
-      icon: Users,
-      route: "/admin/doctor/patients",
+      id: "doctors",
+      label: "Doctors",
+      icon: Stethoscope,
+      route: "/admin/patient/doctors",
     },
     {
-      id: "revenue",
-      label: "Revenue",
-      icon: Wallet,
-      route: "/admin/doctor/revenue",
+      id: "reports",
+      label: "Medical Reports",
+      icon: FileText,
+      route: "/admin/patient/reports",
+    },
+    {
+      id: "hospitals",
+      label: "Hospitals",
+      icon: Hospital,
+      route: "/admin/patient/hospitals",
+    },
+    {
+      id: "bills",
+      label: "Bills",
+      icon: Receipt,
+      route: "/admin/patient/bills",
+    },
+    {
+      id: "chat",
+      label: "AI Assistant",
+      icon: MessageCircle,
+      route: "/admin/patient/chat",
     },
   ];
 
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        const res = await axios.get(`/doctor/profile`, {
+        const res = await axios.get(`/patient/profile`, {
           withCredentials: true,
         });
-        setDoctor(res.data.doctor);
+        setPatient(res.data.patient);
       } catch (err) {
-        // keep doctor null if fetch fails; UI will use dummy header
-        console.warn("Could not fetch doctor profile, using placeholder", err);
+        // ignore and keep null
       }
     };
-
     fetchProfile();
   }, []);
-
-  const filtered = patients.filter((p) =>
-    p.name.toLowerCase().includes(query.trim().toLowerCase())
-  );
+  // fetch doctor payments
+  useEffect(() => {
+    const fetchPayments = async () => {
+      try {
+        const res = await axios.get(`/patient/payments`, {
+          withCredentials: true,
+        });
+        setPayments(res.data.payments);
+      } catch (err) {
+        // ignore and keep null
+      }
+    };
+    fetchPayments();
+  }, []);
 
   const handleLogout = async () => {
     try {
@@ -95,8 +124,21 @@ export default function Patients() {
     }
   };
 
+  const getStatusClasses = (s: string) => {
+    switch (s) {
+      case "paid":
+        return "bg-emerald-100 text-emerald-800";
+      case "pending":
+        return "bg-yellow-100 text-yellow-800";
+      case "failed":
+        return "bg-red-100 text-red-800";
+      default:
+        return "bg-gray-100 text-gray-800";
+    }
+  };
+
   return (
-    <div className={`min-h-screen bg-gray-50`}>
+    <div className="min-h-screen bg-gray-50">
       {/* Mobile overlay */}
       {isSidebarOpen && (
         <div
@@ -138,10 +180,7 @@ export default function Patients() {
                   ? "bg-blue-50 text-blue-600"
                   : "text-gray-700 hover:bg-gray-50"
               }`}
-              onClick={() => {
-                setActiveTab(item.id);
-                setIsSidebarOpen(false);
-              }}
+              onClick={() => setIsSidebarOpen(false)}
             >
               <item.icon className="h-5 w-5" />
               <span className="ml-3 font-medium">{item.label}</span>
@@ -225,7 +264,7 @@ export default function Patients() {
                   </svg>
                 </button>
                 <h2 className="text-lg md:text-2xl font-bold text-gray-800 ml-2">
-                  Patients
+                  Revenue
                 </h2>
               </div>
 
@@ -237,7 +276,7 @@ export default function Patients() {
                   >
                     <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center">
                       <span className="text-white font-semibold">
-                        {doctor?.name
+                        {patient?.name
                           ?.split(" ")
                           .map((n: any) => n[0])
                           .join("")
@@ -246,10 +285,10 @@ export default function Patients() {
                     </div>
                     <div className="hidden md:block text-left">
                       <p className="text-sm font-medium text-gray-800">
-                        {doctor?.name || "Dr. Meera Sharma"}
+                        {patient?.name || "Dr. Meera Sharma"}
                       </p>
                       <p className="text-xs text-gray-500">
-                        {doctor?.email || "doctor@example.com"}
+                        {patient?.email || "doctor@example.com"}
                       </p>
                     </div>
                   </button>
@@ -277,77 +316,133 @@ export default function Patients() {
 
           {/* Main Content */}
           <main className="flex-1 p-4 md:p-6">
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-2xl font-bold text-gray-800">My Patients</h3>
-              <div className="w-full max-w-sm ml-4">
-                <input
-                  value={query}
-                  onChange={(e) => setQuery(e.target.value)}
-                  placeholder="Search by patient name"
-                  className="w-full px-4 py-2 border-2 border-gray-200 text-black rounded-xl focus:outline-none"
-                />
+            {/* Stats cards */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+              <div className="bg-white rounded-lg border border-gray-200 p-4 shadow-sm">
+                <p className="text-sm text-gray-500">Total Bill</p>
+                <p className="text-2xl font-bold text-gray-800">
+                  ₹{" "}
+                  {payments.reduce(
+                    (total, item) => total + Number(item.amount_received),
+                    0
+                  )}
+                </p>
+              </div>
+              <div className="bg-white rounded-lg border border-gray-200 p-4 shadow-sm">
+                <p className="text-sm text-gray-500">Total Doctors</p>
+                {/* filter unique doctors */}
+                <p className="text-2xl font-bold text-gray-800">
+                  {new Set(payments.map((item) => item.doc_id)).size}
+                </p>
+              </div>
+              <div className="bg-white rounded-lg border border-gray-200 p-4 shadow-sm">
+                <p className="text-sm text-gray-500">Total Treatments</p>
+                <p className="text-2xl font-bold text-gray-800">
+                  {payments.length}
+                </p>
+              </div>
+              <div className="bg-white rounded-lg border border-gray-200 p-4 shadow-sm">
+                <p className="text-sm text-gray-500">Total Reports</p>
+                <p className="text-2xl font-bold text-gray-800">
+                  {payments.length}
+                </p>
               </div>
             </div>
-            <hr className="text-black" />
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-4">
-              {filtered.map((p: any, idx: number) => (
-                <div
-                  key={idx}
-                  className="rounded-xl p-6 bg-gradient-to-br from-slate-50 to-white shadow-md hover:shadow-lg border border-transparent hover:border-gray-100 transition transform hover:-translate-y-1"
-                >
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <h4 className="text-xl font-semibold text-gray-800">
-                        {p.name}
-                      </h4>
-                      <p className="text-sm text-gray-500">{p.role}</p>
-                    </div>
-                    <div className="w-12 h-12 bg-linear-to-r from-purple-600 to-pink-500 rounded-full flex items-center justify-center text-white font-semibold">
-                      {p.name
-                        .split(" ")
-                        .map((n: string) => n[0])
-                        .slice(0, 2)
-                        .join("")}
-                    </div>
-                  </div>
-
-                  <div className="mt-4 text-gray-700 space-y-2">
-                    <p>
-                      <span className="font-medium">Age:</span> {p.age}
-                    </p>
-                    <p>
-                      <span className="font-medium">Location:</span>{" "}
-                      {p.location}
-                    </p>
-                    <p>
-                      <span className="font-medium">Mobile:</span> {p.contact}
-                    </p>
-                    <p>
-                      <span className="font-medium">Email:</span> {p.email}
-                    </p>
-                  </div>
-
-                  <div className="mt-6">
-                    {/* <Link
-                      href={`#/patient/${p.email}`}
-                      className="px-4 py-2 bg-blue-600 text-white rounded-lg"
-                    >
-                      View
-                    </Link> */}
-                    <button className="px-4 py-2 border border-gray-200 rounded-lg text-gray-700">
-                      Message
-                    </button>
-                  </div>
+            {/* Filter controls */}
+            <div className="bg-white rounded-lg border border-gray-200 p-4 shadow-sm mb-6">
+              <h4 className="text-lg font-semibold text-gray-800 mb-4">
+                Filter Transactions
+              </h4>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <label className="text-sm text-gray-600 mb-1 block">
+                    Search Doctor
+                  </label>
+                  <input
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder="Type doctor name..."
+                    className="w-full px-4 py-2 border-2 border-gray-200 rounded-xl text-black focus:outline-none"
+                  />
                 </div>
-              ))}
+                <div>
+                  <label className="text-sm text-gray-600 mb-1 block">
+                    Payment Status
+                  </label>
+                  <select
+                    value={paymentFilter}
+                    onChange={(e) => setPaymentFilter(e.target.value)}
+                    className="w-full px-4 py-2 border-2 border-gray-200 text-black rounded-xl"
+                  >
+                    <option value="all">All</option>
+                    <option value="paid">Paid</option>
+                    <option value="pending">Pending</option>
+                    <option value="failed">Failed</option>
+                  </select>
+                </div>
+                <div className="flex items-end">
+                  <button
+                    onClick={() => {
+                      setSearchQuery("");
+                      setPaymentFilter("all");
+                    }}
+                    className="px-4 py-2 bg-gray-100 rounded-lg text-black"
+                  >
+                    Clear
+                  </button>
+                </div>
+              </div>
             </div>
 
-            {filtered.length === 0 && (
-              <div className="mt-10 text-center text-gray-500">
-                No patients found.
-              </div>
-            )}
+            {/* Table */}
+            <div className="bg-white rounded-lg border border-gray-200 p-4 shadow-sm overflow-x-auto">
+              <h3 className="text-lg font-semibold text-gray-800 mb-4">
+                Transactions
+              </h3>
+              <table className="w-full text-left table-auto">
+                <thead>
+                  <tr className="text-sm text-gray-500 border-b">
+                    <th className="py-3 px-3">Date</th>
+                    <th className="py-3 px-3">Doctor</th>
+                    <th className="py-3 px-3">Disease</th>
+                    <th className="py-3 px-3">Consultation Fee</th>
+                    <th className="py-3 px-3">Amount Received</th>
+                    <th className="py-3 px-3">Payment Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredRows.map((r, i) => (
+                    <tr key={i} className="odd:bg-white even:bg-gray-50">
+                      <td className="py-4 px-3 text-sm text-gray-700">
+                        {r.date}
+                      </td>
+                      <td className="py-4 px-3 text-sm text-gray-700">
+                        {r.doc_name}
+                      </td>
+                      <td className="py-4 px-3 text-sm text-gray-700">
+                        {r.disease}
+                      </td>
+                      <td className="py-4 px-3 text-sm text-gray-700">
+                        ₹ {r.consultationFee}
+                      </td>
+                      <td className="py-4 px-3 text-sm text-gray-700">
+                        ₹ {r.amount_received}
+                      </td>
+                      <td className="py-4 px-3 text-sm">
+                        <span
+                          className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${getStatusClasses(
+                            r.status
+                          )}`}
+                        >
+                          {r.status.toUpperCase()}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </main>
         </div>
       </div>

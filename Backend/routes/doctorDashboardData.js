@@ -8,6 +8,7 @@ import { UpdateAppointmentStatus } from "../controllers/UpdateAppointmentStatus.
 import { getReportsForDoctor } from "../controllers/getReportsForDoctor.js";
 import { UpdateReportData } from "../controllers/UpdateReportData.js";
 import { fetchPatients } from "../controllers/fetchPatients.js";
+import { fetchPayments } from "../controllers/fetchPayments.js";
 const router = express.Router();
 
 router.post("/report", verifyToken, report);
@@ -16,6 +17,7 @@ router.patch("/update-profile", verifyToken, UpdateDoctorDetails);
 router.get("/get-appointments", verifyToken, UpcomingAppointmentsForDoctor);
 router.get("/get-reports", verifyToken, getReportsForDoctor);
 router.get("/fetchPatients", verifyToken, fetchPatients);
+router.get("/payments", verifyToken, fetchPayments);
 router.patch(
   "/update-appointment/:appointmentId",
   verifyToken,

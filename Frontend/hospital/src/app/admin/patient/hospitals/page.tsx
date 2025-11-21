@@ -4,6 +4,15 @@ import Link from "next/link";
 import Footer from "../../../../components/Footer";
 import axios from "axios";
 import { HospitalAdminFormData } from "../../../register/page";
+import {
+  User,
+  CalendarDays,
+  Stethoscope,
+  FileText,
+  Hospital,
+  Receipt,
+  MessageCircle,
+} from "lucide-react";
 
 export default function Hospitals() {
   const [activeTab, setActiveTab] = useState("hospitals");
@@ -125,37 +134,43 @@ export default function Hospitals() {
     {
       id: "profile",
       label: "Profile",
-      icon: "👤",
+      icon: User,
       route: "/admin/patient",
     },
     {
       id: "appointments",
       label: "Appointments",
-      icon: "📅",
+      icon: CalendarDays,
       route: "/admin/patient/appointments",
     },
     {
       id: "doctors",
       label: "Doctors",
-      icon: "👨‍⚕️",
+      icon: Stethoscope,
       route: "/admin/patient/doctors",
     },
     {
       id: "reports",
       label: "Medical Reports",
-      icon: "📄",
+      icon: FileText,
       route: "/admin/patient/reports",
     },
     {
       id: "hospitals",
       label: "Hospitals",
-      icon: "🏥",
+      icon: Hospital,
       route: "/admin/patient/hospitals",
+    },
+    {
+      id: "bills",
+      label: "Bills",
+      icon: Receipt,
+      route: "/admin/patient/bills",
     },
     {
       id: "chat",
       label: "AI Assistant",
-      icon: "💬",
+      icon: MessageCircle,
       route: "/admin/patient/chat",
     },
   ];
@@ -204,7 +219,7 @@ export default function Hospitals() {
                 setIsSidebarOpen(false);
               }}
             >
-              <span className="text-2xl">{item.icon}</span>
+              <item.icon className="h-5 w-5" />
               <span className="ml-3 font-medium">{item.label}</span>
             </Link>
           ))}
@@ -238,7 +253,7 @@ export default function Hospitals() {
                 }`}
                 onClick={() => setActiveTab(item.id)}
               >
-                <span className="text-2xl">{item.icon}</span>
+                <item.icon className="h-5 w-5" />
                 <span className="ml-3 font-medium">{item.label}</span>
               </Link>
             ))}

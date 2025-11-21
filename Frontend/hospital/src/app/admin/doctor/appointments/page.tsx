@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import axios from "axios";
+import { User, CalendarDays, Users, Wallet } from "lucide-react";
 
 export default function Appointments() {
   const [activeTab, setActiveTab] = useState("appointments");
@@ -24,27 +25,27 @@ export default function Appointments() {
     "all" | "pending" | "confirmed" | "completed" | "cancelled"
   >("all");
 
-  const sidebarItems = [
-    { id: "profile", label: "Profile", icon: "👤", route: "/admin/doctor" },
-    {
-      id: "appointments",
-      label: "Appointments",
-      icon: "📅",
-      route: "/admin/doctor/appointments",
-    },
-    {
-      id: "patients",
-      label: "Patients",
-      icon: "🧑‍🤝‍🧑",
-      route: "/admin/doctor/patients",
-    },
-    {
-      id: "revenue",
-      label: "Revenue",
-      icon: "💰",
-      route: "/admin/doctor/revenue",
-    },
-  ];
+  // const sidebarItems = [
+  //   { id: "profile", label: "Profile", icon: "👤", route: "/admin/doctor" },
+  //   {
+  //     id: "appointments",
+  //     label: "Appointments",
+  //     icon: "📅",
+  //     route: "/admin/doctor/appointments",
+  //   },
+  //   {
+  //     id: "patients",
+  //     label: "Patients",
+  //     icon: "🧑‍🤝‍🧑",
+  //     route: "/admin/doctor/patients",
+  //   },
+  //   {
+  //     id: "revenue",
+  //     label: "Revenue",
+  //     icon: "💰",
+  //     route: "/admin/doctor/revenue",
+  //   },
+  // ];
 
   //   // dummy dataset - replace with API call later
   //   useEffect(() => {
@@ -92,6 +93,32 @@ export default function Appointments() {
 
   //     setAllAppointments(dummy);
   //   }, []);
+  const sidebarItems = [
+    {
+      id: "profile",
+      label: "Profile",
+      icon: User,
+      route: "/admin/doctor",
+    },
+    {
+      id: "appointments",
+      label: "Appointments",
+      icon: CalendarDays,
+      route: "/admin/doctor/appointments",
+    },
+    {
+      id: "patients",
+      label: "Patients",
+      icon: Users,
+      route: "/admin/doctor/patients",
+    },
+    {
+      id: "revenue",
+      label: "Revenue",
+      icon: Wallet,
+      route: "/admin/doctor/revenue",
+    },
+  ];
 
   const fetchAppointmentData = async () => {
     try {
@@ -275,6 +302,7 @@ export default function Appointments() {
                 setIsSidebarOpen(false);
               }}
             >
+              <item.icon className="h-5 w-5" />
               <span className="ml-3 font-medium">{item.label}</span>
             </Link>
           ))}
@@ -315,7 +343,7 @@ export default function Appointments() {
                 }`}
                 onClick={() => setActiveTab(item.id)}
               >
-                <span className="text-2xl">{item.icon}</span>
+                <item.icon className="h-5 w-5" />
                 <span className="ml-3 font-medium">{item.label}</span>
               </Link>
             ))}

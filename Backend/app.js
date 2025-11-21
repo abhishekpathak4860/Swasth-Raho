@@ -38,7 +38,7 @@ app.use("/doctor", doctorDashboardDataRoute);
 app.use("/api/hospital", hospitalDashboardDataRoute);
 app.use("/data", hospitalDashboardDataRouteFromServer);
 
-// Global error handler
+// Global error handler method
 app.use((err, req, res, next) => {
   console.error(err);
   res.status(500).json({ message: "Internal Server Error" });

@@ -48,7 +48,8 @@ export const initiatePayment = async (req, res) => {
 
     // 1️ CREATE TRANSACTION ID
     const txnId = "txn_" + Date.now();
-
+    // 2️A: Delete old payment entry if exists for this appointment
+    await Payment.deleteMany({ appointmentId });
     // 2️ CREATE PAYMENT ENTRY IN MONGODB
     const newPayment = await Payment.create({
       appointmentId,

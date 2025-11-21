@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import axios from "axios";
+import { User, CalendarDays, Users, Wallet } from "lucide-react";
 
 export default function DoctorDashboard() {
   const [activeTab, setActiveTab] = useState("profile");
@@ -14,23 +15,28 @@ export default function DoctorDashboard() {
   const [doctor, setDoctor] = useState<any>(null);
 
   const sidebarItems = [
-    { id: "profile", label: "Profile", icon: "👤", route: "/admin/doctor" },
+    {
+      id: "profile",
+      label: "Profile",
+      icon: User,
+      route: "/admin/doctor",
+    },
     {
       id: "appointments",
       label: "Appointments",
-      icon: "📅",
+      icon: CalendarDays,
       route: "/admin/doctor/appointments",
     },
     {
       id: "patients",
       label: "Patients",
-      icon: "🧑‍🤝‍🧑",
+      icon: Users,
       route: "/admin/doctor/patients",
     },
     {
       id: "revenue",
       label: "Revenue",
-      icon: "💰",
+      icon: Wallet,
       route: "/admin/doctor/revenue",
     },
   ];
@@ -144,6 +150,7 @@ export default function DoctorDashboard() {
                 setIsSidebarOpen(false);
               }}
             >
+              <item.icon className="h-5 w-5" />
               <span className="ml-3 font-medium">{item.label}</span>
             </Link>
           ))}
@@ -184,7 +191,7 @@ export default function DoctorDashboard() {
                 }`}
                 onClick={() => setActiveTab(item.id)}
               >
-                <span className="text-2xl">{item.icon}</span>
+                <item.icon className="h-5 w-5" />
                 <span className="ml-3 font-medium">{item.label}</span>
               </Link>
             ))}
