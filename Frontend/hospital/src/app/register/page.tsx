@@ -18,6 +18,7 @@ interface DoctorFormData {
   consultationFee: string;
   Total_Revenue: number | 0;
   patient_ids: string[];
+  profileImg: string;
 }
 
 interface PatientFormData {
@@ -28,6 +29,7 @@ interface PatientFormData {
   location: string;
   contact: string;
   role: string;
+  profileImg: string;
 }
 
 export interface HospitalAdminFormData {
@@ -64,6 +66,7 @@ export interface HospitalAdminFormData {
   total_reviews: number | "";
   role: string;
   Total_Revenue_Hospital: number;
+  profileImg: string;
 }
 
 interface SuperAdminFormData {
@@ -71,6 +74,7 @@ interface SuperAdminFormData {
   email: string;
   password: string;
   role: string;
+  profileImg: string;
 }
 
 export default function Register() {
@@ -93,6 +97,7 @@ export default function Register() {
     consultationFee: "",
     Total_Revenue: 0,
     patient_ids: [],
+    profileImg: "",
   });
 
   const [formDataPatient, setFormDataPatient] = useState<PatientFormData>({
@@ -103,6 +108,7 @@ export default function Register() {
     location: "",
     contact: "",
     role: "patient",
+    profileImg: "",
   });
 
   const [formDataHospitalAdmin, setFormDataHospitalAdmin] =
@@ -140,6 +146,7 @@ export default function Register() {
       total_reviews: 0,
       role: "hospital_admin",
       Total_Revenue_Hospital: 0,
+      profileImg: "",
     });
 
   const [formDataSuperAdmin, setFormDataSuperAdmin] =
@@ -148,7 +155,25 @@ export default function Register() {
       email: "",
       password: "",
       role: "super_admin",
+      profileImg: "",
     });
+
+  // Image upload state
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string>("");
+  const [uploadProgress, setUploadProgress] = useState<number>(0);
+  const [isUploading, setIsUploading] = useState<boolean>(false);
+  const [isUploaded, setIsUploaded] = useState<boolean>(false);
+  const [uploadedImageUrl, setUploadedImageUrl] = useState<string>("");
+
+  // Cloudinary config (fallbacks to values you provided if not set in env)
+
+  const CLOUDINARY_CLOUD_NAME =
+    process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || "dwqf8u53j";
+  const CLOUDINARY_UPLOAD_PRESET =
+    process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET || "image_upload";
+  const CLOUDINARY_FOLDER =
+    process.env.NEXT_PUBLIC_CLOUDINARY_FOLDER || "swasthRaho_profile";
 
   // fetch hospital data for the doctors to choose their hospital during registrations
   const fetchHospitalData = async () => {
@@ -165,8 +190,23 @@ export default function Register() {
   useEffect(() => {
     fetchHospitalData();
   }, []);
+
+  // Reset image states when role changes
+  useEffect(() => {
+    setSelectedFile(null);
+    setPreviewUrl("");
+    setUploadProgress(0);
+    setIsUploading(false);
+    setIsUploaded(false);
+    setUploadedImageUrl("");
+  }, [role]);
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    // If an image is chosen but not uploaded yet, block registration
+    if (selectedFile && !isUploaded) {
+      alert("Please upload the selected image before registering.");
+      return;
+    }
     try {
       const apiUrl = `/api/register`;
       let data;
@@ -190,6 +230,80 @@ export default function Register() {
       router.push("/login");
     } catch (error: any) {
       alert(error.response?.data?.message || "Registration failed");
+    }
+  };
+
+  const handleFileSelected = (file?: File | null) => {
+    if (!file) {
+      setSelectedFile(null);
+      if (previewUrl) URL.revokeObjectURL(previewUrl);
+      setPreviewUrl("");
+      setIsUploaded(false);
+      setUploadedImageUrl("");
+      return;
+    }
+    setSelectedFile(file);
+    if (previewUrl) URL.revokeObjectURL(previewUrl);
+    setPreviewUrl(URL.createObjectURL(file));
+    setIsUploaded(false);
+    setUploadedImageUrl("");
+    setUploadProgress(0);
+  };
+
+  const uploadImageToCloudinary = async () => {
+    if (!selectedFile) {
+      alert("Please select an image to upload.");
+      return;
+    }
+
+    try {
+      setIsUploading(true);
+      const cloudinaryUrl = `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`;
+      const body = new FormData();
+      body.append("file", selectedFile as File);
+      body.append("upload_preset", CLOUDINARY_UPLOAD_PRESET);
+      body.append("folder", CLOUDINARY_FOLDER);
+
+      const res = await axios.post(cloudinaryUrl, body, {
+        headers: { "Content-Type": "multipart/form-data" },
+        onUploadProgress: (progressEvent) => {
+          if (progressEvent.total)
+            setUploadProgress(
+              Math.round((progressEvent.loaded / progressEvent.total) * 100)
+            );
+        },
+      });
+
+      const secureUrl = res.data.secure_url || res.data.url;
+      setUploadedImageUrl(secureUrl);
+      console.log(secureUrl);
+      setIsUploaded(true);
+      // Attach uploaded url to the correct form data depending on role
+      switch (role) {
+        case "doctor":
+          setFormDataDoctor({ ...formDataDoctor, profileImg: secureUrl });
+          break;
+        case "patient":
+          setFormDataPatient({ ...formDataPatient, profileImg: secureUrl });
+          break;
+        case "hospital_admin":
+          setFormDataHospitalAdmin({
+            ...formDataHospitalAdmin,
+            profileImg: secureUrl,
+          });
+          break;
+        case "super_admin":
+          setFormDataSuperAdmin({
+            ...formDataSuperAdmin,
+            profileImg: secureUrl,
+          });
+          break;
+      }
+    } catch (error) {
+      console.error("Upload failed:", error);
+      alert("Image upload failed. Please try again.");
+    } finally {
+      setIsUploading(false);
     }
   };
   // scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-200
@@ -298,6 +412,95 @@ export default function Register() {
                 className="w-full p-3 rounded-md bg-white/20 text-white placeholder-gray-300 focus:ring-2 focus:ring-cyan-400 outline-none"
                 required
               />
+            </div>
+
+            {/* Profile Image Upload */}
+            <div>
+              <label className="block mb-1 text-gray-200 text-sm">
+                Profile Image (optional)
+              </label>
+              <div className="flex items-center gap-2">
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) =>
+                    handleFileSelected(
+                      e.target.files ? e.target.files[0] : null
+                    )
+                  }
+                  className="text-gray-300"
+                />
+
+                {!isUploaded ? (
+                  <button
+                    type="button"
+                    onClick={uploadImageToCloudinary}
+                    disabled={!selectedFile || isUploading}
+                    className={`px-3 py-2 rounded-md text-sm font-semibold text-white bg-gradient-to-r from-cyan-500 to-green-400 hover:opacity-90 transition-all ${
+                      (!selectedFile || isUploading) &&
+                      "opacity-50 cursor-not-allowed"
+                    }`}
+                  >
+                    {isUploading
+                      ? `Uploading (${uploadProgress}%)`
+                      : "Upload Image"}
+                  </button>
+                ) : (
+                  <div className="flex items-center gap-2">
+                    <span className="px-3 py-2 rounded-md text-sm font-semibold text-white bg-green-600/80">
+                      Uploaded
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        // allow re-upload
+                        if (uploadedImageUrl) {
+                          // clear the stored uploaded url
+                          setUploadedImageUrl("");
+                        }
+                        setIsUploaded(false);
+                        setUploadProgress(0);
+                      }}
+                      className="px-3 py-2 rounded-md text-sm font-semibold text-white bg-gradient-to-r from-yellow-400 to-orange-400 hover:opacity-90 transition-all"
+                    >
+                      Re-upload
+                    </button>
+                  </div>
+                )}
+
+                {selectedFile && !isUploaded && (
+                  <button
+                    type="button"
+                    onClick={() => handleFileSelected(null)}
+                    className="px-2 py-1 rounded-md text-sm text-red-400 bg-white/10 hover:bg-white/20"
+                  >
+                    Remove
+                  </button>
+                )}
+              </div>
+
+              {isUploaded && uploadedImageUrl ? (
+                <div className="mt-2">
+                  <img
+                    src={uploadedImageUrl}
+                    alt="Uploaded"
+                    className="w-24 h-24 object-cover rounded-full border border-white/20"
+                  />
+                </div>
+              ) : previewUrl ? (
+                <div className="mt-2">
+                  <img
+                    src={previewUrl}
+                    alt="Preview"
+                    className="w-24 h-24 object-cover rounded-full border border-white/20"
+                  />
+                </div>
+              ) : null}
+              <p className="text-xs text-gray-300 mt-2">
+                {selectedFile
+                  ? "Please upload the image before registering (required if a file is selected)."
+                  : "You may register without a profile image."}
+              </p>
             </div>
 
             <div>
@@ -1398,7 +1601,12 @@ export default function Register() {
             )}
             <button
               type="submit"
-              className="w-full py-3 rounded-md text-white font-semibold bg-gradient-to-r from-cyan-500 to-green-400 hover:opacity-90 transition-all"
+              disabled={!!selectedFile && !isUploaded}
+              className={`w-full py-3 rounded-md text-white font-semibold bg-gradient-to-r from-cyan-500 to-green-400 hover:opacity-90 transition-all ${
+                selectedFile && !isUploaded
+                  ? "opacity-50 cursor-not-allowed"
+                  : ""
+              }`}
             >
               Register
             </button>

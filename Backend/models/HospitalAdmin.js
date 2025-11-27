@@ -53,6 +53,7 @@ const hospitalAdminSchema = new mongoose.Schema(
 
     //  Finance
     Total_Revenue_Hospital: { type: Number, default: 0 },
+      profileImg: { type: String,  default: "" },
   },
   { timestamps: true }
 );

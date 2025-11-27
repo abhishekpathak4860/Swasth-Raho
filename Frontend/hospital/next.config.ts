@@ -67,7 +67,16 @@ const nextConfig = {
        {
         source: "/api/hospital/:path*",
         destination: "http://localhost:5000/api/hospital/:path*",
-      }
+      },
+             {
+        source: "/auth/:path*",
+        destination: "http://localhost:5000/auth/:path*",
+      },
+      {
+        source: "/super-admin/:path*",
+        destination: "http://localhost:5000/super-admin/:path*",
+      },
+
     ];
 
 }
@@ -87,8 +96,16 @@ const nextConfig = {
       },
           {
         source: "/api/hospital/:path*",
-        destination: "https://swasth-raho-qd56.vercel.app/hospital/:path*",
+        destination: "https://swasth-raho-qd56.vercel.app/api/hospital/:path*",
       },
+{
+          source: "/auth/:path*",
+        destination: "https://swasth-raho-qd56.vercel.app/auth/:path*",
+},   {
+        source: "/super-admin/:path*",
+        destination: "https://swasth-raho-qd56.vercel.app/super-admin/:path*",
+      },
+      
     ];
   },
 

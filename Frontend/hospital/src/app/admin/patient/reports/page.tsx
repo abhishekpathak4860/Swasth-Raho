@@ -15,11 +15,13 @@ import {
   UserCheck,
   Microscope,
 } from "lucide-react";
+import { useAuth } from "../../../../../context/AuthContext";
 
 export default function Reports() {
+  const { user, loading } = useAuth();
   const [activeTab, setActiveTab] = useState("reports");
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [user, setUser] = useState<any>(null);
+
   const [reportsData, setReportsData] = useState<any[]>([]);
   const [filteredReports, setFilteredReports] = useState<any[]>([]);
   const [selectedFilter, setSelectedFilter] = useState({
@@ -616,14 +618,12 @@ Swasth-Raho Medical Center
               </div>
 
               <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center">
-                  <span className="text-white font-semibold">
-                    {user?.name
-                      ?.split(" ")
-                      .map((ch: any) => ch[0]?.toUpperCase())
-                      .join("")
-                      .slice(0, 2)}
-                  </span>
+                <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center overflow-hidden">
+                  <img
+                    src={user?.profileImg ? user.profileImg : null}
+                    alt=""
+                    className="w-full h-full rounded-full object-cover"
+                  />
                 </div>
                 <div className="hidden md:block text-right">
                   <p className="text-sm font-medium text-gray-800">

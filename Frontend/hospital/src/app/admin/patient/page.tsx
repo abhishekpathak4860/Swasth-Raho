@@ -11,14 +11,21 @@ import {
   Receipt,
   MessageCircle,
 } from "lucide-react";
+import { useAuth } from "../../../../context/AuthContext";
 
 export default function PatientDashboard() {
+  const { user, loading, fetchUser } = useAuth();
   const [activeTab, setActiveTab] = useState("profile");
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
-  const [user, setUser] = useState<any>(null);
+  const [userData, setUser] = useState<any>(null);
   const [editUserDetails, setEditUserDetails] = useState<any>(null);
   const [showEditModal, setShowEditModal] = useState(false);
+
+  useEffect(() => {
+    fetchUser();
+  }, []);
+
   const sidebarItems = [
     {
       id: "profile",
@@ -65,7 +72,7 @@ export default function PatientDashboard() {
   ];
 
   const handleEditUserDetails = async () => {
-    setEditUserDetails({ ...user });
+    setEditUserDetails({ ...userData });
     setShowEditModal(true);
   };
 
@@ -99,20 +106,20 @@ export default function PatientDashboard() {
     setEditUserDetails(null);
   };
 
-  useEffect(() => {
-    const fetchProfile = async () => {
-      try {
-        const res = await axios.get(`/patient/profile`, {
-          withCredentials: true, // send cookies
-        });
-        setUser(res.data.patient);
-      } catch (error) {
-        console.error("Error fetching profile:", error);
-      }
-    };
+  // useEffect(() => {
+  //   const fetchProfile = async () => {
+  //     try {
+  //       const res = await axios.get(`/patient/profile`, {
+  //         withCredentials: true, // send cookies
+  //       });
+  //       setUser(res.data.patient);
+  //     } catch (error) {
+  //       console.error("Error fetching profile:", error);
+  //     }
+  //   };
 
-    fetchProfile();
-  }, []);
+  //   fetchProfile();
+  // }, []);
 
   const handleLogout = async () => {
     try {
@@ -280,14 +287,12 @@ export default function PatientDashboard() {
                     onClick={() => setShowProfileMenu(!showProfileMenu)}
                     className="flex items-center space-x-3 p-1 rounded-md hover:bg-gray-100"
                   >
-                    <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center">
-                      <span className="text-white font-semibold">
-                        {user?.name
-                          ?.split(" ")
-                          .map((ch: any) => ch[0]?.toUpperCase())
-                          .join("")
-                          .slice(0, 2)}
-                      </span>
+                    <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center overflow-hidden">
+                      <img
+                        src={user?.profileImg ? user.profileImg : null}
+                        alt=""
+                        className="w-full h-full rounded-full object-cover"
+                      />
                     </div>
                     <div className="hidden md:block text-left">
                       <p className="text-sm font-medium text-gray-800">
@@ -352,7 +357,9 @@ export default function PatientDashboard() {
                       <label className="block text-sm font-medium text-gray-600">
                         Full Name
                       </label>
-                      <p className="text-gray-800 font-medium">{user?.name}</p>
+                      <p className="text-gray-800 font-medium">
+                        {userData?.name}
+                      </p>
                     </div>
 
                     <div>
@@ -360,7 +367,7 @@ export default function PatientDashboard() {
                         Age
                       </label>
                       <p className="text-gray-800 font-medium">
-                        {user?.age} years
+                        {userData?.age} years
                       </p>
                     </div>
 
@@ -368,7 +375,9 @@ export default function PatientDashboard() {
                       <label className="block text-sm font-medium text-gray-600">
                         Role
                       </label>
-                      <p className="text-gray-800 font-medium">{user?.role}</p>
+                      <p className="text-gray-800 font-medium">
+                        {userData?.role}
+                      </p>
                     </div>
 
                     {/* <div>
@@ -391,7 +400,9 @@ export default function PatientDashboard() {
                       <label className="block text-sm font-medium text-gray-600">
                         Email
                       </label>
-                      <p className="text-gray-800 font-medium">{user?.email}</p>
+                      <p className="text-gray-800 font-medium">
+                        {userData?.email}
+                      </p>
                     </div>
 
                     <div>
@@ -399,7 +410,7 @@ export default function PatientDashboard() {
                         Phone
                       </label>
                       <p className="text-gray-800 font-medium">
-                        {user?.contact}
+                        {userData?.contact}
                       </p>
                     </div>
 
@@ -408,7 +419,7 @@ export default function PatientDashboard() {
                         Location
                       </label>
                       <p className="text-gray-800 font-medium">
-                        {user?.location}
+                        {userData?.location}
                       </p>
                     </div>
 

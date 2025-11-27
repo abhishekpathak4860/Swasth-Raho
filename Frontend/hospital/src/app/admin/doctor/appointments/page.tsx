@@ -4,8 +4,10 @@ import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import axios from "axios";
 import { User, CalendarDays, Users, Wallet } from "lucide-react";
+import { useAuth } from "../../../../../context/AuthContext";
 
 export default function Appointments() {
+  const { user, loading } = useAuth();
   const [activeTab, setActiveTab] = useState("appointments");
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
@@ -388,11 +390,29 @@ export default function Appointments() {
                 </h2>
               </div>
 
-              <div className="flex items-center space-x-3">
+              {/* <div className="flex items-center space-x-3">
                 <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center">
                   <span className="text-white font-semibold">DR</span>
                 </div>
-              </div>
+              </div> */}
+              <button
+                onClick={() => setShowProfileMenu(!showProfileMenu)}
+                className="flex items-center space-x-3 p-1 rounded-md hover:bg-gray-100"
+              >
+                <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center overflow-hidden">
+                  <img
+                    src={user?.profileImg ? user.profileImg : null}
+                    alt=""
+                    className="w-full h-full rounded-full object-cover"
+                  />
+                </div>
+                <div className="hidden md:block text-left">
+                  <p className="text-sm font-medium text-gray-800">
+                    {user?.name}
+                  </p>
+                  <p className="text-xs text-gray-500">{user?.email}</p>
+                </div>
+              </button>
             </div>
           </header>
 

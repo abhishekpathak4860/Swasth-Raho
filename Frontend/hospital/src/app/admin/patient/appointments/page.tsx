@@ -13,8 +13,10 @@ import {
   Receipt,
   MessageCircle,
 } from "lucide-react";
+import { useAuth } from "../../../../../context/AuthContext";
 
 export default function Appointments() {
+  const { user, loading } = useAuth();
   const [activeTab, setActiveTab] = useState("appointments");
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [showBookingForm, setShowBookingForm] = useState(false);
@@ -26,7 +28,7 @@ export default function Appointments() {
   const [appointmentToCancel, setAppointmentToCancel] = useState<any>(null);
   const [showReportModal, setShowReportModal] = useState(false);
   const [selectedReport, setSelectedReport] = useState<any>(null);
-  const [user, setUser] = useState<any>(null);
+
   const [reportsData, setReportsData] = useState<any[]>([]);
 
   // Payment modal state
@@ -102,20 +104,7 @@ export default function Appointments() {
       route: "/admin/patient/chat",
     },
   ];
-  // useEffect(() => {
-  //   const fetchProfile = async () => {
-  //     try {
-  //       const res = await axios.get(`${process.env.NEXT_PUBLIC_BACKEND_URL}/patient/profile`, {
-  //         withCredentials: true, // send cookies
-  //       });
-  //       setUser(res.data.patient);
-  //     } catch (error) {
-  //       console.error("Error fetching profile:", error);
-  //     }
-  //   };
 
-  //   fetchProfile();
-  // }, []);
   const handleLogout = async () => {
     try {
       const res = await axios.post(
@@ -738,15 +727,14 @@ Next Appointment: ${selectedReport.nextAppointment}
                     />
                   </svg>
                 </button>
+
                 <div className="flex items-center space-x-3">
-                  <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center">
-                    <span className="text-white font-semibold">
-                      {user?.name
-                        ?.split(" ")
-                        .map((ch: any) => ch[0]?.toUpperCase())
-                        .join("")
-                        .slice(0, 2)}
-                    </span>
+                  <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center overflow-hidden">
+                    <img
+                      src={user?.profileImg ? user.profileImg : null}
+                      alt=""
+                      className="w-full h-full rounded-full object-cover"
+                    />
                   </div>
                   <div className="hidden md:block text-right">
                     <p className="text-sm font-medium text-gray-800">

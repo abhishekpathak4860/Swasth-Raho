@@ -5,6 +5,7 @@ const superAdminSchema = new mongoose.Schema({
   email: { type: String, required: true, unique: true },
   password: { type: String, required: true },
   role: { type: String, default: "super_admin" },
+  profileImg: { type: String, default: "" },
 });
 
 const SuperAdmin = mongoose.model("SuperAdmin", superAdminSchema);

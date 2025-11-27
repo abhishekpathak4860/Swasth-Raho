@@ -15,6 +15,7 @@ const doctorSchema = new mongoose.Schema({
   Total_Revenue: { type: Number, required: true },
   patient_ids: { type: [String], required: true },
   hospital_id: { type: String, required: true },
+  profileImg: { type: String, default: "" },
 });
 
 const Doctor = mongoose.model("Doctor", doctorSchema);

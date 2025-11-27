@@ -13,8 +13,10 @@ import {
   Receipt,
   MessageCircle,
 } from "lucide-react";
+import { useAuth } from "../../../../../context/AuthContext";
 
 export default function Hospitals() {
+  const { user, loading } = useAuth();
   const [activeTab, setActiveTab] = useState("hospitals");
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
@@ -296,6 +298,21 @@ export default function Hospitals() {
                 <h2 className="text-xl md:text-2xl font-bold text-gray-800 ml-2">
                   Find Hospitals
                 </h2>
+              </div>
+              <div className="flex items-center space-x-3">
+                <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center overflow-hidden">
+                  <img
+                    src={user?.profileImg ? user.profileImg : null}
+                    alt=""
+                    className="w-full h-full rounded-full object-cover"
+                  />
+                </div>
+                <div className="hidden md:block text-right">
+                  <p className="text-sm font-medium text-gray-800">
+                    {user?.name}
+                  </p>
+                  <p className="text-xs text-gray-500">{user?.email}</p>
+                </div>
               </div>
             </div>
           </header>

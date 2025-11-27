@@ -158,7 +158,7 @@ export default function Login() {
         { ...formData, role },
         { withCredentials: true }
       );
-
+      console.log("user data", data.user.profileImg);
       const roleRedirects: Record<string, string> = {
         doctor: "/admin/doctor",
         patient: "/admin/patient",

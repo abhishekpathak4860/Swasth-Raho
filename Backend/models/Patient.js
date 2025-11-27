@@ -8,6 +8,7 @@ const patientSchema = new mongoose.Schema({
   age: { type: Number, required: true },
   location: { type: String, required: true },
   contact: { type: String, required: true },
+  profileImg: { type: String, default: "" },
 });
 
 const Patient = mongoose.model("Patient", patientSchema);

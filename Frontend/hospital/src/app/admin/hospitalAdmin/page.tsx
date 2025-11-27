@@ -13,9 +13,15 @@ import {
   Clock,
   MapPin,
 } from "lucide-react";
+import { useAuth } from "../../../../context/AuthContext";
 
 export default function HospitalAdminDashboard() {
+  const { user, loading, fetchUser } = useAuth();
   const [data, setData] = useState<any>(null);
+
+  useEffect(() => {
+    fetchUser();
+  }, []);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -251,7 +257,7 @@ export default function HospitalAdminDashboard() {
                   </div>
                   <div className="flex items-center gap-3">
                     <Mail size={18} />{" "}
-                    <span className="font-medium">{admin.email || "-"}</span>
+                    <span className="font-medium">{user.email || "-"}</span>
                   </div>
                   <div className="flex items-center gap-3">
                     <MapPin size={18} />{" "}

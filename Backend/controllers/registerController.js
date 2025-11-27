@@ -49,8 +49,10 @@ export const registerUser = async (req, res) => {
       rating,
       total_reviews,
       Total_Revenue_Hospital,
+      profileImg,
     } = req.body;
 
+    const finalProfileImg = profileImg || "";
     if (!name || !email || !password || !role) {
       return res
         .status(400)
@@ -108,6 +110,7 @@ export const registerUser = async (req, res) => {
           consultationFee,
           Total_Revenue,
           patient_ids,
+          profileImg: finalProfileImg,
         });
 
         break;
@@ -125,6 +128,7 @@ export const registerUser = async (req, res) => {
           age,
           location,
           contact,
+          profileImg: finalProfileImg,
         });
         break;
 
@@ -167,6 +171,7 @@ export const registerUser = async (req, res) => {
           total_reviews,
           role,
           Total_Revenue_Hospital,
+          profileImg: finalProfileImg,
         });
         break;
 
@@ -176,6 +181,7 @@ export const registerUser = async (req, res) => {
           email,
           password: hashedPassword,
           role,
+          profileImg: finalProfileImg,
         });
         break;
 
