@@ -67,6 +67,8 @@ export interface HospitalAdminFormData {
   role: string;
   Total_Revenue_Hospital: number;
   profileImg: string;
+  hospitalLat: number;
+  hospitalLng: number;
 }
 
 interface SuperAdminFormData {
@@ -147,6 +149,8 @@ export default function Register() {
       role: "hospital_admin",
       Total_Revenue_Hospital: 0,
       profileImg: "",
+      hospitalLat: 0,
+      hospitalLng: 0,
     });
 
   const [formDataSuperAdmin, setFormDataSuperAdmin] =
@@ -787,6 +791,52 @@ export default function Register() {
                           setFormDataHospitalAdmin({
                             ...formDataHospitalAdmin,
                             emergency_number: e.target.value,
+                          })
+                        }
+                        className="w-full p-3 rounded-md bg-white/20 text-white placeholder-gray-300 focus:ring-2 focus:ring-cyan-400 outline-none"
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-gray-200 font-medium mb-1">
+                        Hospital Latitude
+                      </label>
+                      <input
+                        type="number"
+                        step="any"
+                        min="-90"
+                        max="90"
+                        placeholder="e.g. 28.7041"
+                        value={formDataHospitalAdmin.hospitalLat}
+                        onChange={(e) =>
+                          setFormDataHospitalAdmin({
+                            ...formDataHospitalAdmin,
+                            hospitalLat: Number(e.target.value),
+                          })
+                        }
+                        className="w-full p-3 rounded-md bg-white/20 text-white placeholder-gray-300 focus:ring-2 focus:ring-cyan-400 outline-none"
+                        required
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-gray-200 font-medium mb-1">
+                        Hospital Longitude
+                      </label>
+                      <input
+                        type="number"
+                        step="any"
+                        min="-180"
+                        max="180"
+                        placeholder="e.g. 77.1025"
+                        value={formDataHospitalAdmin.hospitalLng}
+                        onChange={(e) =>
+                          setFormDataHospitalAdmin({
+                            ...formDataHospitalAdmin,
+                            hospitalLng: Number(e.target.value),
                           })
                         }
                         className="w-full p-3 rounded-md bg-white/20 text-white placeholder-gray-300 focus:ring-2 focus:ring-cyan-400 outline-none"

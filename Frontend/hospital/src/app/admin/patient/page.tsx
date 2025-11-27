@@ -106,20 +106,20 @@ export default function PatientDashboard() {
     setEditUserDetails(null);
   };
 
-  // useEffect(() => {
-  //   const fetchProfile = async () => {
-  //     try {
-  //       const res = await axios.get(`/patient/profile`, {
-  //         withCredentials: true, // send cookies
-  //       });
-  //       setUser(res.data.patient);
-  //     } catch (error) {
-  //       console.error("Error fetching profile:", error);
-  //     }
-  //   };
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const res = await axios.get(`/patient/profile`, {
+          withCredentials: true, // send cookies
+        });
+        setUser(res.data.patient);
+      } catch (error) {
+        console.error("Error fetching profile:", error);
+      }
+    };
 
-  //   fetchProfile();
-  // }, []);
+    fetchProfile();
+  }, []);
 
   const handleLogout = async () => {
     try {

@@ -50,6 +50,8 @@ export const registerUser = async (req, res) => {
       total_reviews,
       Total_Revenue_Hospital,
       profileImg,
+      hospitalLat,
+      hospitalLng,
     } = req.body;
 
     const finalProfileImg = profileImg || "";
@@ -172,6 +174,8 @@ export const registerUser = async (req, res) => {
           role,
           Total_Revenue_Hospital,
           profileImg: finalProfileImg,
+          hospitalLat,
+          hospitalLng,
         });
         break;
 

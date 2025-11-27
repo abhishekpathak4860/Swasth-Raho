@@ -51,20 +51,20 @@ export default function DoctorDashboard() {
   //   setDoctor(dummyDoctor);
   // }, []);
 
-  // useEffect(() => {
-  //   const fetchProfile = async () => {
-  //     try {
-  //       const res = await axios.get(`/doctor/profile`, {
-  //         withCredentials: true, // send cookies
-  //       });
-  //       setDoctor(res.data.doctor);
-  //     } catch (error) {
-  //       console.error("Error fetching profile:", error);
-  //     }
-  //   };
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const res = await axios.get(`/doctor/profile`, {
+          withCredentials: true, // send cookies
+        });
+        setDoctor(res.data.doctor);
+      } catch (error) {
+        console.error("Error fetching profile:", error);
+      }
+    };
 
-  //   fetchProfile();
-  // }, []);
+    fetchProfile();
+  }, []);
 
   const handleEdit = () => {
     setEditDetails({ ...doctor });

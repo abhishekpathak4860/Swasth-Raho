@@ -12,6 +12,8 @@ import {
   Hospital,
   Receipt,
   MessageCircle,
+  ArrowRight,
+  MapPin,
 } from "lucide-react";
 import { useAuth } from "../../../../../context/AuthContext";
 
@@ -34,6 +36,30 @@ export default function Hospitals() {
       window.location.href = "/login";
     } catch (error) {
       console.error("Error logging out:", error);
+    }
+  };
+
+  // google map working
+  const handleGetDirections = (hospitalLat, hospitalLng) => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const userLat = position.coords.latitude;
+          const userLng = position.coords.longitude;
+
+          // Google Maps Live Navigation URL
+          const mapsUrl = `https://www.google.com/maps/dir/?api=1&origin=${userLat},${userLng}&destination=${hospitalLat},${hospitalLng}&travelmode=driving`;
+
+          window.open(mapsUrl, "_blank");
+        },
+        (error) => {
+          alert(
+            "Unable to fetch your location. Please enable location access."
+          );
+        }
+      );
+    } else {
+      alert("Geolocation is not supported on this device.");
     }
   };
 
@@ -472,16 +498,28 @@ export default function Hospitals() {
                       </div>
                     </div>
 
-                    <div className="flex items-center justify-between  mt-6">
+                    <div className="flex items-center justify-between flex-col mt-6">
                       {/* View Doctors Button */}
                       <Link href={`/admin/patient/doctors`} className="w-full">
                         <button className="w-full py-3 bg-linear-to-r from-blue-600 to-green-600 text-white rounded-xl font-semibold hover:opacity-90 transition-all flex items-center justify-center group">
                           <span>View Doctors</span>
-                          <span className="ml-2 transform group-hover:translate-x-1 transition-transform">
-                            →
-                          </span>
+                          <ArrowRight className="w-5 h-5 transform group-hover:translate-x-1 transition-transform" />
                         </button>
                       </Link>
+                      <div className="mt-3 w-full">
+                        <button
+                          onClick={() =>
+                            handleGetDirections(
+                              hospital.hospitalLat,
+                              hospital.hospitalLng
+                            )
+                          }
+                          className="w-full py-3 bg-linear-to-r from-blue-600 to-green-600 text-white rounded-xl font-semibold hover:opacity-90 transition-all flex items-center justify-center group"
+                        >
+                          Get Directions
+                          <MapPin className="w-5 h-5 group-hover:scale-110 transition-transform" />
+                        </button>
+                      </div>
                     </div>
                   </div>
                 </div>
