@@ -14,11 +14,12 @@ import {
   MessageCircle,
   ArrowRight,
   MapPin,
+  Loader2,
 } from "lucide-react";
 import { useAuth } from "../../../../../context/AuthContext";
 
 export default function Hospitals() {
-  const { user, loading } = useAuth();
+  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState("hospitals");
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
@@ -26,6 +27,7 @@ export default function Hospitals() {
   const [hospitalsData, setHospitalsData] = useState<HospitalAdminFormData[]>(
     []
   );
+  const [loading, setLoading] = useState(false);
   const handleLogout = async () => {
     try {
       const res = await axios.post(
@@ -41,25 +43,30 @@ export default function Hospitals() {
 
   // google map working
   const handleGetDirections = (hospitalLat, hospitalLng) => {
+    setLoading(true); // start spinner
+
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (position) => {
           const userLat = position.coords.latitude;
           const userLng = position.coords.longitude;
 
-          // Google Maps Live Navigation URL
           const mapsUrl = `https://www.google.com/maps/dir/?api=1&origin=${userLat},${userLng}&destination=${hospitalLat},${hospitalLng}&travelmode=driving`;
 
           window.open(mapsUrl, "_blank");
+
+          setLoading(false); // stop spinner
         },
         (error) => {
           alert(
             "Unable to fetch your location. Please enable location access."
           );
+          setLoading(false); // stop spinner
         }
       );
     } else {
       alert("Geolocation is not supported on this device.");
+      setLoading(false);
     }
   };
 
@@ -514,10 +521,22 @@ export default function Hospitals() {
                               hospital.hospitalLng
                             )
                           }
-                          className="w-full py-3 bg-linear-to-r from-blue-600 to-green-600 text-white rounded-xl font-semibold hover:opacity-90 transition-all flex items-center justify-center group"
+                          disabled={loading}
+                          className={`w-full py-3 bg-linear-to-r from-blue-600 to-green-600 text-white rounded-xl font-semibold hover:opacity-90 transition-all flex items-center justify-center gap-2 group ${
+                            loading ? "opacity-70 cursor-not-allowed" : ""
+                          }`}
                         >
-                          Get Directions
-                          <MapPin className="w-5 h-5 group-hover:scale-110 transition-transform" />
+                          {loading ? (
+                            <>
+                              <Loader2 className="w-5 h-5 animate-spin" />
+                              Getting Directions...
+                            </>
+                          ) : (
+                            <>
+                              Get Directions
+                              <MapPin className="w-5 h-5 group-hover:scale-110 transition-transform" />
+                            </>
+                          )}
                         </button>
                       </div>
                     </div>
