@@ -40,17 +40,17 @@ const io = new Server(server, { cors: corsOptions });
 // Socket Middleware for Security
 io.use((socket, next) => {
   try {
-    const secret = process.env.JWT_SECRET;
+    // const secret = process.env.JWT_SECRET;
 
-    // Check if secret exists
-    if (!secret) {
-      console.error(
-        "CRITICAL: JWT_SECRET is undefined in environment variables."
-      );
-      return next(
-        new Error("Authentication error: Server configuration issue")
-      );
-    }
+    // // Check if secret exists
+    // if (!secret) {
+    //   console.error(
+    //     "CRITICAL: JWT_SECRET is undefined in environment variables."
+    //   );
+    //   return next(
+    //     new Error("Authentication error: Server configuration issue")
+    //   );
+    // }
     // Socket handshake se cookies nikaalna
     const cookies = cookie.parse(
       socket.handshake.headers.cookie || socket.request.headers.cookie
@@ -62,7 +62,7 @@ io.use((socket, next) => {
     }
 
     // Token Verify karna
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const decoded = jwt.verify(token, swasthraho);
     socket.user = decoded; // User ki info socket mein save ho gayi
     next();
   } catch (err) {
