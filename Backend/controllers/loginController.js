@@ -50,14 +50,20 @@ export const loginUser = async (req, res) => {
     );
 
     // Store token in cookie
+    // res.cookie("token", token, {
+    //   httpOnly: true, // cannot be accessed by JS
+    //   secure: process.env.NODE_ENV === "production" ? true : false, // true for HTTPS
+    //   sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+    //   path: "/",
+    //   maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+    // });
     res.cookie("token", token, {
       httpOnly: true, // cannot be accessed by JS
-      secure: process.env.NODE_ENV === "production" ? true : false, // true for HTTPS
-      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+      secure: true, // true for HTTPS
+      sameSite: "none",
       path: "/",
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
     });
-
     res.status(200).json({
       success: "true",
       token,
