@@ -15,7 +15,6 @@ import hospitalDashboardDataRouteFromServer from "./routes/hospitalDataFromServe
 import getTokenRoute from "./routes/getToken.js";
 import aiChatRoute from "./routes/aiChat.js";
 import { socketHandler } from "./controllers/aiChatController.js";
-
 dotenv.config();
 const app = express();
 const server = http.createServer(app); // 4. Create Server
@@ -62,7 +61,7 @@ io.use((socket, next) => {
     }
 
     // Token Verify karna
-    const decoded = jwt.verify(token, swasthraho);
+    const decoded = jwt.verify(token, "swasthraho");
     socket.user = decoded; // User ki info socket mein save ho gayi
     next();
   } catch (err) {
