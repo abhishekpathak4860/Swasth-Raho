@@ -61,7 +61,7 @@ socketHandler(io);
 
 // Health check
 app.get("/", (req, res) => {
-  res.json({ message: "API Running", timestamp: new Date().toISOString() });
+  res.json({ message: "API Runnings", timestamp: new Date().toISOString() });
 });
 
 // Routes
