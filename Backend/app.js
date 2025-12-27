@@ -36,7 +36,7 @@ const corsOptions = {
 app.use(cors(corsOptions));
 
 // Socket.io Init
-const io = new Server(server, { cors: corsOptions });
+const io = new Server(server, { cors: corsOptions, cookie: true });
 
 // Socket Middleware for Security
 io.use((socket, next) => {
@@ -44,7 +44,7 @@ io.use((socket, next) => {
     const secret = process.env.JWT_SECRET;
     const cookieHeader =
       socket.handshake.headers?.cookie || socket.request?.headers?.cookie;
-
+    console.log(cookieHeader);
     //  IMPORTANT SAFETY CHECK
     if (!cookieHeader) {
       return next(new Error("Authentication error: No cookies found"));
