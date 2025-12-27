@@ -1,5 +1,6 @@
 "use client";
 import React, { useState, useRef, useEffect } from "react";
+import { io } from "socket.io-client";
 import {
   Send,
   Bot,
@@ -18,6 +19,14 @@ import {
 import Link from "next/link";
 import axios from "axios";
 // import { useAuth } from "../../../../../context/AuthContext"; // Uncomment this in your real project
+
+const socket = io(
+  process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5000",
+  {
+    withCredentials: true, // Cookies (token) bhejne ke liye zaruri hai
+    transports: ["websocket"], // Sirf websocket use karein faster connection ke liye
+  }
+);
 
 export default function AIAssistant() {
   // const { user } = useAuth(); // Uncomment in real project
@@ -39,40 +48,24 @@ export default function AIAssistant() {
     scrollToBottom();
   }, [messages]);
 
-  const handleSend = async (text = input) => {
-    if (!text.trim()) return;
-
-    // 1 User message UI me add karo
-    const userMessage = { sender: "user", text };
-    setMessages((prev) => [...prev, userMessage]);
-
-    setInput("");
-    setIsLoading(true);
-
-    try {
-      // 2 Backend ko message + previous chat bhejo
-      const res = await axios.post(
-        "/ai/chat",
-        {
-          message: text,
-          history: messages,
-        },
-        {
-          withCredentials: true,
-        }
-      );
-
-      // 3 AI reply UI me add karo
+  // make socket connection
+  useEffect(() => {
+    // 1. AI reply ko sunne ke liye listener
+    socket.on("receive_message", (data) => {
       setMessages((prev) => [
         ...prev,
         {
           sender: "bot",
-          text: res.data.reply,
+          text: data.reply,
           isAi: true,
         },
       ]);
-    } catch (err) {
-      console.error(err);
+      setIsLoading(false);
+    });
+
+    // 2. Error handling listener
+    socket.on("error", (err) => {
+      console.error("Socket Error:", err.message);
       setMessages((prev) => [
         ...prev,
         {
@@ -81,9 +74,79 @@ export default function AIAssistant() {
           isAi: true,
         },
       ]);
-    } finally {
       setIsLoading(false);
-    }
+    });
+
+    // Clean up listeners when component unmounts
+    return () => {
+      socket.off("receive_message");
+      socket.off("error");
+    };
+  }, []);
+
+  // const handleSend = async (text = input) => {
+  //   if (!text.trim()) return;
+
+  //   // 1 User message UI me add karo
+  //   const userMessage = { sender: "user", text };
+  //   setMessages((prev) => [...prev, userMessage]);
+
+  //   setInput("");
+  //   setIsLoading(true);
+
+  //   try {
+  //     // 2 Backend ko message + previous chat bhejo
+  //     const res = await axios.post(
+  //       "/ai/chat",
+  //       {
+  //         message: text,
+  //         history: messages,
+  //       },
+  //       {
+  //         withCredentials: true,
+  //       }
+  //     );
+
+  //     // 3 AI reply UI me add karo
+  //     setMessages((prev) => [
+  //       ...prev,
+  //       {
+  //         sender: "bot",
+  //         text: res.data.reply,
+  //         isAi: true,
+  //       },
+  //     ]);
+  //   } catch (err) {
+  //     console.error(err);
+  //     setMessages((prev) => [
+  //       ...prev,
+  //       {
+  //         sender: "bot",
+  //         text: "Sorry, I am unable to respond right now.",
+  //         isAi: true,
+  //       },
+  //     ]);
+  //   } finally {
+  //     setIsLoading(false);
+  //   }
+  // };
+
+  const handleSend = (text = input) => {
+    if (!text.trim()) return;
+
+    // UI mein user message dikhao
+    const userMessage = { sender: "user", text };
+    setMessages((prev) => [...prev, userMessage]);
+
+    setInput("");
+    setIsLoading(true);
+
+    // 3. Backend ko message bhejo (Event-based)
+    // Ab Axios.post ki zarurat nahi hai!
+    socket.emit("send_message", {
+      message: text,
+      history: messages, // Current chat state
+    });
   };
 
   // fetch user ai message chats
