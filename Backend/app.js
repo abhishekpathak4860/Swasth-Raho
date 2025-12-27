@@ -42,11 +42,16 @@ const io = new Server(server, { cors: corsOptions });
 io.use((socket, next) => {
   try {
     const secret = process.env.JWT_SECRET;
+    const cookieHeader =
+      socket.handshake.headers?.cookie || socket.request?.headers?.cookie;
+
+    //  IMPORTANT SAFETY CHECK
+    if (!cookieHeader) {
+      return next(new Error("Authentication error: No cookies found"));
+    }
 
     // Socket handshake se cookies nikaalna
-    const cookies = cookie.parse(
-      socket.handshake.headers.cookie || socket.request.headers.cookie
-    );
+    const cookies = cookie.parse(cookieHeader);
     const token = cookies.token;
 
     if (!token) {
