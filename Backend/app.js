@@ -9,6 +9,7 @@ import doctorDashboardDataRoute from "./routes/doctorDashboardData.js";
 import hospitalDashboardDataRoute from "./routes/hospitalDashboardDataRoute.js";
 import hospitalDashboardDataRouteFromServer from "./routes/hospitalDataFromServerRoute.js";
 import getTokenRoute from "./routes/getToken.js";
+import aiChatRoute from "./routes/aiChat.js";
 dotenv.config();
 const app = express();
 
@@ -38,6 +39,7 @@ app.use("/patient", patientDashboardDataRoute);
 app.use("/doctor", doctorDashboardDataRoute);
 app.use("/api/hospital", hospitalDashboardDataRoute);
 app.use("/data", hospitalDashboardDataRouteFromServer);
+app.use("/ai", aiChatRoute);
 
 // Global error handler method
 app.use((err, req, res, next) => {
@@ -47,8 +49,8 @@ app.use((err, req, res, next) => {
 
 await connectDB();
 
-export default app;
+// export default app;
 
-// app.listen(PORT, () => {
-//   console.log(`Server running on port ${PORT}`);
-// });
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+});

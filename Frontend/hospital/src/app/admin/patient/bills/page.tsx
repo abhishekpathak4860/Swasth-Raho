@@ -83,7 +83,7 @@ export default function Revenue() {
     },
     {
       id: "chat",
-      label: "AI Assistant",
+      label: "Swasth Bot",
       icon: MessageCircle,
       route: "/admin/patient/chat",
     },
