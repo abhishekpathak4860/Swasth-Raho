@@ -99,7 +99,7 @@ export default function Appointments() {
     },
     {
       id: "chat",
-      label: "AI Assistant",
+      label: "Swasth Bot",
       icon: MessageCircle,
       route: "/admin/patient/chat",
     },

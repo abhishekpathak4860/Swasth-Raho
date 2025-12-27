@@ -1,0 +1,12 @@
+import { GoogleGenerativeAI } from "@google/generative-ai";
+
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+
+async function listModels() {
+  const models = await genAI.listModels();
+  models.forEach((m) => {
+    console.log(m.name, m.supportedGenerationMethods);
+  });
+}
+
+listModels();
