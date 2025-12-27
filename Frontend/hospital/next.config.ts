@@ -87,31 +87,31 @@ const nextConfig = {
     return [
       {
         source: "/api/:path*",
-        destination: "https://swasth-raho-qd56.vercel.app/api/:path*",
+        destination: "https://swasth-hospital.onrender.com/api/:path*",
       },
       {
         source: "/patient/:path*",
-        destination: "https://swasth-raho-qd56.vercel.app/patient/:path*",
+        destination: "https://swasth-hospital.onrender.com/patient/:path*",
       },
       {
         source: "/doctor/:path*",
-        destination: "https://swasth-raho-qd56.vercel.app/doctor/:path*",
+        destination: "https://swasth-hospital.onrender.com/doctor/:path*",
       },
       {
         source: "/api/hospital/:path*",
-        destination: "https://swasth-raho-qd56.vercel.app/api/hospital/:path*",
+        destination: "https://swasth-hospital.onrender.com/api/hospital/:path*",
       },
       {
         source: "/auth/:path*",
-        destination: "https://swasth-raho-qd56.vercel.app/auth/:path*",
+        destination: "https://swasth-hospital.onrender.com/auth/:path*",
       },
       {
         source: "/super-admin/:path*",
-        destination: "https://swasth-raho-qd56.vercel.app/super-admin/:path*",
+        destination: "https://swasth-hospital.onrender.com/super-admin/:path*",
       },
       {
         source: "/ai/:path*",
-        destination: "https://swasth-raho-qd56.vercel.app/ai/:path*",
+        destination: "https://swasth-hospital.onrender.com/ai/:path*",
       },
     ];
   },
