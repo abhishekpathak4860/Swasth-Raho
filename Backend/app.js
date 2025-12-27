@@ -41,7 +41,9 @@ const io = new Server(server, { cors: corsOptions });
 io.use((socket, next) => {
   try {
     // Socket handshake se cookies nikaalna
-    const cookies = cookie.parse(socket.handshake.headers.cookie || "");
+    const cookies = cookie.parse(
+      socket.handshake.headers.cookie || socket.request.headers.cookie
+    );
     const token = cookies.token;
 
     if (!token) {
