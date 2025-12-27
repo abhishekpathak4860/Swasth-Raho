@@ -55,7 +55,7 @@ io.use((socket, next) => {
     socket.user = decoded; // User ki info socket mein save ho gayi
     next();
   } catch (err) {
-    next(new Error("Authentication error: Invalid token"));
+    next(new Error(`Authentication error: ${err.message}`));
   }
 });
 // 5. Connect Socket Handler
