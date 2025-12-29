@@ -1,6 +1,7 @@
 "use client";
 import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
+import axios from "axios";
 import {
   User,
   CalendarDays,
@@ -20,23 +21,22 @@ import {
   ChevronLeft,
   Filter,
 } from "lucide-react";
+import { useSocket } from "../../../../../context/SocketContext";
+import { useAuth } from "../../../../../context/AuthContext";
 
 export default function DoctorMessagesPage() {
-  // State Management
-  const [activeTab, setActiveTab] = useState("messages");
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [showProfileMenu, setShowProfileMenu] = useState(false);
-  const [activeChat, setActiveChat] = useState(null);
-  const [messageInput, setMessageInput] = useState("");
-  const messagesEndRef = useRef(null);
+  const socket = useSocket();
+  const { user } = useAuth(); // Doctor ki login details
 
-  // Fake Doctor Data (Reference from your code)
-  const doctor = {
-    name: "Dr. Akshat Lohni",
-    email: "akshat@gmail.com",
-    role: "Doctor",
-    profileImg: "",
-  };
+  // State Management
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [activeChat, setActiveChat] = useState(null); // Selected Patient Object
+  const [messageInput, setMessageInput] = useState("");
+  const [messages, setMessages] = useState([]); // Selected chat history
+  const [inbox, setInbox] = useState([]); // List of active conversations
+  const [loading, setLoading] = useState(true);
+  const [conversationId, setConversationId] = useState(null);
+  const messagesEndRef = useRef(null);
 
   const sidebarItems = [
     { id: "profile", label: "Profile", icon: User, route: "/admin/doctor" },
@@ -66,107 +66,199 @@ export default function DoctorMessagesPage() {
     },
   ];
 
-  const patientList = [
-    {
-      id: 1,
-      name: "Ayush Pal",
-      age: "26",
-      lastMsg: "Doctor, when should I take the red pill?",
-      time: "09:45 AM",
-      unread: 3,
-      online: true,
-    },
-    {
-      id: 2,
-      name: "Rahul Sharma",
-      age: "32",
-      lastMsg: "The fever has gone down. Thanks!",
-      time: "Yesterday",
-      unread: 0,
-      online: false,
-    },
-    {
-      id: 3,
-      name: "Sneha Gupta",
-      age: "24",
-      lastMsg: "Attached my blood report.",
-      time: "Monday",
-      unread: 0,
-      online: true,
-    },
-  ];
+  // 1. Fetch Doctor Inbox (Sirf wahi patients jinhone message bheja hai)
+  useEffect(() => {
+    const fetchInbox = async () => {
+      try {
+        setLoading(true);
+        const res = await axios.get("/api/chat/inbox", {
+          withCredentials: true,
+        });
+        setInbox(res.data.inbox);
+      } catch (err) {
+        console.error("Inbox fetch failed", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchInbox();
+  }, []);
 
-  const dummyMessages = [
-    {
-      id: 1,
-      sender: "doctor",
-      text: "Hello Ayush, how is your recovery going?",
-      time: "09:00 AM",
-    },
-    {
-      id: 2,
-      sender: "patient",
-      text: "It is better, but I have a question about the medicine.",
-      time: "09:05 AM",
-    },
-    { id: 3, sender: "doctor", text: "Sure, ask away.", time: "09:10 AM" },
-    {
-      id: 4,
-      sender: "patient",
-      text: "Doctor, when should I take the red pill?",
-      time: "09:45 AM",
-    },
-  ];
+  // 2. Chat Select logic: Messages load karna aur Room join karna
+  useEffect(() => {
+    if (activeChat && socket) {
+      const getChat = async () => {
+        try {
+          // activeChat._id patient ki ID hai
+          const res = await axios.get(
+            `/api/chat/conversation/${activeChat._id}`,
+            {
+              withCredentials: true,
+            }
+          );
+          setConversationId(res.data.conversationId);
+          setMessages(res.data.messages);
+
+          // Socket room join karna
+          socket.emit("join_chat", res.data.conversationId);
+        } catch (err) {
+          console.error("Failed to load conversation", err);
+        }
+      };
+      getChat();
+    }
+  }, [activeChat, socket]);
+
+  // 3. Real-time Listening (Incoming Patient Messages)
+  // useEffect(() => {
+  //   if (!socket) return;
+
+  //   socket.on("receive_direct_message", (newMsg) => {
+  //     if (newMsg.conversationId === conversationId) {
+  //       setMessages((prev) => [...prev, newMsg]);
+  //     }
+  //   });
+
+  //   return () => socket.off("receive_direct_message");
+  // }, [socket, conversationId]);
+  useEffect(() => {
+    if (!socket || !conversationId) return;
+
+    const handleNewMessage = (newMessage) => {
+      // BUG FIX: Agar sender doctor khud hai, toh ignore
+      if (String(newMessage.senderId) === String(user?.id || user?._id)) {
+        return;
+      }
+
+      if (String(newMessage.conversationId) === String(conversationId)) {
+        setMessages((prev) => {
+          const isDuplicate = prev.some((m) => m._id === newMessage._id);
+          if (isDuplicate) return prev;
+          return [...prev, newMessage];
+        });
+      }
+    };
+
+    socket.on("receive_direct_message", handleNewMessage);
+    return () => {
+      socket.off("receive_direct_message", handleNewMessage);
+    };
+  }, [socket, conversationId, user]);
+  // 4. Send Message Logic
+  // const handleSendMessage = () => {
+  //   if (!messageInput.trim() || !socket || !conversationId || !activeChat)
+  //     return;
+
+  //   const payload = {
+  //     conversationId: conversationId,
+  //     receiverId: activeChat._id, // Patient ID
+  //     text: messageInput,
+  //   };
+
+  //   socket.emit("send_direct_message", payload);
+
+  //   // Optimistic UI Update
+  //   const localMsg = {
+  //     senderId: user?.id || user?._id,
+  //     text: messageInput,
+  //     createdAt: new Date().toISOString(),
+  //     conversationId: conversationId,
+  //   };
+  //   setMessages((prev) => [...prev, localMsg]);
+  //   setMessageInput("");
+  // };
+  // const handleSendMessage = () => {
+  //   if (!messageInput.trim() || !socket || !conversationId || !activeChat)
+  //     return;
+
+  //   const payload = {
+  //     conversationId: conversationId,
+  //     receiverId: activeChat, // Doctor side par activeChat patient ki ID hai
+  //     text: messageInput,
+  //   };
+
+  //   socket.emit("send_direct_message", payload);
+
+  //   // Optimistic UI: Backend ke emit hone ka wait na karein, turant dikhayein
+  //   const localMsg = {
+  //     senderId: user?.id || user?._id,
+  //     text: messageInput,
+  //     createdAt: new Date().toISOString(),
+  //     conversationId: conversationId,
+  //     _id: Date.now().toString(), // Temporary ID
+  //   };
+  //   setMessages((prev) => [...prev, localMsg]);
+  //   setMessageInput("");
+  // };
+
+  const handleSendMessage = () => {
+    if (!messageInput.trim() || !socket || !conversationId || !activeChat)
+      return;
+
+    const tempId = Date.now().toString();
+    const payload = {
+      conversationId: conversationId,
+      receiverId: activeChat._id,
+      text: messageInput,
+    };
+
+    socket.emit("send_direct_message", payload);
+
+    const localMsg = {
+      _id: tempId,
+      senderId: user?.id || user?._id,
+      text: messageInput,
+      createdAt: new Date().toISOString(),
+      conversationId: conversationId,
+    };
+    setMessages((prev) => [...prev, localMsg]);
+    setMessageInput("");
+  };
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [activeChat]);
+  }, [messages]);
 
   return (
-    <div className="h-screen flex bg-gray-50 overflow-hidden">
-      {/* --- Mobile Sidebar Overlay --- */}
+    <div className="h-screen flex bg-gray-50 overflow-hidden font-sans">
+      {/* Mobile Sidebar Overlay */}
       {isSidebarOpen && (
         <div
-          className="fixed inset-0 bg-black/40 z-50 md:hidden transition-opacity"
+          className="fixed inset-0 bg-black/40 z-50 md:hidden"
           onClick={() => setIsSidebarOpen(false)}
         />
       )}
 
-      {/* --- Sidebar (Doctor Portal Styling) --- */}
+      {/* --- SIDEBAR --- */}
       <aside
         className={`fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-xl transform transition-transform duration-300 md:relative md:translate-x-0 ${
           isSidebarOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
         <div className="p-4 border-b flex items-center justify-between">
-          <div className="flex items-center">
-            <div className="w-10 h-10 bg-gradient-to-r from-blue-600 to-green-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-200">
-              <span className="text-white font-bold text-xl">D</span>
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-gradient-to-r from-blue-600 to-green-600 rounded-xl flex items-center justify-center text-white font-bold shadow-lg shadow-blue-100">
+              D
             </div>
-            <div className="ml-3">
+            <div>
               <h1 className="text-lg font-bold text-gray-800">Swasth-Raho</h1>
-              <p className="text-[10px] text-gray-500 font-bold uppercase tracking-wider">
+              <p className="text-[10px] text-gray-400 font-bold uppercase">
                 Doctor Portal
               </p>
             </div>
           </div>
-          <button
-            className="md:hidden p-2 text-gray-400"
-            onClick={() => setIsSidebarOpen(false)}
-          >
+          <button className="md:hidden" onClick={() => setIsSidebarOpen(false)}>
             <X size={20} />
           </button>
         </div>
-
-        <nav className="mt-4 flex-1 px-3 space-y-1 overflow-y-auto">
+        <nav className="mt-4 flex-1 px-3 space-y-1">
           {sidebarItems.map((item) => (
             <Link
               key={item.id}
               href={item.route}
-              onClick={() => setActiveTab(item.id)}
               className={`flex items-center px-4 py-3 rounded-xl transition-all ${
-                activeTab === item.id
-                  ? "bg-blue-50 text-blue-600 border-r-4 border-blue-600 font-semibold"
+                item.id === "messages"
+                  ? "bg-blue-600 text-white shadow-md shadow-blue-200 font-semibold"
                   : "text-gray-600 hover:bg-gray-100"
               }`}
             >
@@ -177,54 +269,54 @@ export default function DoctorMessagesPage() {
         </nav>
       </aside>
 
-      {/* --- Main Area --- */}
+      {/* --- MAIN CONTENT AREA --- */}
       <div className="flex-1 flex flex-col min-w-0">
-        {/* Header */}
-        <header className="bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between sticky top-0 z-30">
+        <header className="bg-white border-b border-gray-200 px-6 py-3 flex items-center justify-between sticky top-0 z-30">
           <div className="flex items-center">
             <button
               onClick={() => setIsSidebarOpen(true)}
-              className="md:hidden p-2 mr-2 text-gray-600 hover:bg-gray-100 rounded-lg"
+              className="md:hidden p-2 mr-2 text-gray-600"
             >
               <Menu size={24} />
             </button>
             <h2 className="text-xl font-bold text-gray-800 tracking-tight">
-              Patient Messages
+              Patient Inquiries
             </h2>
           </div>
-
           <div className="flex items-center gap-3">
-            <button
-              onClick={() => setShowProfileMenu(!showProfileMenu)}
-              className="flex items-center gap-3 p-1 rounded-full hover:bg-gray-100 transition-colors"
-            >
-              <div className="w-9 h-9 bg-blue-600 rounded-full flex items-center justify-center text-white border-2 border-white shadow-sm overflow-hidden">
+            <div className="hidden sm:block text-right">
+              <p className="text-xs font-bold text-gray-800">{user?.name}</p>
+              <p className="text-[10px] text-green-600 font-medium">Online</p>
+            </div>
+            <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center text-white border-2 border-white shadow-sm overflow-hidden">
+              {user?.profileImg ? (
+                <img
+                  src={user.profileImg}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
                 <User size={20} />
-              </div>
-              <div className="hidden sm:block text-left mr-2">
-                <p className="text-xs font-bold text-gray-800 leading-none">
-                  {doctor.name}
-                </p>
-                <p className="text-[10px] text-gray-500">{doctor.email}</p>
-              </div>
-            </button>
+              )}
+            </div>
           </div>
         </header>
 
-        {/* --- Chat Content --- */}
         <div className="flex-1 flex overflow-hidden">
-          {/* Patient Chat List */}
+          {/* Inbox / Patient List */}
           <div
             className={`w-full md:w-80 lg:w-96 bg-white border-r border-gray-200 flex flex-col ${
               activeChat ? "hidden md:flex" : "flex"
             }`}
           >
-            <div className="p-4 border-b border-gray-100 bg-white space-y-3">
+            <div className="p-4 border-b space-y-3">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-bold text-gray-400 uppercase tracking-widest">
                   Inbox
                 </span>
-                <Filter size={14} className="text-gray-400 cursor-pointer" />
+                <Filter
+                  size={14}
+                  className="text-gray-400 cursor-pointer hover:text-blue-600"
+                />
               </div>
               <div className="relative">
                 <Search
@@ -234,57 +326,70 @@ export default function DoctorMessagesPage() {
                 <input
                   type="text"
                   placeholder="Search patients..."
-                  className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all"
+                  className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
             </div>
 
             <div className="flex-1 overflow-y-auto">
-              {patientList.map((patient) => (
-                <div
-                  key={patient.id}
-                  onClick={() => setActiveChat(patient.id)}
-                  className={`flex items-center p-4 cursor-pointer border-b border-gray-50 transition-all ${
-                    activeChat === patient.id
-                      ? "bg-blue-50"
-                      : "hover:bg-gray-50"
-                  }`}
-                >
-                  <div className="relative shrink-0">
-                    <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center border border-gray-200 shadow-sm">
-                      <User className="text-gray-400" size={24} />
-                    </div>
-                    {patient.online && (
-                      <div className="absolute bottom-0 right-0 w-3.5 h-3.5 bg-green-500 border-2 border-white rounded-full"></div>
-                    )}
-                  </div>
-                  <div className="ml-3 flex-1 min-w-0">
-                    <div className="flex justify-between items-center">
-                      <h4 className="font-bold text-gray-800 text-sm truncate">
-                        {patient.name}
-                      </h4>
-                      <span className="text-[10px] text-gray-400 font-medium">
-                        {patient.time}
-                      </span>
-                    </div>
-                    <p className="text-[10px] text-blue-600 font-bold">
-                      Age: {patient.age}
-                    </p>
-                    <p className="text-xs text-gray-500 truncate mt-0.5">
-                      {patient.lastMsg}
-                    </p>
-                  </div>
-                  {patient.unread > 0 && (
-                    <div className="ml-2 bg-blue-600 text-white text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center shadow-md shadow-blue-200">
-                      {patient.unread}
-                    </div>
-                  )}
+              {loading ? (
+                <div className="p-10 text-center text-sm text-gray-400">
+                  Loading patients...
                 </div>
-              ))}
+              ) : inbox.length === 0 ? (
+                <div className="p-10 text-center text-xs text-gray-400">
+                  No active conversations found.
+                </div>
+              ) : (
+                inbox.map((item) => (
+                  <div
+                    key={item.conversationId}
+                    onClick={() => setActiveChat(item.patient)}
+                    className={`flex items-center p-4 cursor-pointer border-b border-gray-50 transition-all ${
+                      activeChat?._id === item.patient._id
+                        ? "bg-blue-50 border-r-4 border-r-blue-600"
+                        : "hover:bg-gray-50"
+                    }`}
+                  >
+                    <div className="relative shrink-0">
+                      <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center border border-gray-200 overflow-hidden shadow-sm text-gray-400">
+                        {item.patient.profileImg ? (
+                          <img
+                            src={item.patient.profileImg}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <User size={24} />
+                        )}
+                      </div>
+                      <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></div>
+                    </div>
+                    <div className="ml-3 flex-1 min-w-0">
+                      <div className="flex justify-between items-center">
+                        <h4 className="font-bold text-gray-800 text-sm truncate">
+                          {item.patient.name}
+                        </h4>
+                        <span className="text-[10px] text-gray-400 font-medium">
+                          {new Date(item.updatedAt).toLocaleTimeString([], {
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })}
+                        </span>
+                      </div>
+                      <p className="text-[10px] text-blue-600 font-bold">
+                        Age: {item.patient.age || "N/A"}
+                      </p>
+                      <p className="text-xs text-gray-500 truncate mt-0.5">
+                        {item.lastMessage?.text || "No messages yet"}
+                      </p>
+                    </div>
+                  </div>
+                ))
+              )}
             </div>
           </div>
 
-          {/* Chat Window */}
+          {/* Active Chat Window */}
           <div
             className={`flex-1 flex flex-col bg-white ${
               !activeChat ? "hidden md:flex" : "flex"
@@ -292,8 +397,7 @@ export default function DoctorMessagesPage() {
           >
             {activeChat ? (
               <>
-                {/* Chat Header */}
-                <div className="px-4 py-3 border-b border-gray-100 flex justify-between items-center bg-white shadow-sm z-10">
+                <div className="px-4 py-3 border-b flex justify-between items-center shadow-sm z-10 bg-white">
                   <div className="flex items-center">
                     <button
                       onClick={() => setActiveChat(null)}
@@ -302,86 +406,89 @@ export default function DoctorMessagesPage() {
                       <ChevronLeft size={24} />
                     </button>
                     <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-full flex items-center justify-center text-white font-bold shadow-md">
-                      <User size={20} />
+                      {activeChat.profileImg ? (
+                        <img
+                          src={activeChat.profileImg}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        activeChat.name.charAt(0)
+                      )}
                     </div>
                     <div className="ml-3">
                       <h3 className="font-bold text-gray-800 text-sm">
-                        {patientList.find((p) => p.id === activeChat)?.name}
+                        {activeChat.name}
                       </h3>
                       <div className="flex items-center gap-1">
                         <div className="w-1.5 h-1.5 bg-green-500 rounded-full" />
-                        <p className="text-[10px] text-green-500 font-bold uppercase tracking-tighter">
-                          Connected
+                        <p className="text-[10px] text-green-500 font-bold uppercase tracking-tight">
+                          Active Connection
                         </p>
                       </div>
                     </div>
                   </div>
-                  <div className="flex items-center space-x-1 sm:space-x-3 text-gray-400">
-                    <button className="p-2 hover:bg-gray-100 rounded-full transition-colors hidden sm:block">
-                      <Phone size={18} />
-                    </button>
-                    <button className="p-2 hover:bg-gray-100 rounded-full transition-colors hidden sm:block">
-                      <Video size={18} />
-                    </button>
-                    <button className="p-2 hover:bg-gray-100 rounded-full transition-colors">
-                      <MoreVertical size={18} />
-                    </button>
+                  <div className="flex gap-4 text-gray-400 hidden sm:flex">
+                    <Phone
+                      size={18}
+                      className="cursor-pointer hover:text-blue-600"
+                    />
+                    <Video
+                      size={18}
+                      className="cursor-pointer hover:text-blue-600"
+                    />
                   </div>
                 </div>
 
-                {/* Messages Area (WhatsApp Style) */}
                 <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-[#f0f2f5] shadow-inner">
-                  {dummyMessages.map((msg) => (
-                    <div
-                      key={msg.id}
-                      className={`flex ${
-                        msg.sender === "doctor"
-                          ? "justify-end"
-                          : "justify-start"
-                      }`}
-                    >
+                  {messages.map((msg, idx) => {
+                    const isMe = msg.senderId === (user?.id || user?._id);
+                    return (
                       <div
-                        className={`max-w-[85%] sm:max-w-[70%] px-4 py-2.5 rounded-2xl shadow-sm text-sm leading-relaxed ${
-                          msg.sender === "doctor"
-                            ? "bg-blue-600 text-white rounded-tr-none"
-                            : "bg-white text-gray-800 rounded-tl-none border border-gray-100"
+                        key={idx}
+                        className={`flex ${
+                          isMe ? "justify-end" : "justify-start"
                         }`}
                       >
-                        <p>{msg.text}</p>
                         <div
-                          className={`flex items-center justify-end mt-1 gap-1 ${
-                            msg.sender === "doctor"
-                              ? "text-blue-100"
-                              : "text-gray-400"
+                          className={`max-w-[85%] sm:max-w-[70%] px-4 py-2.5 rounded-2xl text-sm shadow-sm leading-relaxed ${
+                            isMe
+                              ? "bg-blue-600 text-white rounded-tr-none"
+                              : "bg-white text-gray-800 rounded-tl-none border border-gray-100"
                           }`}
                         >
-                          <span className="text-[10px] font-medium">
-                            {msg.time}
-                          </span>
-                          {msg.sender === "doctor" && <CheckCheck size={14} />}
+                          <p>{msg.text}</p>
+                          <div
+                            className={`flex items-center justify-end mt-1 text-[10px] ${
+                              isMe ? "text-blue-100" : "text-gray-400"
+                            }`}
+                          >
+                            {new Date(msg.createdAt).toLocaleTimeString([], {
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            })}
+                            {isMe && <CheckCheck size={12} className="ml-1" />}
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                   <div ref={messagesEndRef} />
                 </div>
 
-                {/* Input Area */}
-                <div className="p-3 bg-white border-t border-gray-200 flex items-center gap-2">
-                  <button className="text-gray-400 hover:text-blue-600 p-2 hidden sm:block transition-colors">
-                    <Smile size={22} />
-                  </button>
-                  <button className="text-gray-400 hover:text-blue-600 p-2 transition-colors">
+                <div className="p-3 bg-white border-t border-gray-100 flex items-center gap-2">
+                  <button className="text-gray-400 p-2 hover:bg-gray-100 rounded-lg transition-colors">
                     <Paperclip size={20} />
                   </button>
                   <input
                     type="text"
                     value={messageInput}
                     onChange={(e) => setMessageInput(e.target.value)}
-                    placeholder="Type instructions for patient..."
+                    onKeyDown={(e) => e.key === "Enter" && handleSendMessage()}
+                    placeholder="Type professional advice for patient..."
                     className="flex-1 bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-blue-100 focus:bg-white outline-none transition-all"
                   />
                   <button
+                    onClick={handleSendMessage}
                     className={`p-3 rounded-xl transition-all shadow-lg active:scale-95 ${
                       messageInput.trim()
                         ? "bg-blue-600 text-white shadow-blue-200"
@@ -398,11 +505,11 @@ export default function DoctorMessagesPage() {
                   <MessageSquare className="h-10 w-10 text-blue-300" />
                 </div>
                 <h3 className="text-gray-800 font-bold text-lg">
-                  Patient Conversations
+                  Patient Consultations
                 </h3>
-                <p className="text-sm max-w-[280px] text-center mt-2 text-gray-500">
-                  Select a patient to view medical history and provide real-time
-                  consultation.
+                <p className="text-sm max-w-[280px] text-center mt-2 text-gray-500 px-5">
+                  Select a patient inquiry from the left to start providing
+                  professional medical guidance.
                 </p>
               </div>
             )}

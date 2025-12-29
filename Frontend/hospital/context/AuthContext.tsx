@@ -46,6 +46,7 @@ export function AuthProvider({ children }: any) {
         res.data;
 
       setUser({ ...data, role });
+      console.log("hello", { ...data, role });
     } catch (err) {
       console.log("Auth error:", err);
       setUser(null);

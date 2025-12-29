@@ -17,6 +17,8 @@ import hospitalDashboardDataRouteFromServer from "./routes/hospitalDataFromServe
 import getTokenRoute from "./routes/getToken.js";
 import aiChatRoute from "./routes/aiChat.js";
 import { socketHandler } from "./controllers/aiChatController.js";
+import { userSocketHandler } from "./controllers/userChatController.js";
+import chatRoute from "./routes/chatRoute.js";
 
 const app = express();
 const server = http.createServer(app); // 4. Create Server
@@ -70,6 +72,7 @@ io.use((socket, next) => {
 });
 // 5. Connect Socket Handler
 socketHandler(io);
+userSocketHandler(io);
 
 // Health check
 app.get("/", (req, res) => {
@@ -84,6 +87,7 @@ app.use("/doctor", doctorDashboardDataRoute);
 app.use("/api/hospital", hospitalDashboardDataRoute);
 app.use("/data", hospitalDashboardDataRouteFromServer);
 app.use("/ai", aiChatRoute);
+app.use("/api/chat", chatRoute);
 // userChat
 // Global error handler method
 app.use((err, req, res, next) => {

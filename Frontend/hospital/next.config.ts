@@ -58,6 +58,10 @@ const nextConfig = {
           destination: "http://localhost:5000/api/:path*",
         },
         {
+          source: "/api/chat/:path*",
+          destination: "http://localhost:5000/api/chat/:path*",
+        },
+        {
           source: "/patient/:path*",
           destination: "http://localhost:5000/patient/:path*",
         },
@@ -88,6 +92,10 @@ const nextConfig = {
       {
         source: "/api/:path*",
         destination: "https://swasth-hospital.onrender.com/api/:path*",
+      },
+      {
+        source: "/api/chat/:path*",
+        destination: "https://swasth-hospital.onrender.com/api/chat/:path*",
       },
       {
         source: "/patient/:path*",
