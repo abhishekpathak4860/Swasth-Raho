@@ -1,3 +1,450 @@
+// "use client";
+// import { useState, useRef, useEffect } from "react";
+// import { io } from "socket.io-client";
+// import Cookies from "js-cookie";
+// import {
+//   Send,
+//   Bot,
+//   User,
+//   CalendarDays,
+//   Stethoscope,
+//   FileText,
+//   Hospital,
+//   Receipt,
+//   Sparkles,
+//   ChevronRight,
+//   Paperclip,
+//   StopCircle,
+//   MessageCircle,
+// } from "lucide-react";
+// import Link from "next/link";
+// import axios from "axios";
+// // import { useAuth } from "../../../../../context/AuthContext"; // Uncomment this in your real project
+
+// const socket = io(
+//   process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5000",
+//   {
+//     auth: {
+//       token: Cookies.get("token"),
+//     }, // Cookies (token) bhejne ke liye zaruri hai
+//     transports: ["websocket"], // Sirf websocket use karein faster connection ke liye
+//   }
+// );
+
+// export default function AIAssistant() {
+//   // const { user } = useAuth(); // Uncomment in real project
+
+//   // Fake user for display purposes
+//   const user = { name: "Patient" };
+
+//   const [messages, setMessages] = useState([]);
+//   const [input, setInput] = useState("");
+//   const [isLoading, setIsLoading] = useState(false);
+//   const messagesEndRef = useRef(null);
+
+//   // Auto-scroll to bottom
+//   const scrollToBottom = () => {
+//     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+//   };
+
+//   useEffect(() => {
+//     scrollToBottom();
+//   }, [messages]);
+
+//   // make socket connection
+//   useEffect(() => {
+//     // 1. AI reply ko sunne ke liye listener
+//     socket.on("receive_message", (data) => {
+//       setMessages((prev) => [
+//         ...prev,
+//         {
+//           sender: "bot",
+//           text: data.reply,
+//           isAi: true,
+//         },
+//       ]);
+//       setIsLoading(false);
+//     });
+
+//     // 2. Error handling listener
+//     socket.on("error", (err) => {
+//       console.error("Socket Error:", err.message);
+//       setMessages((prev) => [
+//         ...prev,
+//         {
+//           sender: "bot",
+//           text: "Sorry, I am unable to respond right now.",
+//           isAi: true,
+//         },
+//       ]);
+//       setIsLoading(false);
+//     });
+
+//     // Clean up listeners when component unmounts
+//     return () => {
+//       socket.off("receive_message");
+//       socket.off("error");
+//     };
+//   }, []);
+
+//   // const handleSend = async (text = input) => {
+//   //   if (!text.trim()) return;
+
+//   //   // 1 User message UI me add karo
+//   //   const userMessage = { sender: "user", text };
+//   //   setMessages((prev) => [...prev, userMessage]);
+
+//   //   setInput("");
+//   //   setIsLoading(true);
+
+//   //   try {
+//   //     // 2 Backend ko message + previous chat bhejo
+//   //     const res = await axios.post(
+//   //       "/ai/chat",
+//   //       {
+//   //         message: text,
+//   //         history: messages,
+//   //       },
+//   //       {
+//   //         withCredentials: true,
+//   //       }
+//   //     );
+
+//   //     // 3 AI reply UI me add karo
+//   //     setMessages((prev) => [
+//   //       ...prev,
+//   //       {
+//   //         sender: "bot",
+//   //         text: res.data.reply,
+//   //         isAi: true,
+//   //       },
+//   //     ]);
+//   //   } catch (err) {
+//   //     console.error(err);
+//   //     setMessages((prev) => [
+//   //       ...prev,
+//   //       {
+//   //         sender: "bot",
+//   //         text: "Sorry, I am unable to respond right now.",
+//   //         isAi: true,
+//   //       },
+//   //     ]);
+//   //   } finally {
+//   //     setIsLoading(false);
+//   //   }
+//   // };
+
+//   const handleSend = (text = input) => {
+//     if (!text.trim()) return;
+
+//     // UI mein user message dikhao
+//     const userMessage = { sender: "user", text };
+//     setMessages((prev) => [...prev, userMessage]);
+
+//     setInput("");
+//     setIsLoading(true);
+
+//     // 3. Backend ko message bhejo (Event-based)
+//     // Ab Axios.post ki zarurat nahi hai!
+//     socket.emit("send_message", {
+//       message: text,
+//       history: messages, // Current chat state
+//     });
+//   };
+
+//   // fetch user ai message chats
+
+//   useEffect(() => {
+//     const fetchChatHistory = async () => {
+//       try {
+//         const res = await axios.get("/ai/userChat", {
+//           withCredentials: true,
+//         });
+
+//         // Backend will send messages as:
+//         // [{ question, answer }, { question, answer }]
+//         const formattedMessages = [];
+
+//         res.data.messages.forEach((msg) => {
+//           formattedMessages.push({
+//             sender: "user",
+//             text: msg.question,
+//           });
+
+//           formattedMessages.push({
+//             sender: "bot",
+//             text: msg.answer,
+//             isAi: true,
+//           });
+//         });
+
+//         setMessages(formattedMessages);
+//       } catch (error) {
+//         console.error("Failed to load chat history", error);
+//       }
+//     };
+
+//     fetchChatHistory();
+//   }, []);
+
+//   // Suggested Prompts for Empty State
+//   const suggestedActions = [
+//     {
+//       title: "Find a Doctor",
+//       sub: "Specialists near you",
+//       query: "I need to find a heart specialist near me.",
+//     },
+//     {
+//       title: "Check Appointments",
+//       sub: "Upcoming schedules",
+//       query: "When is my next appointment?",
+//     },
+//     {
+//       title: "Medical Report Analysis",
+//       sub: "Understand your results",
+//       query: "Can you explain my recent blood test report?",
+//     },
+//   ];
+
+//   return (
+//     <div className="h-screen flex bg-gray-50 font-sans overflow-hidden">
+//       {/* ================= SIDEBAR (Kept mostly same) ================= */}
+//       <aside className="hidden md:flex flex-col w-64 bg-white border-r border-gray-200 h-screen z-10">
+//         <div className="p-5 border-b border-gray-100 flex items-center gap-3">
+//           <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center text-white text-xl font-bold shadow-lg shadow-blue-200">
+//             S
+//           </div>
+//           <div>
+//             <h1 className="text-lg font-bold text-gray-800 tracking-tight">
+//               Swasth-Raho
+//             </h1>
+//             <p className="text-xs text-gray-500 font-medium">Patient Portal</p>
+//           </div>
+//         </div>
+
+//         <nav className="mt-6 flex-1 px-3 space-y-1">
+//           {[
+//             { label: "Profile", route: "/admin/patient", icon: User },
+//             {
+//               label: "Appointments",
+//               route: "/admin/patient/appointments",
+//               icon: CalendarDays,
+//             },
+//             {
+//               label: "Doctors",
+//               route: "/admin/patient/doctors",
+//               icon: Stethoscope,
+//             },
+//             {
+//               label: "Medical Reports",
+//               route: "/admin/patient/reports",
+//               icon: FileText,
+//             },
+//             {
+//               label: "Hospitals",
+//               route: "/admin/patient/hospitals",
+//               icon: Hospital,
+//             },
+//             { label: "Bills", route: "/admin/patient/bills", icon: Receipt },
+//             {
+//               label: "Swasth Bot",
+//               route: "/admin/patient/chat",
+//               icon: MessageCircle,
+//             },
+//           ].map((item) => (
+//             <Link
+//               key={item.route}
+//               href={item.route}
+//               className={`flex items-center px-3 py-2.5 rounded-xl transition-all duration-200 group
+//               ${
+//                 item.label === "AI Health Assistant"
+//                   ? "bg-blue-50 text-blue-700 font-semibold shadow-inner"
+//                   : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
+//               }`}
+//             >
+//               <item.icon
+//                 className={`w-5 h-5 ${
+//                   item.label === "AI Health Assistant"
+//                     ? "text-blue-600"
+//                     : "text-gray-400 group-hover:text-gray-600"
+//                 }`}
+//               />
+//               <span className="ml-3 text-sm">{item.label}</span>
+//             </Link>
+//           ))}
+//         </nav>
+
+//         <div className="p-4 border-t">
+//           <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-3 rounded-xl border border-blue-100">
+//             <p className="text-xs text-blue-800 font-medium mb-1">
+//               Premium Plan
+//             </p>
+//             <p className="text-[10px] text-blue-600">
+//               Get unlimited AI consultations.
+//             </p>
+//           </div>
+//         </div>
+//       </aside>
+
+//       {/* ================= MAIN CONTENT ================= */}
+//       <div className="flex-1 flex flex-col relative bg-white">
+//         {/* Header */}
+//         <header className="bg-white/80 backdrop-blur-md border-b border-gray-100 p-4 flex justify-between items-center sticky top-0 z-20">
+//           <div className="flex items-center gap-2">
+//             <MessageCircle className="w-5 h-5 text-blue-600" />
+//             <h2 className="text-xl font-bold text-gray-800">Swasth Bot</h2>
+//             {/* <span className="bg-green-100 text-green-700 text-xs px-2 py-0.5 rounded-full font-medium">
+//               Beta
+//             </span> */}
+//           </div>
+//           <div className="text-sm text-gray-500">New Chat</div>
+//         </header>
+
+//         {/* Chat Area */}
+//         <div className="flex-1 overflow-y-auto custom-scrollbar">
+//           <div className="max-w-3xl mx-auto px-4 py-8">
+//             {/* Empty State (If no messages) */}
+//             {messages.length === 0 && (
+//               <div className="mt-12 text-center space-y-6 animate-in fade-in zoom-in duration-500">
+//                 <div className="w-16 h-16 bg-blue-100 text-blue-600 rounded-2xl mx-auto flex items-center justify-center mb-4">
+//                   <Sparkles className="w-8 h-8" />
+//                 </div>
+//                 <h3 className="text-2xl font-bold text-gray-800">
+//                   Hello, {user?.name || "Patient"}
+//                 </h3>
+//                 <p className="text-gray-500 max-w-md mx-auto">
+//                   I can help you find doctors, analyze reports, or schedule
+//                   appointments within the Swasth-Raho ecosystem.
+//                 </p>
+
+//                 <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-left mt-8">
+//                   {suggestedActions.map((action, idx) => (
+//                     <button
+//                       key={idx}
+//                       onClick={() => handleSend(action.query)}
+//                       className="p-4 border border-gray-200 rounded-xl hover:border-blue-400 hover:shadow-md transition-all bg-white group"
+//                     >
+//                       <h4 className="font-semibold text-gray-800 text-sm mb-1 group-hover:text-blue-600">
+//                         {action.title}
+//                       </h4>
+//                       <p className="text-xs text-gray-500">{action.sub}</p>
+//                     </button>
+//                   ))}
+//                 </div>
+//               </div>
+//             )}
+
+//             {/* Message History */}
+//             <div className="space-y-6">
+//               {messages.map((msg, index) => (
+//                 <div
+//                   key={index}
+//                   className={`flex gap-4 ${
+//                     msg.sender === "user" ? "justify-end" : "justify-start"
+//                   }`}
+//                 >
+//                   {/* Bot Avatar */}
+//                   {msg.sender === "bot" && (
+//                     <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center shrink-0 shadow-md">
+//                       <Sparkles className="w-4 h-4 text-white" />
+//                     </div>
+//                   )}
+
+//                   <div
+//                     className={`max-w-[80%] p-4 rounded-2xl text-sm leading-relaxed shadow-sm ${
+//                       msg.sender === "user"
+//                         ? "bg-gray-900 text-white rounded-tr-sm"
+//                         : "bg-white border border-gray-100 text-gray-800 rounded-tl-sm"
+//                     }`}
+//                   >
+//                     {msg.text}
+//                   </div>
+
+//                   {/* User Avatar */}
+//                   {msg.sender === "user" && (
+//                     <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center shrink-0">
+//                       <User className="w-4 h-4 text-gray-600" />
+//                     </div>
+//                   )}
+//                 </div>
+//               ))}
+
+//               {/* Loading Indicator */}
+//               {isLoading && (
+//                 <div className="flex gap-4">
+//                   <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center shrink-0">
+//                     <Sparkles className="w-4 h-4 text-white" />
+//                   </div>
+//                   <div className="bg-white border border-gray-100 px-4 py-3 rounded-2xl rounded-tl-sm shadow-sm flex items-center gap-1">
+//                     <div
+//                       className="w-2 h-2 bg-blue-400 rounded-full animate-bounce"
+//                       style={{ animationDelay: "0ms" }}
+//                     />
+//                     <div
+//                       className="w-2 h-2 bg-blue-400 rounded-full animate-bounce"
+//                       style={{ animationDelay: "150ms" }}
+//                     />
+//                     <div
+//                       className="w-2 h-2 bg-blue-400 rounded-full animate-bounce"
+//                       style={{ animationDelay: "300ms" }}
+//                     />
+//                   </div>
+//                 </div>
+//               )}
+//               <div ref={messagesEndRef} />
+//             </div>
+//           </div>
+//         </div>
+
+//         {/* Input Area */}
+//         <div className="p-4 bg-white/80 backdrop-blur-sm border-t border-gray-100">
+//           <div className="max-w-3xl mx-auto relative">
+//             <div className="relative flex items-end gap-2 bg-gray-50 border border-gray-200 rounded-2xl p-2 focus-within:ring-2 focus-within:ring-blue-100 focus-within:border-blue-400 transition-all shadow-sm">
+//               <button className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-200 rounded-xl transition-colors">
+//                 <Paperclip className="w-5 h-5" />
+//               </button>
+
+//               <textarea
+//                 value={input}
+//                 onChange={(e) => setInput(e.target.value)}
+//                 onKeyDown={(e) => {
+//                   if (e.key === "Enter" && !e.shiftKey) {
+//                     e.preventDefault();
+//                     handleSend();
+//                   }
+//                 }}
+//                 placeholder="Ask about your reports, doctors, or hospitals..."
+//                 className="w-full bg-transparent border-none focus:ring-0 resize-none max-h-32 min-h-[44px] py-3 text-gray-800 placeholder:text-gray-400 text-sm"
+//                 rows={1}
+//               />
+
+//               <button
+//                 onClick={() => handleSend()}
+//                 disabled={!input.trim() || isLoading}
+//                 className={`p-2 rounded-xl transition-all duration-200 ${
+//                   input.trim()
+//                     ? "bg-blue-600 text-white shadow-lg shadow-blue-200 hover:bg-blue-700"
+//                     : "bg-gray-200 text-gray-400 cursor-not-allowed"
+//                 }`}
+//               >
+//                 {isLoading ? (
+//                   <StopCircle className="w-5 h-5" />
+//                 ) : (
+//                   <Send className="w-5 h-5" />
+//                 )}
+//               </button>
+//             </div>
+//             <p className="text-center text-[10px] text-gray-400 mt-2">
+//               AI can make mistakes. Please check with a real doctor for medical
+//               advice.
+//             </p>
+//           </div>
+//         </div>
+//       </div>
+//     </div>
+//   );
+// }
+
 "use client";
 import { useState, useRef, useEffect } from "react";
 import { io } from "socket.io-client";
@@ -12,37 +459,37 @@ import {
   Hospital,
   Receipt,
   Sparkles,
-  ChevronRight,
   Paperclip,
   StopCircle,
   MessageCircle,
+  Menu,
+  X,
+  PlusCircle,
 } from "lucide-react";
 import Link from "next/link";
 import axios from "axios";
-// import { useAuth } from "../../../../../context/AuthContext"; // Uncomment this in your real project
+import { useSocket } from "../../../../../context/SocketContext";
 
+// Socket connection
 const socket = io(
   process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5000",
   {
     auth: {
       token: Cookies.get("token"),
-    }, // Cookies (token) bhejne ke liye zaruri hai
-    transports: ["websocket"], // Sirf websocket use karein faster connection ke liye
+    },
+    transports: ["websocket"],
   }
 );
 
 export default function AIAssistant() {
-  // const { user } = useAuth(); // Uncomment in real project
-
-  // Fake user for display purposes
+  const socket = useSocket(); // get socket from context
   const user = { name: "Patient" };
-
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false); // Mobile sidebar state
   const messagesEndRef = useRef(null);
 
-  // Auto-scroll to bottom
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
@@ -51,22 +498,47 @@ export default function AIAssistant() {
     scrollToBottom();
   }, [messages]);
 
-  // make socket connection
+  // // Socket setup
+  // useEffect(() => {
+  //   socket.on("receive_message", (data) => {
+  //     setMessages((prev) => [
+  //       ...prev,
+  //       { sender: "bot", text: data.reply, isAi: true },
+  //     ]);
+  //     setIsLoading(false);
+  //   });
+
+  //   socket.on("error", (err) => {
+  //     console.error("Socket Error:", err.message);
+  //     setMessages((prev) => [
+  //       ...prev,
+  //       {
+  //         sender: "bot",
+  //         text: "Sorry, I am unable to respond right now.",
+  //         isAi: true,
+  //       },
+  //     ]);
+  //     setIsLoading(false);
+  //   });
+
+  //   return () => {
+  //     socket.off("receive_message");
+  //     socket.off("error");
+  //   };
+  // }, []);
+
+  // Socket Events Setup
   useEffect(() => {
-    // 1. AI reply ko sunne ke liye listener
+    if (!socket) return; // Agar socket initialize nahi hua toh events mat lagao
+
     socket.on("receive_message", (data) => {
       setMessages((prev) => [
         ...prev,
-        {
-          sender: "bot",
-          text: data.reply,
-          isAi: true,
-        },
+        { sender: "bot", text: data.reply, isAi: true },
       ]);
       setIsLoading(false);
     });
 
-    // 2. Error handling listener
     socket.on("error", (err) => {
       console.error("Socket Error:", err.message);
       setMessages((prev) => [
@@ -80,114 +552,95 @@ export default function AIAssistant() {
       setIsLoading(false);
     });
 
-    // Clean up listeners when component unmounts
     return () => {
       socket.off("receive_message");
       socket.off("error");
     };
-  }, []);
+  }, [socket]);
 
-  // const handleSend = async (text = input) => {
-  //   if (!text.trim()) return;
-
-  //   // 1 User message UI me add karo
-  //   const userMessage = { sender: "user", text };
-  //   setMessages((prev) => [...prev, userMessage]);
-
-  //   setInput("");
-  //   setIsLoading(true);
-
-  //   try {
-  //     // 2 Backend ko message + previous chat bhejo
-  //     const res = await axios.post(
-  //       "/ai/chat",
-  //       {
-  //         message: text,
-  //         history: messages,
-  //       },
-  //       {
-  //         withCredentials: true,
-  //       }
-  //     );
-
-  //     // 3 AI reply UI me add karo
-  //     setMessages((prev) => [
-  //       ...prev,
-  //       {
-  //         sender: "bot",
-  //         text: res.data.reply,
-  //         isAi: true,
-  //       },
-  //     ]);
-  //   } catch (err) {
-  //     console.error(err);
-  //     setMessages((prev) => [
-  //       ...prev,
-  //       {
-  //         sender: "bot",
-  //         text: "Sorry, I am unable to respond right now.",
-  //         isAi: true,
-  //       },
-  //     ]);
-  //   } finally {
-  //     setIsLoading(false);
-  //   }
-  // };
-
-  const handleSend = (text = input) => {
-    if (!text.trim()) return;
-
-    // UI mein user message dikhao
-    const userMessage = { sender: "user", text };
-    setMessages((prev) => [...prev, userMessage]);
-
-    setInput("");
-    setIsLoading(true);
-
-    // 3. Backend ko message bhejo (Event-based)
-    // Ab Axios.post ki zarurat nahi hai!
-    socket.emit("send_message", {
-      message: text,
-      history: messages, // Current chat state
-    });
-  };
-
-  // fetch user ai message chats
-
+  // Fetch history on load
   useEffect(() => {
     const fetchChatHistory = async () => {
       try {
-        const res = await axios.get("/ai/userChat", {
-          withCredentials: true,
-        });
-
-        // Backend will send messages as:
-        // [{ question, answer }, { question, answer }]
+        const res = await axios.get("/ai/userChat", { withCredentials: true });
         const formattedMessages = [];
-
         res.data.messages.forEach((msg) => {
-          formattedMessages.push({
-            sender: "user",
-            text: msg.question,
-          });
-
+          formattedMessages.push({ sender: "user", text: msg.question });
           formattedMessages.push({
             sender: "bot",
             text: msg.answer,
             isAi: true,
           });
         });
-
         setMessages(formattedMessages);
       } catch (error) {
         console.error("Failed to load chat history", error);
       }
     };
-
     fetchChatHistory();
   }, []);
 
-  // Suggested Prompts for Empty State
+  // const handleSend = (text = input) => {
+  //   if (!text.trim()) return;
+  //   const userMessage = { sender: "user", text };
+  //   setMessages((prev) => [...prev, userMessage]);
+  //   setInput("");
+  //   setIsLoading(true);
+  //   socket.emit("send_message", { message: text, history: messages });
+  // };
+  const handleSend = (text = input) => {
+    if (!text.trim() || !socket) return;
+
+    const userMessage = { sender: "user", text };
+    setMessages((prev) => [...prev, userMessage]);
+    setInput("");
+    setIsLoading(true);
+
+    socket.emit("send_message", {
+      message: text,
+      history: messages,
+    });
+  };
+
+  // NEW CHAT / DELETE API LOGIC
+  const handleNewChat = async () => {
+    try {
+      const confirmDelete = window.confirm(
+        "Start a new chat? This will clear your current history."
+      );
+      if (!confirmDelete) return;
+
+      await axios.delete("/ai/deleteChat", { withCredentials: true });
+      setMessages([]);
+    } catch (error) {
+      console.error("Failed to delete chat history", error);
+      alert("Error clearing history. Please try again.");
+    }
+  };
+
+  const navItems = [
+    { label: "Profile", route: "/admin/patient", icon: User },
+    {
+      label: "Appointments",
+      route: "/admin/patient/appointments",
+      icon: CalendarDays,
+    },
+    { label: "Doctors", route: "/admin/patient/doctors", icon: Stethoscope },
+    {
+      label: "Medical Reports",
+      route: "/admin/patient/reports",
+      icon: FileText,
+    },
+    { label: "Hospitals", route: "/admin/patient/hospitals", icon: Hospital },
+    { label: "Bills", route: "/admin/patient/bills", icon: Receipt },
+    {
+      label: "Swasth Bot",
+      route: "/admin/patient/chat",
+      icon: MessageCircle,
+      active: true,
+    },
+  ];
+
   const suggestedActions = [
     {
       title: "Find a Doctor",
@@ -200,71 +653,67 @@ export default function AIAssistant() {
       query: "When is my next appointment?",
     },
     {
-      title: "Medical Report Analysis",
-      sub: "Understand your results",
-      query: "Can you explain my recent blood test report?",
+      title: "Report Analysis",
+      sub: "Understand results",
+      query: "Explain my recent blood test report.",
     },
   ];
 
   return (
-    <div className="h-screen flex bg-gray-50 font-sans overflow-hidden">
-      {/* ================= SIDEBAR (Kept mostly same) ================= */}
-      <aside className="hidden md:flex flex-col w-64 bg-white border-r border-gray-200 h-screen z-10">
-        <div className="p-5 border-b border-gray-100 flex items-center gap-3">
-          <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center text-white text-xl font-bold shadow-lg shadow-blue-200">
-            S
+    <div className="h-screen flex bg-gray-50 font-sans overflow-hidden relative">
+      {/* Mobile Sidebar Overlay */}
+      {isSidebarOpen && (
+        <div
+          className="fixed inset-0 bg-black/40 z-30 md:hidden backdrop-blur-sm"
+          onClick={() => setIsSidebarOpen(false)}
+        />
+      )}
+
+      {/* ================= SIDEBAR (Responsive) ================= */}
+      <aside
+        className={`
+        fixed inset-y-0 left-0 z-40 w-72 bg-white border-r border-gray-200 transform transition-transform duration-300 ease-in-out
+        md:relative md:translate-x-0
+        ${isSidebarOpen ? "translate-x-0" : "-translate-x-full"}
+      `}
+      >
+        <div className="p-5 border-b border-gray-100 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center text-white text-xl font-bold shadow-lg">
+              S
+            </div>
+            <div>
+              <h1 className="text-lg font-bold text-gray-800 tracking-tight">
+                Swasth-Raho
+              </h1>
+              <p className="text-xs text-gray-500 font-medium">
+                Patient Portal
+              </p>
+            </div>
           </div>
-          <div>
-            <h1 className="text-lg font-bold text-gray-800 tracking-tight">
-              Swasth-Raho
-            </h1>
-            <p className="text-xs text-gray-500 font-medium">Patient Portal</p>
-          </div>
+          <button
+            className="md:hidden p-2 text-gray-400 hover:text-gray-600"
+            onClick={() => setIsSidebarOpen(false)}
+          >
+            <X size={20} />
+          </button>
         </div>
 
-        <nav className="mt-6 flex-1 px-3 space-y-1">
-          {[
-            { label: "Profile", route: "/admin/patient", icon: User },
-            {
-              label: "Appointments",
-              route: "/admin/patient/appointments",
-              icon: CalendarDays,
-            },
-            {
-              label: "Doctors",
-              route: "/admin/patient/doctors",
-              icon: Stethoscope,
-            },
-            {
-              label: "Medical Reports",
-              route: "/admin/patient/reports",
-              icon: FileText,
-            },
-            {
-              label: "Hospitals",
-              route: "/admin/patient/hospitals",
-              icon: Hospital,
-            },
-            { label: "Bills", route: "/admin/patient/bills", icon: Receipt },
-            {
-              label: "Swasth Bot",
-              route: "/admin/patient/chat",
-              icon: MessageCircle,
-            },
-          ].map((item) => (
+        <nav className="mt-6 flex-1 px-3 space-y-1 overflow-y-auto">
+          {navItems.map((item) => (
             <Link
               key={item.route}
               href={item.route}
-              className={`flex items-center px-3 py-2.5 rounded-xl transition-all duration-200 group
+              className={`flex items-center px-4 py-3 rounded-xl transition-all duration-200 group
               ${
-                item.label === "AI Health Assistant"
-                  ? "bg-blue-50 text-blue-700 font-semibold shadow-inner"
+                item.active
+                  ? "bg-blue-50 text-blue-700 font-semibold"
                   : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
               }`}
             >
               <item.icon
                 className={`w-5 h-5 ${
-                  item.label === "AI Health Assistant"
+                  item.active
                     ? "text-blue-600"
                     : "text-gray-400 group-hover:text-gray-600"
                 }`}
@@ -275,121 +724,122 @@ export default function AIAssistant() {
         </nav>
 
         <div className="p-4 border-t">
-          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-3 rounded-xl border border-blue-100">
-            <p className="text-xs text-blue-800 font-medium mb-1">
+          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-4 rounded-xl border border-blue-100">
+            <p className="text-xs text-blue-800 font-bold mb-1 uppercase tracking-wider">
               Premium Plan
             </p>
-            <p className="text-[10px] text-blue-600">
-              Get unlimited AI consultations.
+            <p className="text-[11px] text-blue-600 leading-tight">
+              Get unlimited AI health consultations today.
             </p>
           </div>
         </div>
       </aside>
 
       {/* ================= MAIN CONTENT ================= */}
-      <div className="flex-1 flex flex-col relative bg-white">
+      <div className="flex-1 flex flex-col min-w-0 bg-white relative">
         {/* Header */}
-        <header className="bg-white/80 backdrop-blur-md border-b border-gray-100 p-4 flex justify-between items-center sticky top-0 z-20">
-          <div className="flex items-center gap-2">
-            <MessageCircle className="w-5 h-5 text-blue-600" />
-            <h2 className="text-xl font-bold text-gray-800">Swasth Bot</h2>
-            {/* <span className="bg-green-100 text-green-700 text-xs px-2 py-0.5 rounded-full font-medium">
-              Beta
-            </span> */}
+        <header className="bg-white/90 backdrop-blur-md border-b border-gray-100 p-4 flex justify-between items-center sticky top-0 z-20">
+          <div className="flex items-center gap-3">
+            <button
+              className="md:hidden p-2 -ml-2 text-gray-500 hover:bg-gray-100 rounded-lg"
+              onClick={() => setIsSidebarOpen(true)}
+            >
+              <Menu size={20} />
+            </button>
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center">
+                <MessageCircle className="w-5 h-5 text-blue-600" />
+              </div>
+              <h2 className="text-lg font-bold text-gray-800 hidden sm:block">
+                Swasth Bot
+              </h2>
+            </div>
           </div>
-          <div className="text-sm text-gray-500">
-            Connected to Swasth-Raho Database
-          </div>
+
+          <button
+            onClick={handleNewChat}
+            className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-blue-600 hover:bg-blue-50 rounded-lg transition-colors border border-blue-100"
+          >
+            <PlusCircle size={16} />
+            <span>New Chat</span>
+          </button>
         </header>
 
         {/* Chat Area */}
-        <div className="flex-1 overflow-y-auto custom-scrollbar">
+        <div className="flex-1 overflow-y-auto bg-gray-50/50">
           <div className="max-w-3xl mx-auto px-4 py-8">
-            {/* Empty State (If no messages) */}
             {messages.length === 0 && (
-              <div className="mt-12 text-center space-y-6 animate-in fade-in zoom-in duration-500">
+              <div className="mt-12 text-center space-y-6">
                 <div className="w-16 h-16 bg-blue-100 text-blue-600 rounded-2xl mx-auto flex items-center justify-center mb-4">
                   <Sparkles className="w-8 h-8" />
                 </div>
-                <h3 className="text-2xl font-bold text-gray-800">
-                  Hello, {user?.name || "Patient"}
+                <h3 className="text-2xl font-bold text-gray-800 tracking-tight">
+                  Hello, {user?.name}
                 </h3>
-                <p className="text-gray-500 max-w-md mx-auto">
-                  I can help you find doctors, analyze reports, or schedule
-                  appointments within the Swasth-Raho ecosystem.
+                <p className="text-gray-500 max-w-sm mx-auto text-sm leading-relaxed">
+                  How can I assist you today? I can help with reports, doctors,
+                  or general health queries.
                 </p>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-left mt-8">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-left mt-10">
                   {suggestedActions.map((action, idx) => (
                     <button
                       key={idx}
                       onClick={() => handleSend(action.query)}
-                      className="p-4 border border-gray-200 rounded-xl hover:border-blue-400 hover:shadow-md transition-all bg-white group"
+                      className="p-4 border border-gray-200 rounded-2xl hover:border-blue-400 hover:shadow-lg transition-all bg-white text-left group"
                     >
-                      <h4 className="font-semibold text-gray-800 text-sm mb-1 group-hover:text-blue-600">
+                      <h4 className="font-bold text-gray-800 text-xs mb-1 group-hover:text-blue-600 uppercase tracking-wide">
                         {action.title}
                       </h4>
-                      <p className="text-xs text-gray-500">{action.sub}</p>
+                      <p className="text-xs text-gray-500 line-clamp-1">
+                        {action.sub}
+                      </p>
                     </button>
                   ))}
                 </div>
               </div>
             )}
 
-            {/* Message History */}
-            <div className="space-y-6">
+            <div className="space-y-6 pb-4">
               {messages.map((msg, index) => (
                 <div
                   key={index}
-                  className={`flex gap-4 ${
+                  className={`flex gap-3 sm:gap-4 ${
                     msg.sender === "user" ? "justify-end" : "justify-start"
                   }`}
                 >
-                  {/* Bot Avatar */}
                   {msg.sender === "bot" && (
-                    <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center shrink-0 shadow-md">
+                    <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center shrink-0 shadow-sm mt-1">
                       <Sparkles className="w-4 h-4 text-white" />
                     </div>
                   )}
-
                   <div
-                    className={`max-w-[80%] p-4 rounded-2xl text-sm leading-relaxed shadow-sm ${
+                    className={`max-w-[85%] sm:max-w-[75%] p-4 rounded-2xl text-sm leading-relaxed shadow-sm
+                    ${
                       msg.sender === "user"
-                        ? "bg-gray-900 text-white rounded-tr-sm"
-                        : "bg-white border border-gray-100 text-gray-800 rounded-tl-sm"
+                        ? "bg-blue-600 text-white rounded-tr-none"
+                        : "bg-white border border-gray-200 text-gray-800 rounded-tl-none"
                     }`}
                   >
                     {msg.text}
                   </div>
-
-                  {/* User Avatar */}
                   {msg.sender === "user" && (
-                    <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center shrink-0">
+                    <div className="w-8 h-8 rounded-lg bg-gray-200 flex items-center justify-center shrink-0 mt-1">
                       <User className="w-4 h-4 text-gray-600" />
                     </div>
                   )}
                 </div>
               ))}
 
-              {/* Loading Indicator */}
               {isLoading && (
                 <div className="flex gap-4">
-                  <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center shrink-0">
+                  <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center shrink-0">
                     <Sparkles className="w-4 h-4 text-white" />
                   </div>
-                  <div className="bg-white border border-gray-100 px-4 py-3 rounded-2xl rounded-tl-sm shadow-sm flex items-center gap-1">
-                    <div
-                      className="w-2 h-2 bg-blue-400 rounded-full animate-bounce"
-                      style={{ animationDelay: "0ms" }}
-                    />
-                    <div
-                      className="w-2 h-2 bg-blue-400 rounded-full animate-bounce"
-                      style={{ animationDelay: "150ms" }}
-                    />
-                    <div
-                      className="w-2 h-2 bg-blue-400 rounded-full animate-bounce"
-                      style={{ animationDelay: "300ms" }}
-                    />
+                  <div className="bg-white border border-gray-200 px-5 py-4 rounded-2xl rounded-tl-none shadow-sm flex items-center gap-1.5">
+                    <div className="w-1.5 h-1.5 bg-blue-400 rounded-full animate-bounce [animation-delay:-0.3s]" />
+                    <div className="w-1.5 h-1.5 bg-blue-400 rounded-full animate-bounce [animation-delay:-0.15s]" />
+                    <div className="w-1.5 h-1.5 bg-blue-400 rounded-full animate-bounce" />
                   </div>
                 </div>
               )}
@@ -399,10 +849,10 @@ export default function AIAssistant() {
         </div>
 
         {/* Input Area */}
-        <div className="p-4 bg-white/80 backdrop-blur-sm border-t border-gray-100">
-          <div className="max-w-3xl mx-auto relative">
-            <div className="relative flex items-end gap-2 bg-gray-50 border border-gray-200 rounded-2xl p-2 focus-within:ring-2 focus-within:ring-blue-100 focus-within:border-blue-400 transition-all shadow-sm">
-              <button className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-200 rounded-xl transition-colors">
+        <div className="p-4 bg-white border-t border-gray-100">
+          <div className="max-w-3xl mx-auto">
+            <div className="relative flex items-end gap-2 bg-gray-50 border border-gray-200 rounded-2xl p-2 focus-within:ring-2 focus-within:ring-blue-100 focus-within:border-blue-400 transition-all">
+              <button className="p-2.5 text-gray-400 hover:text-gray-600 rounded-xl">
                 <Paperclip className="w-5 h-5" />
               </button>
 
@@ -415,18 +865,18 @@ export default function AIAssistant() {
                     handleSend();
                   }
                 }}
-                placeholder="Ask about your reports, doctors, or hospitals..."
-                className="w-full bg-transparent border-none focus:ring-0 resize-none max-h-32 min-h-[44px] py-3 text-gray-800 placeholder:text-gray-400 text-sm"
+                placeholder="Message Swasth Bot..."
+                className="w-full bg-transparent border-none focus:ring-0 resize-none max-h-32 min-h-[44px] py-3 text-sm text-gray-800"
                 rows={1}
               />
 
               <button
                 onClick={() => handleSend()}
                 disabled={!input.trim() || isLoading}
-                className={`p-2 rounded-xl transition-all duration-200 ${
+                className={`p-2.5 rounded-xl transition-all duration-200 ${
                   input.trim()
-                    ? "bg-blue-600 text-white shadow-lg shadow-blue-200 hover:bg-blue-700"
-                    : "bg-gray-200 text-gray-400 cursor-not-allowed"
+                    ? "bg-blue-600 text-white shadow-md hover:bg-blue-700"
+                    : "bg-gray-200 text-gray-400"
                 }`}
               >
                 {isLoading ? (
@@ -436,9 +886,9 @@ export default function AIAssistant() {
                 )}
               </button>
             </div>
-            <p className="text-center text-[10px] text-gray-400 mt-2">
-              AI can make mistakes. Please check with a real doctor for medical
-              advice.
+            <p className="text-center text-[10px] text-gray-400 mt-3 font-medium">
+              Swasth Bot is an AI assistant. Consult a doctor for professional
+              medical advice.
             </p>
           </div>
         </div>

@@ -8,7 +8,7 @@ const AuthContext = createContext(null);
 
 // Provider
 export function AuthProvider({ children }: any) {
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState();
   const [loading, setLoading] = useState(true);
 
   // Fetch profile dynamically based on role inside JWT cookie
