@@ -14,6 +14,7 @@ import {
   Receipt,
   MessageCircle,
   IndianRupee,
+  MessageSquare,
 } from "lucide-react";
 import { useAuth } from "../../../../../context/AuthContext";
 
@@ -90,6 +91,12 @@ export default function Doctors() {
       label: "Swasth Bot",
       icon: MessageCircle,
       route: "/admin/patient/chat",
+    },
+    {
+      id: "messages",
+      label: "Messages",
+      icon: MessageSquare,
+      route: "/admin/patient/messages",
     },
   ];
   // useEffect(() => {

@@ -14,6 +14,7 @@ import {
   MessageCircle,
   UserCheck,
   Microscope,
+  MessageSquare,
 } from "lucide-react";
 import { useAuth } from "../../../../../context/AuthContext";
 
@@ -74,6 +75,12 @@ export default function Reports() {
       icon: MessageCircle,
       route: "/admin/patient/chat",
     },
+    {
+  id: "messages",
+  label: "Messages",
+  icon: MessageSquare, 
+  route: "/admin/patient/messages",
+},
   ];
 
   // // Dummy reports data

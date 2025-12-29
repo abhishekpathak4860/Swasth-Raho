@@ -10,6 +10,7 @@ import {
   Hospital,
   Receipt,
   MessageCircle,
+  MessageSquare,
 } from "lucide-react";
 import { useAuth } from "../../../../context/AuthContext";
 
@@ -68,6 +69,12 @@ export default function PatientDashboard() {
       label: "Swasth Bot",
       icon: MessageCircle,
       route: "/admin/patient/chat",
+    },
+    {
+      id: "messages",
+      label: "Messages",
+      icon: MessageSquare,
+      route: "/admin/patient/messages",
     },
   ];
 

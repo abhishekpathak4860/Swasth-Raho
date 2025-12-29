@@ -465,6 +465,7 @@ import {
   Menu,
   X,
   PlusCircle,
+  MessageSquare,
 } from "lucide-react";
 import Link from "next/link";
 import axios from "axios";
@@ -638,6 +639,12 @@ export default function AIAssistant() {
       route: "/admin/patient/chat",
       icon: MessageCircle,
       active: true,
+    },
+    {
+      id: "messages",
+      label: "Messages",
+      icon: MessageSquare,
+      route: "/admin/patient/messages",
     },
   ];
 
