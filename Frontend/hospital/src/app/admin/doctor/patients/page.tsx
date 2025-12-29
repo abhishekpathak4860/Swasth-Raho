@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import axios from "axios";
-import { User, CalendarDays, Users, Wallet } from "lucide-react";
+import { User, CalendarDays, Users, Wallet, MessageSquare } from "lucide-react";
 import { useAuth } from "../../../../../context/AuthContext";
 
 export default function Patients() {
@@ -65,6 +65,12 @@ export default function Patients() {
       label: "Revenue",
       icon: Wallet,
       route: "/admin/doctor/revenue",
+    },
+    {
+      id: "messages",
+      label: "Messages",
+      icon: MessageSquare,
+      route: "/admin/doctor/messages",
     },
   ];
 
