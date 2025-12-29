@@ -1,6 +1,7 @@
 "use client";
-import React, { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect } from "react";
 import { io } from "socket.io-client";
+import Cookies from "js-cookie";
 import {
   Send,
   Bot,
@@ -23,7 +24,9 @@ import axios from "axios";
 const socket = io(
   process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5000",
   {
-    withCredentials: true, // Cookies (token) bhejne ke liye zaruri hai
+    auth: {
+      token: Cookies.get("token"),
+    }, // Cookies (token) bhejne ke liye zaruri hai
     transports: ["websocket"], // Sirf websocket use karein faster connection ke liye
   }
 );
