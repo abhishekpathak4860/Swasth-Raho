@@ -33,6 +33,7 @@ export const userSocketHandler = (io) => {
         // Update last message in Conversation
         await Conversation.findByIdAndUpdate(conversationId, {
           lastMessage: { text, senderId: userId },
+          updatedAt: Date.now(),
         });
 
         // // Emit to the specific room
