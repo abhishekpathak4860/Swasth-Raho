@@ -501,6 +501,10 @@ import {
   Menu,
   X,
   ChevronLeft,
+  MessageCircle,
+  Receipt,
+  Hospital,
+  FileText,
 } from "lucide-react";
 import axios from "axios";
 import { useSocket } from "../../../../../context/SocketContext";
@@ -549,7 +553,12 @@ export default function PatientMessagesPage() {
   };
 
   const sidebarItems = [
-    { id: "profile", label: "Profile", icon: User, route: "/admin/patient" },
+    {
+      id: "profile",
+      label: "Profile",
+      icon: User,
+      route: "/admin/patient",
+    },
     {
       id: "appointments",
       label: "Appointments",
@@ -561,6 +570,30 @@ export default function PatientMessagesPage() {
       label: "Doctors",
       icon: Stethoscope,
       route: "/admin/patient/doctors",
+    },
+    {
+      id: "reports",
+      label: "Medical Reports",
+      icon: FileText,
+      route: "/admin/patient/reports",
+    },
+    {
+      id: "hospitals",
+      label: "Hospitals",
+      icon: Hospital,
+      route: "/admin/patient/hospitals",
+    },
+    {
+      id: "bills",
+      label: "Bills",
+      icon: Receipt,
+      route: "/admin/patient/bills",
+    },
+    {
+      id: "chat",
+      label: "Swasth Bot",
+      icon: MessageCircle,
+      route: "/admin/patient/chat",
     },
     {
       id: "messages",
