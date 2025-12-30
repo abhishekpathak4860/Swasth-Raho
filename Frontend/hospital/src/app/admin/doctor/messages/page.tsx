@@ -28,6 +28,7 @@
 //   const socket = useSocket();
 //   const { user } = useAuth();
 
+//   // State Management
 //   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 //   const [activeChat, setActiveChat] = useState(null);
 //   const [messageInput, setMessageInput] = useState("");
@@ -35,7 +36,18 @@
 //   const [inbox, setInbox] = useState([]);
 //   const [loading, setLoading] = useState(true);
 //   const [conversationId, setConversationId] = useState(null);
+//   const [searchTerm, setSearchTerm] = useState("");
 //   const messagesEndRef = useRef(null);
+
+//   const activeChatRef = useRef(null);
+//   const conversationIdRef = useRef(null);
+
+//   useEffect(() => {
+//     activeChatRef.current = activeChat;
+//   }, [activeChat]);
+//   useEffect(() => {
+//     conversationIdRef.current = conversationId;
+//   }, [conversationId]);
 
 //   const sidebarItems = [
 //     { id: "profile", label: "Profile", icon: User, route: "/admin/doctor" },
@@ -81,6 +93,10 @@
 //     fetchInbox();
 //   }, []);
 
+//   const filteredInbox = inbox.filter((item) =>
+//     item.patient.name.toLowerCase().includes(searchTerm.toLowerCase())
+//   );
+
 //   useEffect(() => {
 //     if (activeChat && socket) {
 //       const getChat = async () => {
@@ -92,13 +108,11 @@
 //           setConversationId(res.data.conversationId);
 //           setMessages(res.data.messages);
 //           socket.emit("join_chat", res.data.conversationId);
-
 //           await axios.patch(
 //             `/api/chat/read/${res.data.conversationId}`,
 //             {},
 //             { withCredentials: true }
 //           );
-
 //           setInbox((prev) =>
 //             prev.map((item) =>
 //               item.patient._id === activeChat._id
@@ -107,86 +121,68 @@
 //             )
 //           );
 //         } catch (err) {
-//           console.error("Failed to load conversation", err);
+//           console.error(err);
 //         }
 //       };
 //       getChat();
 //     }
 //   }, [activeChat, socket]);
 
-//   // --- FIXED REAL-TIME LISTENER ---
 //   useEffect(() => {
 //     if (!socket) return;
-
 //     const handleNewMessage = (newMessage) => {
 //       const senderId = String(newMessage.senderId);
 //       const currentUserId = String(user?.id || user?._id);
-
-//       // 1. UPDATE SIDEBAR (Sorting and Badges)
 //       setInbox((prevInbox) => {
 //         const itemIndex = prevInbox.findIndex(
 //           (item) =>
 //             item.patient._id === senderId ||
 //             item.patient._id === newMessage.receiverId
 //         );
-
 //         let updatedInbox = [...prevInbox];
-
 //         if (itemIndex !== -1) {
 //           const targetItem = { ...updatedInbox[itemIndex] };
-
-//           // CRITICAL FIX: Only increment if the chat is NOT the currently open one
-//           // We use a ref or a direct check here.
-//           if (
-//             senderId !== currentUserId &&
-//             (!activeChat || activeChat._id !== senderId)
-//           ) {
+//           const isChatOpenWithSender =
+//             activeChatRef.current && activeChatRef.current._id === senderId;
+//           if (senderId !== currentUserId && !isChatOpenWithSender) {
 //             targetItem.unreadCount = (targetItem.unreadCount || 0) + 1;
 //           }
-
 //           targetItem.lastMessage = { text: newMessage.text };
 //           targetItem.updatedAt = newMessage.createdAt;
-
 //           updatedInbox.splice(itemIndex, 1);
-//           updatedInbox.unshift(targetItem); // Move to top
+//           updatedInbox.unshift(targetItem);
 //         } else {
 //           fetchInbox();
 //         }
 //         return updatedInbox;
 //       });
-
-//       // 2. UPDATE CHAT WINDOW
 //       if (
-//         conversationId &&
-//         String(newMessage.conversationId) === String(conversationId)
+//         conversationIdRef.current &&
+//         String(newMessage.conversationId) === String(conversationIdRef.current)
 //       ) {
 //         if (senderId === currentUserId) return;
-//         setMessages((prev) => {
-//           if (prev.some((m) => m._id === newMessage._id)) return prev;
-//           return [...prev, newMessage];
-//         });
+//         setMessages((prev) =>
+//           prev.some((m) => m._id === newMessage._id)
+//             ? prev
+//             : [...prev, newMessage]
+//         );
 //       }
 //     };
-
 //     socket.on("receive_direct_message", handleNewMessage);
 //     return () => {
 //       socket.off("receive_direct_message", handleNewMessage);
 //     };
-//   }, [socket, conversationId, user, activeChat]); // activeChat is necessary here
+//   }, [socket, user]);
 
 //   const handleSendMessage = () => {
 //     if (!messageInput.trim() || !socket || !conversationId || !activeChat)
 //       return;
-
 //     const tempId = "temp-" + Date.now();
-//     const payload = {
+//     socket.emit("send_direct_message", {
 //       conversationId,
 //       receiverId: activeChat._id,
 //       text: messageInput,
-//     };
-
-//     socket.emit("send_direct_message", payload);
-
+//     });
 //     setMessages((prev) => [
 //       ...prev,
 //       {
@@ -197,7 +193,6 @@
 //         conversationId,
 //       },
 //     ]);
-
 //     setInbox((prev) => {
 //       const idx = prev.findIndex((item) => item.patient._id === activeChat._id);
 //       if (idx === -1) return prev;
@@ -211,7 +206,6 @@
 //       updated.unshift(target);
 //       return updated;
 //     });
-
 //     setMessageInput("");
 //   };
 
@@ -227,6 +221,7 @@
 //           onClick={() => setIsSidebarOpen(false)}
 //         />
 //       )}
+
 //       <aside
 //         className={`fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-xl transform transition-transform duration-300 md:relative md:translate-x-0 ${
 //           isSidebarOpen ? "translate-x-0" : "-translate-x-full"
@@ -234,10 +229,15 @@
 //       >
 //         <div className="p-4 border-b flex items-center justify-between">
 //           <div className="flex items-center gap-3">
-//             <div className="w-10 h-10 bg-gradient-to-r from-blue-600 to-green-600 rounded-xl flex items-center justify-center text-white font-bold shadow-lg">
+//             <div className="w-10 h-10 bg-gradient-to-r from-blue-600 to-green-600 rounded-xl flex items-center justify-center text-white font-bold shadow-lg shadow-blue-100">
 //               D
 //             </div>
-//             <h1 className="text-lg font-bold">Swasth-Raho</h1>
+//             <div>
+//               <h1 className="text-lg font-bold text-gray-800">Swasth-Raho</h1>
+//               <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">
+//                 Doctor Portal
+//               </p>
+//             </div>
 //           </div>
 //           <button className="md:hidden" onClick={() => setIsSidebarOpen(false)}>
 //             <X size={20} />
@@ -250,7 +250,7 @@
 //               href={item.route}
 //               className={`flex items-center px-4 py-3 rounded-xl transition-all ${
 //                 item.id === "messages"
-//                   ? "bg-blue-600 text-white shadow-md"
+//                   ? "bg-blue-600 text-white shadow-md shadow-blue-200 font-semibold"
 //                   : "text-gray-600 hover:bg-gray-100"
 //               }`}
 //             >
@@ -260,6 +260,7 @@
 //           ))}
 //         </nav>
 //       </aside>
+
 //       <div className="flex-1 flex flex-col min-w-0">
 //         <header className="bg-white border-b border-gray-200 px-6 py-3 flex justify-between items-center sticky top-0 z-30">
 //           <div className="flex items-center">
@@ -269,7 +270,9 @@
 //             >
 //               <Menu size={24} />
 //             </button>
-//             <h2 className="text-xl font-bold">Patient Inquiries</h2>
+//             <h2 className="text-xl font-bold text-gray-800 tracking-tight">
+//               Patient Inquiries
+//             </h2>
 //           </div>
 //           <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center text-white border-2 border-white shadow-sm overflow-hidden">
 //             {user?.profileImg ? (
@@ -282,6 +285,7 @@
 //             )}
 //           </div>
 //         </header>
+
 //         <div className="flex-1 flex overflow-hidden">
 //           <div
 //             className={`w-full md:w-80 lg:w-96 bg-white border-r border-gray-200 flex flex-col ${
@@ -302,18 +306,25 @@
 //                 />
 //                 <input
 //                   type="text"
+//                   value={searchTerm}
+//                   onChange={(e) => setSearchTerm(e.target.value)}
 //                   placeholder="Search patients..."
-//                   className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500"
+//                   className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 outline-none transition-all shadow-sm"
 //                 />
 //               </div>
 //             </div>
+
 //             <div className="flex-1 overflow-y-auto">
 //               {loading ? (
 //                 <div className="p-10 text-center text-sm text-gray-400">
 //                   Loading...
 //                 </div>
+//               ) : filteredInbox.length === 0 ? (
+//                 <div className="p-10 text-center text-xs text-gray-400 font-bold italic">
+//                   No results for "{searchTerm}"
+//                 </div>
 //               ) : (
-//                 inbox.map((item) => (
+//                 filteredInbox.map((item) => (
 //                   <div
 //                     key={item.conversationId}
 //                     onClick={() => setActiveChat(item.patient)}
@@ -342,7 +353,7 @@
 //                           {item.patient.name}
 //                         </h4>
 //                         {item.unreadCount > 0 && (
-//                           <span className="bg-green-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center">
+//                           <span className="bg-green-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center animate-pulse">
 //                             {item.unreadCount}
 //                           </span>
 //                         )}
@@ -359,6 +370,7 @@
 //               )}
 //             </div>
 //           </div>
+
 //           <div
 //             className={`flex-1 flex flex-col bg-[#e5ddd5] ${
 //               !activeChat ? "hidden md:flex" : "flex"
@@ -366,7 +378,7 @@
 //           >
 //             {activeChat ? (
 //               <>
-//                 <div className="px-4 py-3 border-b flex justify-between items-center bg-white shadow-sm z-10">
+//                 <div className="px-4 py-3 border-b flex justify-between items-center bg-white shadow-sm z-10 text-black">
 //                   <div className="flex items-center">
 //                     <button
 //                       onClick={() => setActiveChat(null)}
@@ -384,20 +396,32 @@
 //                         activeChat.name.charAt(0)
 //                       )}
 //                     </div>
-//                     <div className="ml-3 text-black">
+//                     <div className="ml-3">
 //                       <h3 className="font-bold text-gray-800 text-sm">
 //                         {activeChat.name}
 //                       </h3>
 //                       <div className="flex items-center gap-1">
 //                         <div className="w-1.5 h-1.5 bg-green-500 rounded-full" />
 //                         <p className="text-[10px] text-green-500 font-bold uppercase tracking-tight">
-//                           Online
+//                           Connected
 //                         </p>
 //                       </div>
 //                     </div>
 //                   </div>
+//                   <div className="flex gap-4 text-gray-400 hidden sm:flex">
+//                     <Phone
+//                       size={18}
+//                       className="cursor-pointer hover:text-blue-600"
+//                     />
+//                     <Video
+//                       size={18}
+//                       className="cursor-pointer hover:text-blue-600"
+//                     />
+//                   </div>
 //                 </div>
-//                 <div className="flex-1 overflow-y-auto p-4 space-y-4">
+
+//                 {/* --- CHAT AREA WITH WHATSAPP COLORS --- */}
+//                 <div className="flex-1 overflow-y-auto p-4 space-y-3">
 //                   {messages.map((msg, idx) => {
 //                     const isMe =
 //                       String(msg.senderId) === String(user?.id || user?._id);
@@ -409,7 +433,7 @@
 //                         }`}
 //                       >
 //                         <div
-//                           className={`max-w-[85%] sm:max-w-[70%] px-4 py-2.5 rounded-2xl shadow-sm text-sm leading-relaxed ${
+//                           className={`max-w-[85%] sm:max-w-[70%] px-3 py-1.5 rounded-lg shadow-sm text-sm leading-relaxed relative ${
 //                             isMe
 //                               ? "bg-[#dcf8c6] text-gray-800 rounded-tr-none"
 //                               : "bg-white text-gray-800 rounded-tl-none border"
@@ -417,15 +441,15 @@
 //                         >
 //                           <p>{msg.text}</p>
 //                           <div
-//                             className={`flex items-center justify-end mt-1 text-[10px] ${
-//                               isMe ? "text-gray-500" : "text-gray-400"
-//                             }`}
+//                             className={`flex items-center justify-end mt-1 text-[9px] text-gray-500 gap-1`}
 //                           >
 //                             {new Date(msg.createdAt).toLocaleTimeString([], {
 //                               hour: "2-digit",
 //                               minute: "2-digit",
 //                             })}
-//                             {isMe && <CheckCheck size={12} className="ml-1" />}
+//                             {isMe && (
+//                               <CheckCheck size={11} className="text-blue-400" />
+//                             )}
 //                           </div>
 //                         </div>
 //                       </div>
@@ -433,11 +457,12 @@
 //                   })}
 //                   <div ref={messagesEndRef} />
 //                 </div>
+
 //                 <div className="p-3 bg-[#f0f0f0] flex items-center gap-2">
 //                   <button className="text-gray-500 p-2 hover:bg-gray-200 rounded-lg">
 //                     <Smile size={22} />
 //                   </button>
-//                   <button className="text-gray-400 p-2 hover:bg-gray-200 rounded-lg">
+//                   <button className="text-gray-500 p-2 hover:bg-gray-200 rounded-lg">
 //                     <Paperclip size={20} />
 //                   </button>
 //                   <input
@@ -452,8 +477,8 @@
 //                     onClick={handleSendMessage}
 //                     className={`p-2.5 rounded-full transition-all active:scale-95 ${
 //                       messageInput.trim()
-//                         ? "bg-[#00a884] text-white"
-//                         : "bg-gray-400 text-white"
+//                         ? "bg-[#00a884] text-white shadow-md"
+//                         : "bg-gray-300 text-white cursor-default"
 //                     }`}
 //                   >
 //                     <Send size={20} />
@@ -468,9 +493,8 @@
 //                 <h3 className="text-gray-800 font-bold text-lg">
 //                   Patient Consultations
 //                 </h3>
-//                 <p className="text-sm max-w-[280px] text-center mt-2 text-gray-500 px-5">
-//                   Select a patient inquiry from the left to start providing
-//                   professional medical guidance.
+//                 <p className="text-sm max-w-[280px] text-center mt-2 text-gray-500">
+//                   Select a patient inquiry to start providing medical guidance.
 //                 </p>
 //               </div>
 //             )}
@@ -492,7 +516,6 @@ import {
   Wallet,
   MessageSquare,
   Search,
-  MoreVertical,
   Phone,
   Video,
   Send,
@@ -511,6 +534,7 @@ export default function DoctorMessagesPage() {
   const socket = useSocket();
   const { user } = useAuth();
 
+  // State Management
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [activeChat, setActiveChat] = useState(null);
   const [messageInput, setMessageInput] = useState("");
@@ -518,19 +542,45 @@ export default function DoctorMessagesPage() {
   const [inbox, setInbox] = useState([]);
   const [loading, setLoading] = useState(true);
   const [conversationId, setConversationId] = useState(null);
+  const [searchTerm, setSearchTerm] = useState("");
   const messagesEndRef = useRef(null);
 
-  // CRITICAL FIX: Use Ref to handle stale state in socket listeners
+  // --- 1. AUDIO REFERENCES ---
+  const sendSoundRef = useRef(null);
+  const receiveSoundRef = useRef(null);
+
+  // Refs to handle stale state in socket listeners
   const activeChatRef = useRef(null);
   const conversationIdRef = useRef(null);
 
   useEffect(() => {
     activeChatRef.current = activeChat;
   }, [activeChat]);
-
   useEffect(() => {
     conversationIdRef.current = conversationId;
   }, [conversationId]);
+
+  // Initialize sounds on mount
+  useEffect(() => {
+    sendSoundRef.current = new Audio("/sounds/send.mp3");
+    receiveSoundRef.current = new Audio("/sounds/receive.wav");
+  }, []);
+
+  const playSendSound = () => {
+    if (sendSoundRef.current) {
+      sendSoundRef.current.currentTime = 0;
+      sendSoundRef.current.play().catch((e) => console.log("Sound error:", e));
+    }
+  };
+
+  const playReceiveSound = () => {
+    if (receiveSoundRef.current) {
+      receiveSoundRef.current.currentTime = 0;
+      receiveSoundRef.current
+        .play()
+        .catch((e) => console.log("Sound error:", e));
+    }
+  };
 
   const sidebarItems = [
     { id: "profile", label: "Profile", icon: User, route: "/admin/doctor" },
@@ -560,7 +610,6 @@ export default function DoctorMessagesPage() {
     },
   ];
 
-  // 1. Initial Load
   const fetchInbox = async () => {
     try {
       setLoading(true);
@@ -577,7 +626,11 @@ export default function DoctorMessagesPage() {
     fetchInbox();
   }, []);
 
-  // 2. Selection & Mark as Read
+  // --- DYNAMIC SEARCH LOGIC ---
+  const filteredInbox = inbox.filter((item) =>
+    item.patient.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
   useEffect(() => {
     if (activeChat && socket) {
       const getChat = async () => {
@@ -589,13 +642,11 @@ export default function DoctorMessagesPage() {
           setConversationId(res.data.conversationId);
           setMessages(res.data.messages);
           socket.emit("join_chat", res.data.conversationId);
-
           await axios.patch(
             `/api/chat/read/${res.data.conversationId}`,
             {},
             { withCredentials: true }
           );
-
           setInbox((prev) =>
             prev.map((item) =>
               item.patient._id === activeChat._id
@@ -604,86 +655,80 @@ export default function DoctorMessagesPage() {
             )
           );
         } catch (err) {
-          console.error("Failed to load conversation", err);
+          console.error(err);
         }
       };
       getChat();
     }
   }, [activeChat, socket]);
 
-  // 3. FIXED REAL-TIME LISTENER
+  // Real-time Listening (Sorting + Notifications + Receive Sound)
   useEffect(() => {
     if (!socket) return;
-
     const handleNewMessage = (newMessage) => {
       const senderId = String(newMessage.senderId);
       const currentUserId = String(user?.id || user?._id);
 
-      // --- 1. SIDEBAR NOTIFICATION & SORTING ---
       setInbox((prevInbox) => {
         const itemIndex = prevInbox.findIndex(
           (item) =>
             item.patient._id === senderId ||
             item.patient._id === newMessage.receiverId
         );
-
         let updatedInbox = [...prevInbox];
 
         if (itemIndex !== -1) {
           const targetItem = { ...updatedInbox[itemIndex] };
-
-          // Use Ref to check if this specific patient's chat is currently open
           const isChatOpenWithSender =
             activeChatRef.current && activeChatRef.current._id === senderId;
 
-          if (senderId !== currentUserId && !isChatOpenWithSender) {
-            targetItem.unreadCount = (targetItem.unreadCount || 0) + 1; // Increment badge
+          if (senderId !== currentUserId) {
+            playReceiveSound(); // --- PLAY RECEIVE SOUND ---
+            if (!isChatOpenWithSender) {
+              targetItem.unreadCount = (targetItem.unreadCount || 0) + 1;
+            }
           }
 
           targetItem.lastMessage = { text: newMessage.text };
           targetItem.updatedAt = newMessage.createdAt;
-
           updatedInbox.splice(itemIndex, 1);
-          updatedInbox.unshift(targetItem); // Move to top like WhatsApp
+          updatedInbox.unshift(targetItem);
         } else {
           fetchInbox();
         }
         return updatedInbox;
       });
 
-      // --- 2. CHAT WINDOW UPDATE ---
       if (
         conversationIdRef.current &&
         String(newMessage.conversationId) === String(conversationIdRef.current)
       ) {
         if (senderId === currentUserId) return;
-        setMessages((prev) => {
-          if (prev.some((m) => m._id === newMessage._id)) return prev;
-          return [...prev, newMessage];
-        });
+        setMessages((prev) =>
+          prev.some((m) => m._id === newMessage._id)
+            ? prev
+            : [...prev, newMessage]
+        );
       }
     };
-
     socket.on("receive_direct_message", handleNewMessage);
     return () => {
       socket.off("receive_direct_message", handleNewMessage);
     };
-  }, [socket, user]); // Removed dependencies that cause listener resets
+  }, [socket, user]);
 
-  // 4. Send Message
   const handleSendMessage = () => {
     if (!messageInput.trim() || !socket || !conversationId || !activeChat)
       return;
 
+    playSendSound(); // --- PLAY SEND SOUND ---
+
     const tempId = "temp-" + Date.now();
-    const payload = {
+    socket.emit("send_direct_message", {
       conversationId,
       receiverId: activeChat._id,
       text: messageInput,
-    };
-
-    socket.emit("send_direct_message", payload);
-
+    });
     setMessages((prev) => [
       ...prev,
       {
@@ -708,7 +753,6 @@ export default function DoctorMessagesPage() {
       updated.unshift(target);
       return updated;
     });
-
     setMessageInput("");
   };
 
@@ -736,7 +780,7 @@ export default function DoctorMessagesPage() {
             </div>
             <div>
               <h1 className="text-lg font-bold text-gray-800">Swasth-Raho</h1>
-              <p className="text-[10px] text-gray-400 font-bold uppercase">
+              <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">
                 Doctor Portal
               </p>
             </div>
@@ -811,22 +855,24 @@ export default function DoctorMessagesPage() {
                 />
                 <input
                   type="text"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
                   placeholder="Search patients..."
-                  className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500"
+                  className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 outline-none transition-all shadow-sm"
                 />
               </div>
             </div>
             <div className="flex-1 overflow-y-auto">
               {loading ? (
                 <div className="p-10 text-center text-sm text-gray-400">
-                  Loading patients...
+                  Loading...
                 </div>
-              ) : inbox.length === 0 ? (
-                <div className="p-10 text-center text-xs text-gray-400">
-                  No active conversations found.
+              ) : filteredInbox.length === 0 ? (
+                <div className="p-10 text-center text-xs text-gray-400 font-bold italic">
+                  No results for "{searchTerm}"
                 </div>
               ) : (
-                inbox.map((item) => (
+                filteredInbox.map((item) => (
                   <div
                     key={item.conversationId}
                     onClick={() => setActiveChat(item.patient)}
@@ -855,7 +901,7 @@ export default function DoctorMessagesPage() {
                           {item.patient.name}
                         </h4>
                         {item.unreadCount > 0 && (
-                          <span className="bg-green-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center">
+                          <span className="bg-green-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center animate-pulse">
                             {item.unreadCount}
                           </span>
                         )}
@@ -880,7 +926,7 @@ export default function DoctorMessagesPage() {
           >
             {activeChat ? (
               <>
-                <div className="px-4 py-3 border-b flex justify-between items-center bg-white shadow-sm z-10">
+                <div className="px-4 py-3 border-b flex justify-between items-center bg-white shadow-sm z-10 text-black">
                   <div className="flex items-center">
                     <button
                       onClick={() => setActiveChat(null)}
@@ -898,20 +944,20 @@ export default function DoctorMessagesPage() {
                         activeChat.name.charAt(0)
                       )}
                     </div>
-                    <div className="ml-3 text-black">
+                    <div className="ml-3">
                       <h3 className="font-bold text-gray-800 text-sm">
                         {activeChat.name}
                       </h3>
                       <div className="flex items-center gap-1">
                         <div className="w-1.5 h-1.5 bg-green-500 rounded-full" />
                         <p className="text-[10px] text-green-500 font-bold uppercase tracking-tight">
-                          Active Connection
+                          Connected
                         </p>
                       </div>
                     </div>
                   </div>
                 </div>
-                <div className="flex-1 overflow-y-auto p-4 space-y-4 shadow-inner bg-[#f0f2f5]">
+                <div className="flex-1 overflow-y-auto p-4 space-y-3">
                   {messages.map((msg, idx) => {
                     const isMe =
                       String(msg.senderId) === String(user?.id || user?._id);
@@ -923,23 +969,23 @@ export default function DoctorMessagesPage() {
                         }`}
                       >
                         <div
-                          className={`max-w-[85%] sm:max-w-[70%] px-4 py-2.5 rounded-2xl shadow-sm text-sm leading-relaxed ${
+                          className={`max-w-[85%] sm:max-w-[70%] px-3 py-1.5 rounded-lg shadow-sm text-sm leading-relaxed relative ${
                             isMe
-                              ? "bg-blue-600 text-white rounded-tr-none"
-                              : "bg-white text-gray-800 rounded-tl-none border border-gray-100"
+                              ? "bg-[#dcf8c6] text-gray-800 rounded-tr-none"
+                              : "bg-white text-gray-800 rounded-tl-none border"
                           }`}
                         >
                           <p>{msg.text}</p>
                           <div
-                            className={`flex items-center justify-end mt-1 text-[10px] ${
-                              isMe ? "text-blue-100" : "text-gray-400"
-                            }`}
+                            className={`flex items-center justify-end mt-1 text-[9px] text-gray-500 gap-1`}
                           >
                             {new Date(msg.createdAt).toLocaleTimeString([], {
                               hour: "2-digit",
                               minute: "2-digit",
                             })}
-                            {isMe && <CheckCheck size={12} className="ml-1" />}
+                            {isMe && (
+                              <CheckCheck size={11} className="text-blue-400" />
+                            )}
                           </div>
                         </div>
                       </div>
@@ -947,11 +993,11 @@ export default function DoctorMessagesPage() {
                   })}
                   <div ref={messagesEndRef} />
                 </div>
-                <div className="p-3 bg-white border-t border-gray-100 flex items-center gap-2">
-                  <button className="text-gray-400 p-2 hover:bg-gray-100 rounded-lg">
+                <div className="p-3 bg-[#f0f0f0] flex items-center gap-2">
+                  <button className="text-gray-500 p-2 hover:bg-gray-200 rounded-lg">
                     <Smile size={22} />
                   </button>
-                  <button className="text-gray-400 p-2 hover:bg-gray-100 rounded-lg transition-colors">
+                  <button className="text-gray-500 p-2 hover:bg-gray-200 rounded-lg">
                     <Paperclip size={20} />
                   </button>
                   <input
@@ -960,14 +1006,14 @@ export default function DoctorMessagesPage() {
                     onChange={(e) => setMessageInput(e.target.value)}
                     onKeyDown={(e) => e.key === "Enter" && handleSendMessage()}
                     placeholder="Type professional advice..."
-                    className="flex-1 bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-blue-100 focus:bg-white outline-none transition-all shadow-inner"
+                    className="flex-1 bg-white border-none text-black rounded-xl px-4 py-2.5 text-sm outline-none shadow-sm"
                   />
                   <button
                     onClick={handleSendMessage}
-                    className={`p-3 rounded-xl transition-all shadow-lg active:scale-95 ${
+                    className={`p-2.5 rounded-full transition-all active:scale-95 ${
                       messageInput.trim()
-                        ? "bg-blue-600 text-white shadow-blue-200"
-                        : "bg-gray-200 text-gray-400"
+                        ? "bg-[#00a884] text-white shadow-md"
+                        : "bg-gray-300 text-white cursor-default"
                     }`}
                   >
                     <Send size={20} />
@@ -979,10 +1025,10 @@ export default function DoctorMessagesPage() {
                 <div className="w-24 h-24 bg-blue-50 rounded-full flex items-center justify-center mb-6 animate-pulse">
                   <MessageSquare className="h-10 w-10 text-blue-300" />
                 </div>
-                <h3 className="text-gray-800 font-bold text-lg">
+                <h3 className="text-gray-800 font-bold text-lg text-black">
                   Patient Consultations
                 </h3>
-                <p className="text-sm max-w-[280px] text-center mt-2 text-gray-500 px-5 text-gray-500">
+                <p className="text-sm max-w-[280px] text-center mt-2 text-gray-500">
                   Select a patient inquiry from the left to start providing
                   professional medical guidance.
                 </p>
