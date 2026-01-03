@@ -5,13 +5,8 @@
 //   User,
 //   CalendarDays,
 //   Stethoscope,
-//   FileText,
-//   Hospital,
-//   Receipt,
-//   MessageCircle,
 //   MessageSquare,
 //   Search,
-//   MoreVertical,
 //   Phone,
 //   Video,
 //   Send,
@@ -21,6 +16,10 @@
 //   Menu,
 //   X,
 //   ChevronLeft,
+//   VideoOff,
+//   Mic,
+//   MicOff,
+//   PhoneOff,
 // } from "lucide-react";
 // import axios from "axios";
 // import { useSocket } from "../../../../../context/SocketContext";
@@ -40,20 +39,38 @@
 //   const [searchTerm, setSearchTerm] = useState("");
 //   const messagesEndRef = useRef(null);
 
-//   // --- AUDIO REF ---
-//   const sendSoundRef = useRef(null);
+//   // --- 1. VIDEO CALL STATE & REFS ---
+//   const [isCalling, setIsCalling] = useState(false); // When Patient clicks call
+//   const [isIncomingCall, setIsIncomingCall] = useState(false); // When Doctor calls
+//   const [isCallAccepted, setIsCallAccepted] = useState(false);
 
-//   // Initialize audio on mount
+//   const localVideoRef = useRef(null);
+//   const remoteVideoRef = useRef(null);
+
+//   // --- 2. AUDIO REFERENCES ---
+//   const sendSoundRef = useRef(null);
+//   const receiveSoundRef = useRef(null);
+
 //   useEffect(() => {
 //     sendSoundRef.current = new Audio("/sounds/send.mp3");
+//     receiveSoundRef.current = new Audio("/sounds/receive.wav");
 //   }, []);
 
 //   const playSendSound = () => {
 //     if (sendSoundRef.current) {
-//       sendSoundRef.current.currentTime = 0; // Reset to start
+//       sendSoundRef.current.currentTime = 0;
 //       sendSoundRef.current
 //         .play()
-//         .catch((err) => console.log("Audio play failed:", err));
+//         .catch((e) => console.log("Sound play error:", e));
+//     }
+//   };
+
+//   const playReceiveSound = () => {
+//     if (receiveSoundRef.current) {
+//       receiveSoundRef.current.currentTime = 0;
+//       receiveSoundRef.current
+//         .play()
+//         .catch((e) => console.log("Sound play error:", e));
 //     }
 //   };
 
@@ -99,7 +116,9 @@
 
 //   const filteredDoctors = doctorsData.filter((doc) => {
 //     const nameMatch = doc.name.toLowerCase().includes(searchTerm.toLowerCase());
-//     const typeMatch = doc.type.toLowerCase().includes(searchTerm.toLowerCase());
+//     const typeMatch = (doc.type || "")
+//       .toLowerCase()
+//       .includes(searchTerm.toLowerCase());
 //     return nameMatch || typeMatch;
 //   });
 
@@ -145,11 +164,11 @@
 //         let updatedDocs = [...prev];
 //         if (docIndex !== -1) {
 //           const targetDoc = { ...updatedDocs[docIndex] };
-//           if (
-//             senderId !== currentUserId &&
-//             (!activeChat || activeChat._id !== senderId)
-//           ) {
-//             targetDoc.unreadCount = (targetDoc.unreadCount || 0) + 1;
+//           if (senderId !== currentUserId) {
+//             playReceiveSound();
+//             if (!activeChat || activeChat._id !== senderId) {
+//               targetDoc.unreadCount = (targetDoc.unreadCount || 0) + 1;
+//             }
 //           }
 //           updatedDocs.splice(docIndex, 1);
 //           updatedDocs.unshift(targetDoc);
@@ -174,20 +193,16 @@
 //     };
 //   }, [socket, conversationId, user, activeChat]);
 
-//   // 4. Send Message Logic
 //   const handleSendMessage = () => {
 //     if (!messageInput.trim() || !socket || !activeChat || !conversationId)
 //       return;
-
-//     playSendSound(); // --- PLAY SOUND ON CLICK ---
-
+//     playSendSound();
 //     const tempId = "temp-" + Date.now();
 //     socket.emit("send_direct_message", {
 //       conversationId,
 //       receiverId: activeChat._id,
 //       text: messageInput,
 //     });
-
 //     setMessages((prev) => [
 //       ...prev,
 //       {
@@ -198,7 +213,6 @@
 //         conversationId,
 //       },
 //     ]);
-
 //     setDoctorsData((prev) => {
 //       const idx = prev.findIndex((d) => d._id === activeChat._id);
 //       if (idx === -1) return prev;
@@ -207,13 +221,24 @@
 //       updated.unshift(target);
 //       return updated;
 //     });
-
 //     setMessageInput("");
 //   };
 
 //   useEffect(() => {
 //     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
 //   }, [messages]);
+
+//   // --- 3. VIDEO UI TOGGLE FUNCTIONS ---
+//   const startVideoCall = () => {
+//     setIsCalling(true);
+//     // WebRTC logic will go here in next step
+//   };
+
+//   const endCall = () => {
+//     setIsCalling(false);
+//     setIsIncomingCall(false);
+//     setIsCallAccepted(false);
+//   };
 
 //   return (
 //     <div className="h-screen flex bg-gray-50 overflow-hidden font-sans text-black">
@@ -231,7 +256,7 @@
 //       >
 //         <div className="p-4 border-b flex items-center justify-between">
 //           <div className="flex items-center gap-3">
-//             <div className="w-10 h-10 bg-gradient-to-r from-blue-600 to-green-600 rounded-xl flex items-center justify-center text-white font-bold">
+//             <div className="w-10 h-10 bg-gradient-to-r from-blue-600 to-green-600 rounded-xl flex items-center justify-center text-white font-bold shadow-lg">
 //               S
 //             </div>
 //             <h1 className="text-lg font-bold text-gray-800">Swasth-Raho</h1>
@@ -247,7 +272,7 @@
 //               href={item.route}
 //               className={`flex items-center px-4 py-3 rounded-xl transition-all ${
 //                 item.id === "messages"
-//                   ? "bg-blue-600 text-white shadow-md"
+//                   ? "bg-blue-600 text-white shadow-md shadow-blue-200"
 //                   : "text-gray-600 hover:bg-gray-100"
 //               }`}
 //             >
@@ -258,7 +283,7 @@
 //         </nav>
 //       </aside>
 
-//       <div className="flex-1 flex flex-col min-w-0">
+//       <div className="flex-1 flex flex-col min-w-0 relative">
 //         <header className="bg-white border-b border-gray-200 px-6 py-3 flex justify-between items-center sticky top-0 z-30">
 //           <div className="flex items-center">
 //             <button
@@ -274,6 +299,7 @@
 //               <img
 //                 src={user.profileImg}
 //                 className="w-full h-full object-cover"
+//                 alt=""
 //               />
 //             ) : (
 //               <User size={20} />
@@ -282,6 +308,7 @@
 //         </header>
 
 //         <div className="flex-1 flex overflow-hidden">
+//           {/* Sidebar Area */}
 //           <div
 //             className={`w-full md:w-80 lg:w-96 bg-white border-r border-gray-200 flex flex-col ${
 //               activeChat ? "hidden md:flex" : "flex"
@@ -297,7 +324,7 @@
 //                   type="text"
 //                   value={searchTerm}
 //                   onChange={(e) => setSearchTerm(e.target.value)}
-//                   placeholder="Search doctors by name or type..."
+//                   placeholder="Search doctors..."
 //                   className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 outline-none"
 //                 />
 //               </div>
@@ -306,10 +333,6 @@
 //               {loading ? (
 //                 <div className="p-10 text-center text-sm text-gray-400">
 //                   Loading...
-//                 </div>
-//               ) : filteredDoctors.length === 0 ? (
-//                 <div className="p-10 text-center text-xs text-gray-400 font-bold">
-//                   No doctors found matching "{searchTerm}"
 //                 </div>
 //               ) : (
 //                 filteredDoctors.map((doc) => (
@@ -328,6 +351,7 @@
 //                           <img
 //                             src={doc.profileImg}
 //                             className="w-full h-full object-cover"
+//                             alt=""
 //                           />
 //                         ) : (
 //                           <User className="text-blue-600" size={24} />
@@ -356,13 +380,79 @@
 //             </div>
 //           </div>
 
+//           {/* Chat / Video Window Area */}
 //           <div
-//             className={`flex-1 flex flex-col bg-[#e5ddd5] ${
+//             className={`flex-1 flex flex-col relative ${
 //               !activeChat ? "hidden md:flex" : "flex"
 //             }`}
 //           >
 //             {activeChat ? (
 //               <>
+//                 {/* --- 4. VIDEO CALL OVERLAY UI --- */}
+//                 {(isCalling || isIncomingCall) && (
+//                   <div className="absolute inset-0 z-50 bg-slate-900 flex flex-col items-center justify-center text-white">
+//                     {/* Remote Video (Full Size) */}
+//                     <div className="absolute inset-0 overflow-hidden flex items-center justify-center bg-black">
+//                       {isCallAccepted ? (
+//                         <video
+//                           ref={remoteVideoRef}
+//                           autoPlay
+//                           playsInline
+//                           className="w-full h-full object-cover"
+//                         />
+//                       ) : (
+//                         <div className="flex flex-col items-center space-y-4">
+//                           <div className="w-24 h-24 rounded-full bg-blue-600 flex items-center justify-center text-4xl font-bold border-4 border-white animate-pulse">
+//                             {activeChat.name.charAt(0)}
+//                           </div>
+//                           <h2 className="text-2xl font-bold">
+//                             {isIncomingCall
+//                               ? "Incoming Request..."
+//                               : "Calling Doctor..."}
+//                           </h2>
+//                           <p className="text-gray-400">{activeChat.name}</p>
+//                         </div>
+//                       )}
+//                     </div>
+
+//                     {/* Local Video (Small Picture-in-Picture) */}
+//                     <div className="absolute top-6 right-6 w-32 md:w-48 aspect-video bg-gray-800 rounded-2xl border-2 border-white/20 shadow-2xl overflow-hidden z-20">
+//                       <video
+//                         ref={localVideoRef}
+//                         autoPlay
+//                         playsInline
+//                         muted
+//                         className="w-full h-full object-cover bg-slate-700"
+//                       />
+//                     </div>
+
+//                     {/* Call Controls */}
+//                     <div className="absolute bottom-10 flex items-center space-x-6 z-30">
+//                       <button className="p-4 bg-gray-700/80 hover:bg-gray-600 rounded-full transition-all backdrop-blur-md">
+//                         <Mic size={24} />
+//                       </button>
+//                       <button className="p-4 bg-gray-700/80 hover:bg-gray-600 rounded-full transition-all backdrop-blur-md">
+//                         <VideoOff size={24} />
+//                       </button>
+//                       {isIncomingCall && !isCallAccepted && (
+//                         <button
+//                           onClick={() => setIsCallAccepted(true)}
+//                           className="p-4 bg-green-500 hover:bg-green-600 rounded-full transition-all shadow-lg shadow-green-500/50"
+//                         >
+//                           <Video size={24} />
+//                         </button>
+//                       )}
+//                       <button
+//                         onClick={endCall}
+//                         className="p-4 bg-red-500 hover:bg-red-600 rounded-full transition-all shadow-lg shadow-red-500/50"
+//                       >
+//                         <PhoneOff size={24} />
+//                       </button>
+//                     </div>
+//                   </div>
+//                 )}
+
+//                 {/* Normal Chat Header */}
 //                 <div className="px-4 py-3 border-b flex justify-between items-center bg-white shadow-sm z-10 text-black">
 //                   <div className="flex items-center">
 //                     <button
@@ -376,6 +466,7 @@
 //                         <img
 //                           src={activeChat.profileImg}
 //                           className="w-full h-full object-cover"
+//                           alt=""
 //                         />
 //                       ) : (
 //                         activeChat.name.charAt(0)
@@ -396,13 +487,15 @@
 //                       className="cursor-pointer hover:text-blue-600"
 //                     />
 //                     <Video
+//                       onClick={startVideoCall}
 //                       size={18}
 //                       className="cursor-pointer hover:text-blue-600"
 //                     />
 //                   </div>
 //                 </div>
 
-//                 <div className="flex-1 overflow-y-auto p-4 space-y-3 scroll-smooth">
+//                 {/* Chat History */}
+//                 <div className="flex-1 overflow-y-auto p-4 space-y-3 scroll-smooth bg-[#e5ddd5]">
 //                   {messages.map((msg) => {
 //                     const isMe =
 //                       String(msg.senderId) === String(user?.id || user?._id);
@@ -437,6 +530,7 @@
 //                   <div ref={messagesEndRef} />
 //                 </div>
 
+//                 {/* Input Area */}
 //                 <div className="p-3 bg-[#f0f0f0] flex items-center gap-2">
 //                   <button className="text-gray-500 p-2">
 //                     <Smile size={22} />
@@ -473,7 +567,7 @@
 //                   WhatsApp for Swasth-Raho
 //                 </h3>
 //                 <p className="text-xs text-center mt-1 px-10 text-gray-500">
-//                   Pick a doctor to start a high-speed, secure consultation.
+//                   Pick a doctor to start a consultation.
 //                 </p>
 //               </div>
 //             )}
@@ -501,14 +595,19 @@ import {
   Menu,
   X,
   ChevronLeft,
-  MessageCircle,
+  VideoOff,
+  Mic,
+  MicOff,
+  PhoneOff,
   Receipt,
   Hospital,
   FileText,
+  MessageCircle,
 } from "lucide-react";
 import axios from "axios";
 import { useSocket } from "../../../../../context/SocketContext";
 import { useAuth } from "../../../../../context/AuthContext";
+import { useWebRTC } from "../../../../../hooks/useWebRTC"; // Hook import kiya
 
 export default function PatientMessagesPage() {
   const socket = useSocket();
@@ -524,14 +623,31 @@ export default function PatientMessagesPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const messagesEndRef = useRef(null);
 
-  // --- 1. AUDIO REFERENCES ---
+  // --- VIDEO CALL UI STATE ---
+  const [isCalling, setIsCalling] = useState(false); // Jab Patient call initiate kare
+  const [isIncomingCall, setIsIncomingCall] = useState(false); // Jab Doctor ka call aaye
+  const [isCallAccepted, setIsCallAccepted] = useState(false);
+  const [incomingOffer, setIncomingOffer] = useState(null);
+
+  const localVideoRef = useRef(null);
+  const remoteVideoRef = useRef(null);
+
+  // --- WebRTC Hook Integration ---
+  const {
+    createOffer,
+    handleIncomingCall,
+    handleCallAccepted,
+    handleNewICECandidate,
+    cleanup,
+  } = useWebRTC(socket, conversationId, localVideoRef, remoteVideoRef);
+
+  // --- AUDIO REFERENCES ---
   const sendSoundRef = useRef(null);
   const receiveSoundRef = useRef(null);
 
-  // Initialize sounds on mount
   useEffect(() => {
     sendSoundRef.current = new Audio("/sounds/send.mp3");
-    receiveSoundRef.current = new Audio("/sounds/receive.wav"); // Ensure file is in public/sounds/
+    receiveSoundRef.current = new Audio("/sounds/receive.wav");
   }, []);
 
   const playSendSound = () => {
@@ -552,13 +668,65 @@ export default function PatientMessagesPage() {
     }
   };
 
+  // --- SIGNALING LISTENERS ---
+  useEffect(() => {
+    if (!socket || !conversationId) return;
+
+    socket.on("incoming_call", (data) => {
+      setIsIncomingCall(true);
+      setIncomingOffer(data.offer);
+      playReceiveSound(); // Call aane par sound
+    });
+
+    socket.on("call_accepted", async (data) => {
+      setIsCallAccepted(true);
+      await handleCallAccepted(data.answer);
+    });
+
+    socket.on("ice_candidate", async (data) => {
+      await handleNewICECandidate(data.candidate);
+    });
+
+    socket.on("call_ended", () => {
+      endCallLocally();
+    });
+
+    return () => {
+      socket.off("incoming_call");
+      socket.off("call_accepted");
+      socket.off("ice_candidate");
+      socket.off("call_ended");
+    };
+  }, [socket, conversationId]);
+
+  // --- CALLING FUNCTIONS ---
+  const startVideoCall = async () => {
+    setIsCalling(true);
+    await createOffer(); // Signaling Offer bhejna
+  };
+
+  const acceptCall = async () => {
+    setIsIncomingCall(false);
+    setIsCallAccepted(true);
+    await handleIncomingCall(incomingOffer); // Signaling Answer bhejna
+  };
+
+  const endCallLocally = () => {
+    setIsCalling(false);
+    setIsIncomingCall(false);
+    setIsCallAccepted(false);
+    setIncomingOffer(null);
+    cleanup(); // Camera aur PeerConnection close karna
+  };
+
+  const endCall = () => {
+    socket.emit("end_call", conversationId);
+    endCallLocally();
+  };
+
+  // --- CHAT LOGIC ---
   const sidebarItems = [
-    {
-      id: "profile",
-      label: "Profile",
-      icon: User,
-      route: "/admin/patient",
-    },
+    { id: "profile", label: "Profile", icon: User, route: "/admin/patient" },
     {
       id: "appointments",
       label: "Appointments",
@@ -572,30 +740,6 @@ export default function PatientMessagesPage() {
       route: "/admin/patient/doctors",
     },
     {
-      id: "reports",
-      label: "Medical Reports",
-      icon: FileText,
-      route: "/admin/patient/reports",
-    },
-    {
-      id: "hospitals",
-      label: "Hospitals",
-      icon: Hospital,
-      route: "/admin/patient/hospitals",
-    },
-    {
-      id: "bills",
-      label: "Bills",
-      icon: Receipt,
-      route: "/admin/patient/bills",
-    },
-    {
-      id: "chat",
-      label: "Swasth Bot",
-      icon: MessageCircle,
-      route: "/admin/patient/chat",
-    },
-    {
       id: "messages",
       label: "Messages",
       icon: MessageSquare,
@@ -603,7 +747,6 @@ export default function PatientMessagesPage() {
     },
   ];
 
-  // Fetch Sorted Inbox
   const fetchInbox = async () => {
     try {
       setLoading(true);
@@ -622,7 +765,6 @@ export default function PatientMessagesPage() {
     fetchInbox();
   }, []);
 
-  // --- DYNAMIC SEARCH LOGIC ---
   const filteredDoctors = doctorsData.filter((doc) => {
     const nameMatch = doc.name.toLowerCase().includes(searchTerm.toLowerCase());
     const typeMatch = (doc.type || "")
@@ -631,7 +773,6 @@ export default function PatientMessagesPage() {
     return nameMatch || typeMatch;
   });
 
-  // Room Join & Mark as Read
   useEffect(() => {
     if (activeChat && socket) {
       const getRoomAndMessages = async () => {
@@ -648,7 +789,6 @@ export default function PatientMessagesPage() {
             {},
             { withCredentials: true }
           );
-
           setDoctorsData((prev) =>
             prev.map((d) =>
               d._id === activeChat._id ? { ...d, unreadCount: 0 } : d
@@ -662,14 +802,11 @@ export default function PatientMessagesPage() {
     }
   }, [activeChat, socket]);
 
-  // Real-time Listener (Sorting + Notifications + Receive Sound)
   useEffect(() => {
     if (!socket) return;
     const handleNewMessage = (newMessage) => {
       const senderId = String(newMessage.senderId);
       const currentUserId = String(user?.id || user?._id);
-
-      // A. Sidebar Update & Sorting
       setDoctorsData((prev) => {
         const docIndex = prev.findIndex(
           (d) => d._id === senderId || d._id === newMessage.receiverId
@@ -677,17 +814,12 @@ export default function PatientMessagesPage() {
         let updatedDocs = [...prev];
         if (docIndex !== -1) {
           const targetDoc = { ...updatedDocs[docIndex] };
-
           if (senderId !== currentUserId) {
-            // Trigger Receive Sound
             playReceiveSound();
-
-            // Increment unread count if chat not active
             if (!activeChat || activeChat._id !== senderId) {
               targetDoc.unreadCount = (targetDoc.unreadCount || 0) + 1;
             }
           }
-
           updatedDocs.splice(docIndex, 1);
           updatedDocs.unshift(targetDoc);
         } else {
@@ -695,8 +827,6 @@ export default function PatientMessagesPage() {
         }
         return updatedDocs;
       });
-
-      // B. Message List Update
       if (String(newMessage.conversationId) === String(conversationId)) {
         if (senderId === currentUserId) return;
         setMessages((prev) =>
@@ -706,28 +836,22 @@ export default function PatientMessagesPage() {
         );
       }
     };
-
     socket.on("receive_direct_message", handleNewMessage);
     return () => {
       socket.off("receive_direct_message", handleNewMessage);
     };
   }, [socket, conversationId, user, activeChat]);
 
-  // Send Message Logic
   const handleSendMessage = () => {
     if (!messageInput.trim() || !socket || !activeChat || !conversationId)
       return;
-
-    // --- TRIGGER SEND SOUND ---
     playSendSound();
-
     const tempId = "temp-" + Date.now();
     socket.emit("send_direct_message", {
       conversationId,
       receiverId: activeChat._id,
       text: messageInput,
     });
-
     setMessages((prev) => [
       ...prev,
       {
@@ -738,7 +862,6 @@ export default function PatientMessagesPage() {
         conversationId,
       },
     ]);
-
     setDoctorsData((prev) => {
       const idx = prev.findIndex((d) => d._id === activeChat._id);
       if (idx === -1) return prev;
@@ -747,7 +870,6 @@ export default function PatientMessagesPage() {
       updated.unshift(target);
       return updated;
     });
-
     setMessageInput("");
   };
 
@@ -798,7 +920,7 @@ export default function PatientMessagesPage() {
         </nav>
       </aside>
 
-      <div className="flex-1 flex flex-col min-w-0">
+      <div className="flex-1 flex flex-col min-w-0 relative">
         <header className="bg-white border-b border-gray-200 px-6 py-3 flex justify-between items-center sticky top-0 z-30">
           <div className="flex items-center">
             <button
@@ -814,6 +936,7 @@ export default function PatientMessagesPage() {
               <img
                 src={user.profileImg}
                 className="w-full h-full object-cover"
+                alt=""
               />
             ) : (
               <User size={20} />
@@ -822,7 +945,6 @@ export default function PatientMessagesPage() {
         </header>
 
         <div className="flex-1 flex overflow-hidden">
-          {/* Sidebar with Dynamic Search */}
           <div
             className={`w-full md:w-80 lg:w-96 bg-white border-r border-gray-200 flex flex-col ${
               activeChat ? "hidden md:flex" : "flex"
@@ -838,8 +960,8 @@ export default function PatientMessagesPage() {
                   type="text"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  placeholder="Search doctors by name or type..."
-                  className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                  placeholder="Search doctors..."
+                  className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 outline-none"
                 />
               </div>
             </div>
@@ -847,10 +969,6 @@ export default function PatientMessagesPage() {
               {loading ? (
                 <div className="p-10 text-center text-sm text-gray-400">
                   Loading...
-                </div>
-              ) : filteredDoctors.length === 0 ? (
-                <div className="p-10 text-center text-xs text-gray-400 font-bold italic">
-                  No doctors found matching "{searchTerm}"
                 </div>
               ) : (
                 filteredDoctors.map((doc) => (
@@ -869,6 +987,7 @@ export default function PatientMessagesPage() {
                           <img
                             src={doc.profileImg}
                             className="w-full h-full object-cover"
+                            alt=""
                           />
                         ) : (
                           <User className="text-blue-600" size={24} />
@@ -897,14 +1016,74 @@ export default function PatientMessagesPage() {
             </div>
           </div>
 
-          {/* Chat Area */}
           <div
-            className={`flex-1 flex flex-col bg-[#e5ddd5] ${
+            className={`flex-1 flex flex-col relative ${
               !activeChat ? "hidden md:flex" : "flex"
             }`}
           >
             {activeChat ? (
               <>
+                {/* --- VIDEO CALL OVERLAY UI --- */}
+                {(isCalling || isIncomingCall || isCallAccepted) && (
+                  <div className="absolute inset-0 z-50 bg-slate-900 flex flex-col items-center justify-center text-white">
+                    <div className="absolute inset-0 overflow-hidden flex items-center justify-center bg-black">
+                      {isCallAccepted ? (
+                        <video
+                          ref={remoteVideoRef}
+                          autoPlay
+                          playsInline
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="flex flex-col items-center space-y-4">
+                          <div className="w-24 h-24 rounded-full bg-blue-600 flex items-center justify-center text-4xl font-bold border-4 border-white animate-pulse">
+                            {activeChat.name.charAt(0)}
+                          </div>
+                          <h2 className="text-2xl font-bold">
+                            {isIncomingCall
+                              ? "Incoming Request..."
+                              : "Calling Doctor..."}
+                          </h2>
+                          <p className="text-gray-400">{activeChat.name}</p>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="absolute top-6 right-6 w-32 md:w-48 aspect-video bg-gray-800 rounded-2xl border-2 border-white/20 shadow-2xl overflow-hidden z-20">
+                      <video
+                        ref={localVideoRef}
+                        autoPlay
+                        playsInline
+                        muted
+                        className="w-full h-full object-cover bg-slate-700"
+                      />
+                    </div>
+
+                    <div className="absolute bottom-10 flex items-center space-x-6 z-30">
+                      <button className="p-4 bg-gray-700/80 hover:bg-gray-600 rounded-full transition-all backdrop-blur-md">
+                        <Mic size={24} />
+                      </button>
+                      <button className="p-4 bg-gray-700/80 hover:bg-gray-600 rounded-full transition-all backdrop-blur-md">
+                        <VideoOff size={24} />
+                      </button>
+                      {isIncomingCall && !isCallAccepted && (
+                        <button
+                          onClick={acceptCall}
+                          className="p-4 bg-green-500 hover:bg-green-600 rounded-full transition-all shadow-lg shadow-green-500/50"
+                        >
+                          <Video size={24} />
+                        </button>
+                      )}
+                      <button
+                        onClick={endCall}
+                        className="p-4 bg-red-500 hover:bg-red-600 rounded-full transition-all shadow-lg shadow-red-500/50"
+                      >
+                        <PhoneOff size={24} />
+                      </button>
+                    </div>
+                  </div>
+                )}
+
                 <div className="px-4 py-3 border-b flex justify-between items-center bg-white shadow-sm z-10 text-black">
                   <div className="flex items-center">
                     <button
@@ -914,14 +1093,7 @@ export default function PatientMessagesPage() {
                       <ChevronLeft size={24} />
                     </button>
                     <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold overflow-hidden shadow-sm">
-                      {activeChat.profileImg ? (
-                        <img
-                          src={activeChat.profileImg}
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        activeChat.name.charAt(0)
-                      )}
+                      {activeChat.name.charAt(0)}
                     </div>
                     <div className="ml-3">
                       <h3 className="font-bold text-gray-800 text-sm">
@@ -938,12 +1110,14 @@ export default function PatientMessagesPage() {
                       className="cursor-pointer hover:text-blue-600"
                     />
                     <Video
+                      onClick={startVideoCall}
                       size={18}
                       className="cursor-pointer hover:text-blue-600"
                     />
                   </div>
                 </div>
-                <div className="flex-1 overflow-y-auto p-4 space-y-3">
+
+                <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-[#e5ddd5]">
                   {messages.map((msg) => {
                     const isMe =
                       String(msg.senderId) === String(user?.id || user?._id);
@@ -977,6 +1151,7 @@ export default function PatientMessagesPage() {
                   })}
                   <div ref={messagesEndRef} />
                 </div>
+
                 <div className="p-3 bg-[#f0f0f0] flex items-center gap-2">
                   <button className="text-gray-500 p-2">
                     <Smile size={22} />
@@ -1013,7 +1188,7 @@ export default function PatientMessagesPage() {
                   WhatsApp for Swasth-Raho
                 </h3>
                 <p className="text-xs text-center mt-1 px-10 text-gray-500">
-                  Pick a doctor to start a high-speed, secure consultation.
+                  Pick a doctor to start a consultation.
                 </p>
               </div>
             )}

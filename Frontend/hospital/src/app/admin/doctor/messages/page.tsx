@@ -9,7 +9,6 @@
 //   Wallet,
 //   MessageSquare,
 //   Search,
-//   MoreVertical,
 //   Phone,
 //   Video,
 //   Send,
@@ -20,6 +19,10 @@
 //   X,
 //   ChevronLeft,
 //   Filter,
+//   VideoOff,
+//   Mic,
+//   MicOff,
+//   PhoneOff,
 // } from "lucide-react";
 // import { useSocket } from "../../../../../context/SocketContext";
 // import { useAuth } from "../../../../../context/AuthContext";
@@ -39,6 +42,19 @@
 //   const [searchTerm, setSearchTerm] = useState("");
 //   const messagesEndRef = useRef(null);
 
+//   // --- VIDEO CALL STATE ---
+//   const [isCalling, setIsCalling] = useState(false);
+//   const [isIncomingCall, setIsIncomingCall] = useState(false);
+//   const [isCallAccepted, setIsCallAccepted] = useState(false);
+
+//   const localVideoRef = useRef(null);
+//   const remoteVideoRef = useRef(null);
+
+//   // Audio References
+//   const sendSoundRef = useRef(null);
+//   const receiveSoundRef = useRef(null);
+
+//   // Refs to handle stale state in socket listeners
 //   const activeChatRef = useRef(null);
 //   const conversationIdRef = useRef(null);
 
@@ -48,6 +64,28 @@
 //   useEffect(() => {
 //     conversationIdRef.current = conversationId;
 //   }, [conversationId]);
+
+//   // Initialize sounds on mount
+//   useEffect(() => {
+//     sendSoundRef.current = new Audio("/sounds/send.mp3");
+//     receiveSoundRef.current = new Audio("/sounds/receive.wav");
+//   }, []);
+
+//   const playSendSound = () => {
+//     if (sendSoundRef.current) {
+//       sendSoundRef.current.currentTime = 0;
+//       sendSoundRef.current.play().catch((e) => console.log("Sound error:", e));
+//     }
+//   };
+
+//   const playReceiveSound = () => {
+//     if (receiveSoundRef.current) {
+//       receiveSoundRef.current.currentTime = 0;
+//       receiveSoundRef.current
+//         .play()
+//         .catch((e) => console.log("Sound error:", e));
+//     }
+//   };
 
 //   const sidebarItems = [
 //     { id: "profile", label: "Profile", icon: User, route: "/admin/doctor" },
@@ -144,8 +182,11 @@
 //           const targetItem = { ...updatedInbox[itemIndex] };
 //           const isChatOpenWithSender =
 //             activeChatRef.current && activeChatRef.current._id === senderId;
-//           if (senderId !== currentUserId && !isChatOpenWithSender) {
-//             targetItem.unreadCount = (targetItem.unreadCount || 0) + 1;
+//           if (senderId !== currentUserId) {
+//             playReceiveSound();
+//             if (!isChatOpenWithSender) {
+//               targetItem.unreadCount = (targetItem.unreadCount || 0) + 1;
+//             }
 //           }
 //           targetItem.lastMessage = { text: newMessage.text };
 //           targetItem.updatedAt = newMessage.createdAt;
@@ -177,6 +218,7 @@
 //   const handleSendMessage = () => {
 //     if (!messageInput.trim() || !socket || !conversationId || !activeChat)
 //       return;
+//     playSendSound();
 //     const tempId = "temp-" + Date.now();
 //     socket.emit("send_direct_message", {
 //       conversationId,
@@ -213,6 +255,16 @@
 //     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
 //   }, [messages]);
 
+//   // --- VIDEO UI TOGGLE FUNCTIONS ---
+//   const startVideoCall = () => {
+//     setIsCalling(true);
+//   };
+//   const endCall = () => {
+//     setIsCalling(false);
+//     setIsIncomingCall(false);
+//     setIsCallAccepted(false);
+//   };
+
 //   return (
 //     <div className="h-screen flex bg-gray-50 overflow-hidden font-sans text-black">
 //       {isSidebarOpen && (
@@ -221,7 +273,6 @@
 //           onClick={() => setIsSidebarOpen(false)}
 //         />
 //       )}
-
 //       <aside
 //         className={`fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-xl transform transition-transform duration-300 md:relative md:translate-x-0 ${
 //           isSidebarOpen ? "translate-x-0" : "-translate-x-full"
@@ -261,7 +312,7 @@
 //         </nav>
 //       </aside>
 
-//       <div className="flex-1 flex flex-col min-w-0">
+//       <div className="flex-1 flex flex-col min-w-0 relative">
 //         <header className="bg-white border-b border-gray-200 px-6 py-3 flex justify-between items-center sticky top-0 z-30">
 //           <div className="flex items-center">
 //             <button
@@ -287,6 +338,7 @@
 //         </header>
 
 //         <div className="flex-1 flex overflow-hidden">
+//           {/* Sidebar Area */}
 //           <div
 //             className={`w-full md:w-80 lg:w-96 bg-white border-r border-gray-200 flex flex-col ${
 //               activeChat ? "hidden md:flex" : "flex"
@@ -313,15 +365,14 @@
 //                 />
 //               </div>
 //             </div>
-
 //             <div className="flex-1 overflow-y-auto">
 //               {loading ? (
 //                 <div className="p-10 text-center text-sm text-gray-400">
 //                   Loading...
 //                 </div>
-//               ) : filteredInbox.length === 0 ? (
+//               ) : inbox.length === 0 ? (
 //                 <div className="p-10 text-center text-xs text-gray-400 font-bold italic">
-//                   No results for "{searchTerm}"
+//                   No active conversations.
 //                 </div>
 //               ) : (
 //                 filteredInbox.map((item) => (
@@ -371,13 +422,73 @@
 //             </div>
 //           </div>
 
+//           {/* Chat / Video Window Area */}
 //           <div
-//             className={`flex-1 flex flex-col bg-[#e5ddd5] ${
+//             className={`flex-1 flex flex-col relative ${
 //               !activeChat ? "hidden md:flex" : "flex"
 //             }`}
 //           >
 //             {activeChat ? (
 //               <>
+//                 {/* --- VIDEO CALL OVERLAY UI --- */}
+//                 {(isCalling || isIncomingCall) && (
+//                   <div className="absolute inset-0 z-50 bg-slate-900 flex flex-col items-center justify-center text-white">
+//                     <div className="absolute inset-0 overflow-hidden flex items-center justify-center bg-black">
+//                       {isCallAccepted ? (
+//                         <video
+//                           ref={remoteVideoRef}
+//                           autoPlay
+//                           playsInline
+//                           className="w-full h-full object-cover"
+//                         />
+//                       ) : (
+//                         <div className="flex flex-col items-center space-y-4">
+//                           <div className="w-24 h-24 rounded-full bg-blue-600 flex items-center justify-center text-4xl font-bold border-4 border-white animate-pulse">
+//                             {activeChat.name.charAt(0)}
+//                           </div>
+//                           <h2 className="text-2xl font-bold">
+//                             {isIncomingCall
+//                               ? "Incoming Consultation Request..."
+//                               : "Calling Patient..."}
+//                           </h2>
+//                           <p className="text-gray-400">{activeChat.name}</p>
+//                         </div>
+//                       )}
+//                     </div>
+//                     <div className="absolute top-6 right-6 w-32 md:w-48 aspect-video bg-gray-800 rounded-2xl border-2 border-white/20 shadow-2xl overflow-hidden z-20">
+//                       <video
+//                         ref={localVideoRef}
+//                         autoPlay
+//                         playsInline
+//                         muted
+//                         className="w-full h-full object-cover bg-slate-700"
+//                       />
+//                     </div>
+//                     <div className="absolute bottom-10 flex items-center space-x-6 z-30">
+//                       <button className="p-4 bg-gray-700/80 hover:bg-gray-600 rounded-full transition-all backdrop-blur-md">
+//                         <Mic size={24} />
+//                       </button>
+//                       <button className="p-4 bg-gray-700/80 hover:bg-gray-600 rounded-full transition-all backdrop-blur-md">
+//                         <VideoOff size={24} />
+//                       </button>
+//                       {isIncomingCall && !isCallAccepted && (
+//                         <button
+//                           onClick={() => setIsCallAccepted(true)}
+//                           className="p-4 bg-green-500 hover:bg-green-600 rounded-full transition-all shadow-lg"
+//                         >
+//                           <Video size={24} />
+//                         </button>
+//                       )}
+//                       <button
+//                         onClick={endCall}
+//                         className="p-4 bg-red-500 hover:bg-red-600 rounded-full transition-all shadow-lg shadow-red-500/50"
+//                       >
+//                         <PhoneOff size={24} />
+//                       </button>
+//                     </div>
+//                   </div>
+//                 )}
+
 //                 <div className="px-4 py-3 border-b flex justify-between items-center bg-white shadow-sm z-10 text-black">
 //                   <div className="flex items-center">
 //                     <button
@@ -414,14 +525,14 @@
 //                       className="cursor-pointer hover:text-blue-600"
 //                     />
 //                     <Video
+//                       onClick={startVideoCall}
 //                       size={18}
 //                       className="cursor-pointer hover:text-blue-600"
 //                     />
 //                   </div>
 //                 </div>
 
-//                 {/* --- CHAT AREA WITH WHATSAPP COLORS --- */}
-//                 <div className="flex-1 overflow-y-auto p-4 space-y-3">
+//                 <div className="flex-1 overflow-y-auto p-4 space-y-4 shadow-inner bg-[#f0f2f5]">
 //                   {messages.map((msg, idx) => {
 //                     const isMe =
 //                       String(msg.senderId) === String(user?.id || user?._id);
@@ -493,8 +604,9 @@
 //                 <h3 className="text-gray-800 font-bold text-lg">
 //                   Patient Consultations
 //                 </h3>
-//                 <p className="text-sm max-w-[280px] text-center mt-2 text-gray-500">
-//                   Select a patient inquiry to start providing medical guidance.
+//                 <p className="text-sm max-w-[280px] text-center mt-2 text-gray-500 px-5 text-gray-500">
+//                   Select a patient inquiry from the left to start providing
+//                   professional medical guidance.
 //                 </p>
 //               </div>
 //             )}
@@ -504,7 +616,6 @@
 //     </div>
 //   );
 // }
-
 "use client";
 import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
@@ -526,9 +637,14 @@ import {
   X,
   ChevronLeft,
   Filter,
+  VideoOff,
+  Mic,
+  MicOff,
+  PhoneOff,
 } from "lucide-react";
 import { useSocket } from "../../../../../context/SocketContext";
 import { useAuth } from "../../../../../context/AuthContext";
+import { useWebRTC } from "../../../../../hooks/useWebRTC"; // WebRTC Hook import kiya
 
 export default function DoctorMessagesPage() {
   const socket = useSocket();
@@ -545,7 +661,16 @@ export default function DoctorMessagesPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const messagesEndRef = useRef(null);
 
-  // --- 1. AUDIO REFERENCES ---
+  // --- VIDEO CALL UI STATE ---
+  const [isCalling, setIsCalling] = useState(false);
+  const [isIncomingCall, setIsIncomingCall] = useState(false);
+  const [isCallAccepted, setIsCallAccepted] = useState(false);
+  const [incomingOffer, setIncomingOffer] = useState(null);
+
+  const localVideoRef = useRef(null);
+  const remoteVideoRef = useRef(null);
+
+  // Audio References
   const sendSoundRef = useRef(null);
   const receiveSoundRef = useRef(null);
 
@@ -559,6 +684,15 @@ export default function DoctorMessagesPage() {
   useEffect(() => {
     conversationIdRef.current = conversationId;
   }, [conversationId]);
+
+  // WebRTC Hook Integration
+  const {
+    createOffer,
+    handleIncomingCall,
+    handleCallAccepted,
+    handleNewICECandidate,
+    cleanup,
+  } = useWebRTC(socket, conversationId, localVideoRef, remoteVideoRef);
 
   // Initialize sounds on mount
   useEffect(() => {
@@ -582,6 +716,63 @@ export default function DoctorMessagesPage() {
     }
   };
 
+  // --- WebRTC SIGNALING LISTENERS ---
+  useEffect(() => {
+    if (!socket || !conversationId) return;
+
+    socket.on("incoming_call", (data) => {
+      setIncomingOffer(data.offer);
+      setIsIncomingCall(true);
+      playReceiveSound(); // Incoming call sound
+    });
+
+    socket.on("call_accepted", async (data) => {
+      setIsCallAccepted(true);
+      await handleCallAccepted(data.answer);
+    });
+
+    socket.on("ice_candidate", async (data) => {
+      await handleNewICECandidate(data.candidate);
+    });
+
+    socket.on("call_ended", () => {
+      endCallLocally();
+    });
+
+    return () => {
+      socket.off("incoming_call");
+      socket.off("call_accepted");
+      socket.off("ice_candidate");
+      socket.off("call_ended");
+    };
+  }, [socket, conversationId]);
+
+  // --- CALLING FUNCTIONS ---
+  const startVideoCall = async () => {
+    setIsCalling(true);
+    await createOffer(); // Send Signaling Offer
+  };
+
+  const acceptCall = async () => {
+    setIsIncomingCall(false);
+    setIsCallAccepted(true);
+    await handleIncomingCall(incomingOffer); // Send Signaling Answer
+  };
+
+  const endCallLocally = () => {
+    setIsCalling(false);
+    setIsIncomingCall(false);
+    setIsCallAccepted(false);
+    setIncomingOffer(null);
+    cleanup(); // Stop Camera and PeerConnection
+  };
+
+  const endCall = () => {
+    socket.emit("end_call", conversationId);
+    endCallLocally();
+  };
+
+  // --- PREVIOUS CHAT LOGIC (UNCHANGED) ---
   const sidebarItems = [
     { id: "profile", label: "Profile", icon: User, route: "/admin/doctor" },
     {
@@ -626,7 +817,6 @@ export default function DoctorMessagesPage() {
     fetchInbox();
   }, []);
 
-  // --- DYNAMIC SEARCH LOGIC ---
   const filteredInbox = inbox.filter((item) =>
     item.patient.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
@@ -662,13 +852,11 @@ export default function DoctorMessagesPage() {
     }
   }, [activeChat, socket]);
 
-  // Real-time Listening (Sorting + Notifications + Receive Sound)
   useEffect(() => {
     if (!socket) return;
     const handleNewMessage = (newMessage) => {
       const senderId = String(newMessage.senderId);
       const currentUserId = String(user?.id || user?._id);
-
       setInbox((prevInbox) => {
         const itemIndex = prevInbox.findIndex(
           (item) =>
@@ -676,19 +864,16 @@ export default function DoctorMessagesPage() {
             item.patient._id === newMessage.receiverId
         );
         let updatedInbox = [...prevInbox];
-
         if (itemIndex !== -1) {
           const targetItem = { ...updatedInbox[itemIndex] };
           const isChatOpenWithSender =
             activeChatRef.current && activeChatRef.current._id === senderId;
-
           if (senderId !== currentUserId) {
-            playReceiveSound(); // --- PLAY RECEIVE SOUND ---
+            playReceiveSound();
             if (!isChatOpenWithSender) {
               targetItem.unreadCount = (targetItem.unreadCount || 0) + 1;
             }
           }
-
           targetItem.lastMessage = { text: newMessage.text };
           targetItem.updatedAt = newMessage.createdAt;
           updatedInbox.splice(itemIndex, 1);
@@ -698,7 +883,6 @@ export default function DoctorMessagesPage() {
         }
         return updatedInbox;
       });
-
       if (
         conversationIdRef.current &&
         String(newMessage.conversationId) === String(conversationIdRef.current)
@@ -720,9 +904,7 @@ export default function DoctorMessagesPage() {
   const handleSendMessage = () => {
     if (!messageInput.trim() || !socket || !conversationId || !activeChat)
       return;
-
-    playSendSound(); // --- PLAY SEND SOUND ---
-
+    playSendSound();
     const tempId = "temp-" + Date.now();
     socket.emit("send_direct_message", {
       conversationId,
@@ -739,7 +921,6 @@ export default function DoctorMessagesPage() {
         conversationId,
       },
     ]);
-
     setInbox((prev) => {
       const idx = prev.findIndex((item) => item.patient._id === activeChat._id);
       if (idx === -1) return prev;
@@ -807,7 +988,7 @@ export default function DoctorMessagesPage() {
         </nav>
       </aside>
 
-      <div className="flex-1 flex flex-col min-w-0">
+      <div className="flex-1 flex flex-col min-w-0 relative">
         <header className="bg-white border-b border-gray-200 px-6 py-3 flex justify-between items-center sticky top-0 z-30">
           <div className="flex items-center">
             <button
@@ -833,6 +1014,7 @@ export default function DoctorMessagesPage() {
         </header>
 
         <div className="flex-1 flex overflow-hidden">
+          {/* Inbox Area */}
           <div
             className={`w-full md:w-80 lg:w-96 bg-white border-r border-gray-200 flex flex-col ${
               activeChat ? "hidden md:flex" : "flex"
@@ -843,10 +1025,7 @@ export default function DoctorMessagesPage() {
                 <span className="text-xs font-bold text-gray-400 uppercase tracking-widest">
                   Inbox
                 </span>
-                <Filter
-                  size={14}
-                  className="text-gray-400 cursor-pointer hover:text-blue-600"
-                />
+                <Filter size={14} className="text-gray-400 cursor-pointer" />
               </div>
               <div className="relative">
                 <Search
@@ -866,10 +1045,6 @@ export default function DoctorMessagesPage() {
               {loading ? (
                 <div className="p-10 text-center text-sm text-gray-400">
                   Loading...
-                </div>
-              ) : filteredInbox.length === 0 ? (
-                <div className="p-10 text-center text-xs text-gray-400 font-bold italic">
-                  No results for "{searchTerm}"
                 </div>
               ) : (
                 filteredInbox.map((item) => (
@@ -920,12 +1095,71 @@ export default function DoctorMessagesPage() {
           </div>
 
           <div
-            className={`flex-1 flex flex-col bg-[#e5ddd5] ${
+            className={`flex-1 flex flex-col relative ${
               !activeChat ? "hidden md:flex" : "flex"
             }`}
           >
             {activeChat ? (
               <>
+                {/* --- VIDEO CALL OVERLAY UI --- */}
+                {(isCalling || isIncomingCall || isCallAccepted) && (
+                  <div className="absolute inset-0 z-50 bg-slate-900 flex flex-col items-center justify-center text-white">
+                    <div className="absolute inset-0 overflow-hidden flex items-center justify-center bg-black">
+                      {isCallAccepted ? (
+                        <video
+                          ref={remoteVideoRef}
+                          autoPlay
+                          playsInline
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="flex flex-col items-center space-y-4">
+                          <div className="w-24 h-24 rounded-full bg-blue-600 flex items-center justify-center text-4xl font-bold border-4 border-white animate-pulse">
+                            {activeChat.name.charAt(0)}
+                          </div>
+                          <h2 className="text-2xl font-bold">
+                            {isIncomingCall
+                              ? "Incoming Request..."
+                              : "Calling Patient..."}
+                          </h2>
+                          <p className="text-gray-400">{activeChat.name}</p>
+                        </div>
+                      )}
+                    </div>
+                    <div className="absolute top-6 right-6 w-32 md:w-48 aspect-video bg-gray-800 rounded-2xl border-2 border-white/20 shadow-2xl overflow-hidden z-20">
+                      <video
+                        ref={localVideoRef}
+                        autoPlay
+                        playsInline
+                        muted
+                        className="w-full h-full object-cover bg-slate-700"
+                      />
+                    </div>
+                    <div className="absolute bottom-10 flex items-center space-x-6 z-30">
+                      <button className="p-4 bg-gray-700/80 hover:bg-gray-600 rounded-full transition-all backdrop-blur-md">
+                        <Mic size={24} />
+                      </button>
+                      <button className="p-4 bg-gray-700/80 hover:bg-gray-600 rounded-full transition-all backdrop-blur-md">
+                        <VideoOff size={24} />
+                      </button>
+                      {isIncomingCall && !isCallAccepted && (
+                        <button
+                          onClick={acceptCall}
+                          className="p-4 bg-green-500 hover:bg-green-600 rounded-full transition-all shadow-lg shadow-green-500/50"
+                        >
+                          <Video size={24} />
+                        </button>
+                      )}
+                      <button
+                        onClick={endCall}
+                        className="p-4 bg-red-500 hover:bg-red-600 rounded-full transition-all shadow-lg shadow-red-500/50"
+                      >
+                        <PhoneOff size={24} />
+                      </button>
+                    </div>
+                  </div>
+                )}
+
                 <div className="px-4 py-3 border-b flex justify-between items-center bg-white shadow-sm z-10 text-black">
                   <div className="flex items-center">
                     <button
@@ -956,8 +1190,20 @@ export default function DoctorMessagesPage() {
                       </div>
                     </div>
                   </div>
+                  <div className="flex gap-4 text-gray-400 hidden sm:flex">
+                    <Phone
+                      size={18}
+                      className="cursor-pointer hover:text-blue-600"
+                    />
+                    <Video
+                      onClick={startVideoCall}
+                      size={18}
+                      className="cursor-pointer hover:text-blue-600"
+                    />
+                  </div>
                 </div>
-                <div className="flex-1 overflow-y-auto p-4 space-y-3">
+
+                <div className="flex-1 overflow-y-auto p-4 space-y-3 shadow-inner bg-[#f0f2f5]">
                   {messages.map((msg, idx) => {
                     const isMe =
                       String(msg.senderId) === String(user?.id || user?._id);
@@ -993,11 +1239,12 @@ export default function DoctorMessagesPage() {
                   })}
                   <div ref={messagesEndRef} />
                 </div>
+
                 <div className="p-3 bg-[#f0f0f0] flex items-center gap-2">
                   <button className="text-gray-500 p-2 hover:bg-gray-200 rounded-lg">
                     <Smile size={22} />
                   </button>
-                  <button className="text-gray-500 p-2 hover:bg-gray-200 rounded-lg">
+                  <button className="text-gray-400 p-2 hover:bg-gray-100 rounded-lg transition-colors">
                     <Paperclip size={20} />
                   </button>
                   <input
@@ -1006,7 +1253,7 @@ export default function DoctorMessagesPage() {
                     onChange={(e) => setMessageInput(e.target.value)}
                     onKeyDown={(e) => e.key === "Enter" && handleSendMessage()}
                     placeholder="Type professional advice..."
-                    className="flex-1 bg-white border-none text-black rounded-xl px-4 py-2.5 text-sm outline-none shadow-sm"
+                    className="flex-1 bg-white border-none rounded-xl px-4 py-2.5 text-sm outline-none shadow-sm shadow-inner"
                   />
                   <button
                     onClick={handleSendMessage}
@@ -1025,7 +1272,7 @@ export default function DoctorMessagesPage() {
                 <div className="w-24 h-24 bg-blue-50 rounded-full flex items-center justify-center mb-6 animate-pulse">
                   <MessageSquare className="h-10 w-10 text-blue-300" />
                 </div>
-                <h3 className="text-gray-800 font-bold text-lg text-black">
+                <h3 className="text-gray-800 font-bold text-lg">
                   Patient Consultations
                 </h3>
                 <p className="text-sm max-w-[280px] text-center mt-2 text-gray-500">
