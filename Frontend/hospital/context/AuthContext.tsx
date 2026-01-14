@@ -15,7 +15,7 @@ export function AuthProvider({ children }: any) {
   const fetchUser = async () => {
     try {
       // 1. Hit a single API to read cookie + return role
-      const resToken = await axios.get("/auth/get-role", {
+      const resToken = await axios.get("/user/auth/get-role", {
         withCredentials: true,
       });
 
@@ -46,7 +46,6 @@ export function AuthProvider({ children }: any) {
         res.data;
 
       setUser({ ...data, role });
-      console.log("hello", { ...data, role });
     } catch (err) {
       console.log("Auth error:", err);
       setUser(null);

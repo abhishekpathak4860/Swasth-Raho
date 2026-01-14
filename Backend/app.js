@@ -19,6 +19,10 @@ import aiChatRoute from "./routes/aiChat.js";
 import { socketHandler } from "./controllers/aiChatController.js";
 import { userSocketHandler } from "./controllers/userChatController.js";
 import chatRoute from "./routes/chatRoute.js";
+import passport from "passport";
+import session from "express-session";
+import "./config/passport.js";
+import googleAuthRoute from "./routes/googleAuthRoute.js";
 
 const app = express();
 const server = http.createServer(app); // 4. Create Server
@@ -28,6 +32,15 @@ const PORT = process.env.PORT || 5000;
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
+app.use(
+  session({
+    secret: process.env.JWT_SECRET,
+    resave: false,
+    saveUninitialized: false,
+  })
+);
+app.use(passport.initialize());
+app.use(passport.session());
 
 // Allowed Origins
 const corsOptions = {
@@ -80,7 +93,7 @@ app.get("/", (req, res) => {
 });
 
 // Routes
-app.use("/auth", getTokenRoute);
+app.use("/user/auth", getTokenRoute);
 app.use("/api", registerRoute);
 app.use("/patient", patientDashboardDataRoute);
 app.use("/doctor", doctorDashboardDataRoute);
@@ -88,6 +101,7 @@ app.use("/api/hospital", hospitalDashboardDataRoute);
 app.use("/data", hospitalDashboardDataRouteFromServer);
 app.use("/ai", aiChatRoute);
 app.use("/api/chat", chatRoute);
+app.use("/auth", googleAuthRoute);
 // userChat
 // Global error handler method
 app.use((err, req, res, next) => {

@@ -729,7 +729,7 @@ export default function AIAssistant() {
             </Link>
           ))}
         </nav>
-
+        {/* 
         <div className="p-4 border-t">
           <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-4 rounded-xl border border-blue-100">
             <p className="text-xs text-blue-800 font-bold mb-1 uppercase tracking-wider">
@@ -739,7 +739,7 @@ export default function AIAssistant() {
               Get unlimited AI health consultations today.
             </p>
           </div>
-        </div>
+        </div> */}
       </aside>
 
       {/* ================= MAIN CONTENT ================= */}
