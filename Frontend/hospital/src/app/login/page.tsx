@@ -271,7 +271,9 @@ export default function Login() {
      * Backend ka Google auth start endpoint
      * role ko query / state me bhej rahe hain
      */
-    window.location.href = `${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/google?role=${role}`;
+    // window.location.href = `${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/google?role=${role}`;
+    // Proxy Call (Goes through Next.js)
+    window.location.href = `/auth/google?role=${role}`;
   };
 
   // Spinner Icon Component for cleaner code
