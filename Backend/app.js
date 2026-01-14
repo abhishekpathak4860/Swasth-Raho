@@ -26,6 +26,7 @@ import googleAuthRoute from "./routes/googleAuthRoute.js";
 
 const app = express();
 const server = http.createServer(app); // 4. Create Server
+app.set("trust proxy", 1);
 
 const PORT = process.env.PORT || 5000;
 
