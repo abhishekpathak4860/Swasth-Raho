@@ -9,6 +9,8 @@ const patientSchema = new mongoose.Schema({
   location: { type: String, required: true },
   contact: { type: String, required: true },
   profileImg: { type: String, default: "" },
+  resetPasswordOtp: { type: String },
+  resetPasswordExpire: { type: Date },
 });
 
 const Patient = mongoose.model("Patient", patientSchema);

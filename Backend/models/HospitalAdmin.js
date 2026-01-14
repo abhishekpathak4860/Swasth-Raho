@@ -7,6 +7,8 @@ const hospitalAdminSchema = new mongoose.Schema(
     email: { type: String, required: true, unique: true },
     password: { type: String, required: true },
     role: { type: String, default: "hospital_admin" },
+    resetPasswordOtp: { type: String },
+    resetPasswordExpire: { type: Date },
 
     //Hospital Details
     hospital_name: { type: String, required: true },

@@ -16,6 +16,8 @@ const doctorSchema = new mongoose.Schema({
   patient_ids: { type: [String], required: true },
   hospital_id: { type: String, required: true },
   profileImg: { type: String, default: "" },
+  resetPasswordOtp: { type: String },
+  resetPasswordExpire: { type: Date },
 });
 
 const Doctor = mongoose.model("Doctor", doctorSchema);
