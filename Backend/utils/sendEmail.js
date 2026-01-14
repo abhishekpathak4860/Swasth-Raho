@@ -24,15 +24,29 @@
 import nodemailer from "nodemailer";
 
 const sendEmail = async (options) => {
-  // 1. Create Transporter with Explicit Port 465
+  // 1. Validate Env Vars
+  if (!process.env.EMAIL_USERNAME || !process.env.EMAIL_PASSWORD) {
+    throw new Error(
+      "❌ EMAIL_USERNAME or EMAIL_PASSWORD missing in Environment Variables"
+    );
+  }
+
+  // 2. Create Transporter (Using Port 587 - More reliable for Cloud Servers)
   const transporter = nodemailer.createTransport({
-    host: "smtp.gmail.com", // Explicit host
-    port: 465, // Secure port (Works on Render)
-    secure: true, // true for 465, false for other ports
+    host: "smtp.gmail.com",
+    port: 587, // 587 is standard for TLS
+    secure: false, // Must be false for port 587 (it upgrades via STARTTLS)
     auth: {
       user: process.env.EMAIL_USERNAME,
-      pass: process.env.EMAIL_PASSWORD, // Must be 16-char App Password
+      pass: process.env.EMAIL_PASSWORD,
     },
+    tls: {
+      rejectUnauthorized: false, // Helps avoid certificate issues on some cloud servers
+    },
+    // Debugging settings
+    logger: true,
+    debug: true,
+    connectionTimeout: 10000, // Fail fast if it can't connect (10 seconds)
   });
 
   const mailOptions = {
@@ -42,14 +56,12 @@ const sendEmail = async (options) => {
     text: options.message,
   };
 
-  // 2. Add Error Logging to see if it works
   try {
     const info = await transporter.sendMail(mailOptions);
     console.log("Email sent successfully:", info.messageId);
   } catch (error) {
     console.error("Nodemailer Failed:", error);
-    // Throw error so the controller knows it failed
-    throw new Error(error.message);
+    throw new Error(`Email Error: ${error.message}`);
   }
 };
 
