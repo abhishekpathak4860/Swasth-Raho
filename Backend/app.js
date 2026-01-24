@@ -10,6 +10,7 @@ import { Server } from "socket.io";
 import cookieParser from "cookie-parser";
 import connectDB from "./config/DB.js";
 import registerRoute from "./routes/registerRoute.js";
+import superAdminDashboardDataRoute from "./routes/superAdminRoute.js";
 import patientDashboardDataRoute from "./routes/patientDashboardData.js";
 import doctorDashboardDataRoute from "./routes/doctorDashboardData.js";
 import hospitalDashboardDataRoute from "./routes/hospitalDashboardDataRoute.js";
@@ -38,7 +39,7 @@ app.use(
     secret: process.env.JWT_SECRET,
     resave: false,
     saveUninitialized: false,
-  })
+  }),
 );
 app.use(passport.initialize());
 app.use(passport.session());
@@ -97,6 +98,7 @@ app.get("/", (req, res) => {
 app.use("/user/auth", getTokenRoute);
 app.use("/api", registerRoute);
 app.use("/patient", patientDashboardDataRoute);
+app.use("/super-admin", superAdminDashboardDataRoute);
 app.use("/doctor", doctorDashboardDataRoute);
 app.use("/api/hospital", hospitalDashboardDataRoute);
 app.use("/data", hospitalDashboardDataRouteFromServer);

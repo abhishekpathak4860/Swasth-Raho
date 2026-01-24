@@ -257,7 +257,7 @@ export default function HospitalAdminDashboard() {
                   </div>
                   <div className="flex items-center gap-3">
                     <Mail size={18} />{" "}
-                    <span className="font-medium">{user.email || "-"}</span>
+                    <span className="font-medium">{user?.email || "-"}</span>
                   </div>
                   <div className="flex items-center gap-3">
                     <MapPin size={18} />{" "}

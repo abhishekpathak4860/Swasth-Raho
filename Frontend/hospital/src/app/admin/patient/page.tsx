@@ -96,7 +96,7 @@ export default function PatientDashboard() {
       const res = await axios.patch(
         `/patient/update-profile`,
         editUserDetails,
-        { withCredentials: true }
+        { withCredentials: true },
       );
 
       // Update the user state with new data
@@ -133,7 +133,7 @@ export default function PatientDashboard() {
       const res = await axios.post(
         `/api/logout`,
         {},
-        { withCredentials: true }
+        { withCredentials: true },
       );
 
       // Clear user state and redirect

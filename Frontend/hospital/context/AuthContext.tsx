@@ -33,7 +33,7 @@ export function AuthProvider({ children }: any) {
       else if (role === "patient") endpoint = "/patient/profile";
       else if (role === "hospital_admin")
         endpoint = "/api/hospital/get-profile";
-      else if (role === "super_admin") endpoint = "/superAdmin/profile";
+      else if (role === "super_admin") endpoint = "/super-admin/profile";
 
       const res = await axios.get(endpoint, { withCredentials: true });
 
@@ -42,7 +42,7 @@ export function AuthProvider({ children }: any) {
         res.data.doctor ||
         res.data.patient ||
         res.data.hospital_admin ||
-        res.data.super_admin ||
+        res.data.superAdmin ||
         res.data;
 
       setUser({ ...data, role });
