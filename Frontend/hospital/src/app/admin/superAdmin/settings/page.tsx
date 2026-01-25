@@ -18,8 +18,18 @@ import {
   Loader2,
   ShieldAlert,
   Edit2,
+  CheckCircle,
+  UploadCloud,
 } from "lucide-react";
 import { useAuth } from "../../../../../context/AuthContext";
+
+// --- ENV VARS ---
+const CLOUDINARY_CLOUD_NAME =
+  process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || "dwqf8u53j";
+const CLOUDINARY_UPLOAD_PRESET =
+  process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET || "image_upload";
+const CLOUDINARY_FOLDER =
+  process.env.NEXT_PUBLIC_CLOUDINARY_FOLDER || "swasthRaho_profile";
 
 export default function AdminSettings() {
   const { user, fetchUser } = useAuth();
@@ -30,17 +40,22 @@ export default function AdminSettings() {
   // Settings State
   const [section, setSection] = useState<"general" | "security">("general");
   const [loading, setLoading] = useState(false);
-  const [isEditing, setIsEditing] = useState(false); // Controls Read-Only Mode
+  const [isEditing, setIsEditing] = useState(false);
   const [message, setMessage] = useState({ type: "", text: "" });
 
+  // Form Data
   const [formData, setFormData] = useState({
     name: "",
     email: "",
     profileImg: "",
-    currentPassword: "",
     newPassword: "",
     confirmPassword: "",
   });
+
+  // Image Upload State
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
 
   // Load user data
   useEffect(() => {
@@ -62,18 +77,53 @@ export default function AdminSettings() {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      setSelectedFile(file);
+      setPreviewUrl(URL.createObjectURL(file)); // Show local preview
+    }
+  };
+
   const handleEditToggle = () => {
-    // If cancelling edit, revert to original user data
     if (isEditing && user) {
+      // Reset fields if cancelling
       setFormData((prev) => ({
         ...prev,
         name: user.name || "",
         email: user.email || "",
         profileImg: user.profileImg || "",
       }));
+      setSelectedFile(null);
+      setPreviewUrl(null);
     }
     setIsEditing(!isEditing);
     setMessage({ type: "", text: "" });
+  };
+
+  // --- CLOUDINARY UPLOAD FUNCTION ---
+  const uploadImageToCloudinary = async (): Promise<string | null> => {
+    if (!selectedFile) return null;
+
+    try {
+      setIsUploadingImage(true);
+      const cloudinaryUrl = `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`;
+      const body = new FormData();
+      body.append("file", selectedFile);
+      body.append("upload_preset", CLOUDINARY_UPLOAD_PRESET);
+      body.append("folder", CLOUDINARY_FOLDER);
+
+      const res = await axios.post(cloudinaryUrl, body, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+
+      return res.data.secure_url || res.data.url;
+    } catch (error) {
+      console.error("Cloudinary Upload Error:", error);
+      throw new Error("Failed to upload image. Please try again.");
+    } finally {
+      setIsUploadingImage(false);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -83,33 +133,56 @@ export default function AdminSettings() {
 
     try {
       if (section === "security") {
+        // --- PASSWORD UPDATE LOGIC ---
         if (formData.newPassword !== formData.confirmPassword) {
           throw new Error("New passwords do not match.");
         }
-        if (!formData.currentPassword) {
-          throw new Error("Please enter current password to save changes.");
+        if (formData.newPassword.length < 6) {
+          throw new Error("Password must be at least 6 characters long.");
         }
-      }
 
-      const res = await axios.patch(
-        "/super-admin/update-profile",
-        { ...formData, section },
-        { withCredentials: true },
-      );
+        const res = await axios.patch(
+          "/super-admin/updatePassword",
+          { newPassword: formData.newPassword },
+          { withCredentials: true },
+        );
+        setMessage({ type: "success", text: res.data.message });
 
-      setMessage({ type: "success", text: res.data.message });
-
-      if (section === "security") {
         setFormData((prev) => ({
           ...prev,
-          currentPassword: "",
           newPassword: "",
           confirmPassword: "",
         }));
-      }
+      } else {
+        // --- GENERAL PROFILE UPDATE LOGIC ---
 
-      setIsEditing(false); // Lock fields after success
-      fetchUser(); // Refresh data
+        let finalProfileImg = formData.profileImg;
+
+        // 1. Check if a new file needs uploading
+        if (selectedFile) {
+          const uploadedUrl = await uploadImageToCloudinary();
+          if (uploadedUrl) {
+            finalProfileImg = uploadedUrl;
+          }
+        }
+
+        // 2. Send Data to Backend
+        const res = await axios.patch(
+          "/super-admin/update-profile",
+          {
+            name: formData.name,
+            email: formData.email,
+            profileImg: finalProfileImg,
+          },
+          { withCredentials: true },
+        );
+
+        setMessage({ type: "success", text: res.data.message });
+        setIsEditing(false);
+        setSelectedFile(null);
+        setPreviewUrl(null);
+        fetchUser(); // Refresh Context
+      }
     } catch (err: any) {
       setMessage({
         type: "error",
@@ -174,9 +247,7 @@ export default function AdminSettings() {
 
       {/* ---------------- SIDEBAR ---------------- */}
       <aside
-        className={`fixed top-0 left-0 z-50 h-full w-64 bg-white shadow-xl transform transition-transform duration-300 md:relative md:translate-x-0 ${
-          isSidebarOpen ? "translate-x-0" : "-translate-x-full"
-        }`}
+        className={`fixed top-0 left-0 z-50 h-full w-64 bg-white shadow-xl transform transition-transform duration-300 md:relative md:translate-x-0 ${isSidebarOpen ? "translate-x-0" : "-translate-x-full"}`}
       >
         <div className="p-6 border-b border-gray-100 flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -199,18 +270,13 @@ export default function AdminSettings() {
             <X size={20} />
           </button>
         </div>
-
         <nav className="mt-6 px-4 space-y-2">
           {sidebarItems.map((item) => (
             <Link
               key={item.id}
               href={item.route}
               onClick={() => setActiveTab(item.id)}
-              className={`flex items-center px-4 py-3 rounded-xl transition-all duration-200 group ${
-                activeTab === item.id
-                  ? "bg-blue-50 text-blue-700 font-semibold border-l-4 border-blue-600"
-                  : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
-              }`}
+              className={`flex items-center px-4 py-3 rounded-xl transition-all duration-200 group ${activeTab === item.id ? "bg-blue-50 text-blue-700 font-semibold border-l-4 border-blue-600" : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"}`}
             >
               <item.icon
                 className={`w-5 h-5 transition-colors ${activeTab === item.id ? "text-blue-600" : "text-gray-400"}`}
@@ -219,7 +285,6 @@ export default function AdminSettings() {
             </Link>
           ))}
         </nav>
-
         <div className="absolute bottom-0 w-full p-4 border-t border-gray-100 bg-gray-50/50">
           <button
             onClick={handleLogout}
@@ -246,7 +311,6 @@ export default function AdminSettings() {
                 Account Settings
               </h2>
             </div>
-
             <div className="relative">
               <button
                 onClick={() => setShowProfileMenu(!showProfileMenu)}
@@ -289,6 +353,7 @@ export default function AdminSettings() {
                 onClick={() => {
                   setSection("general");
                   setIsEditing(false);
+                  setMessage({ type: "", text: "" });
                 }}
                 className={`pb-4 px-2 text-sm font-medium transition-all relative ${section === "general" ? "text-blue-600" : "text-gray-500 hover:text-gray-700"}`}
               >
@@ -303,7 +368,8 @@ export default function AdminSettings() {
                 onClick={() => {
                   setSection("security");
                   setIsEditing(false);
-                }} // Reset edit mode when switching tabs
+                  setMessage({ type: "", text: "" });
+                }}
                 className={`pb-4 px-2 text-sm font-medium transition-all relative ${section === "security" ? "text-blue-600" : "text-gray-500 hover:text-gray-700"}`}
               >
                 <span className="flex items-center gap-2">
@@ -321,7 +387,7 @@ export default function AdminSettings() {
                 className={`p-4 mb-6 rounded-lg text-sm flex items-center gap-2 ${message.type === "success" ? "bg-green-50 text-green-700 border border-green-200" : "bg-red-50 text-red-700 border border-red-200"}`}
               >
                 {message.type === "success" ? (
-                  <User size={16} />
+                  <CheckCircle size={16} />
                 ) : (
                   <ShieldAlert size={16} />
                 )}
@@ -331,16 +397,12 @@ export default function AdminSettings() {
 
             {/* Form Section */}
             <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 sm:p-8 relative">
-              {/* Edit Button (Top Right) */}
+              {/* Edit Button (Only for General) */}
               {section === "general" && (
                 <button
                   onClick={handleEditToggle}
                   type="button"
-                  className={`absolute top-8 right-8 flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                    isEditing
-                      ? "bg-red-50 text-red-600 hover:bg-red-100"
-                      : "bg-blue-50 text-blue-600 hover:bg-blue-100"
-                  }`}
+                  className={`absolute top-8 right-8 flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${isEditing ? "bg-red-50 text-red-600 hover:bg-red-100" : "bg-blue-50 text-blue-600 hover:bg-blue-100"}`}
                 >
                   {isEditing ? <X size={16} /> : <Edit2 size={16} />}
                   {isEditing ? "Cancel" : "Edit Profile"}
@@ -358,6 +420,7 @@ export default function AdminSettings() {
                         >
                           <img
                             src={
+                              previewUrl ||
                               formData.profileImg ||
                               "https://via.placeholder.com/150"
                             }
@@ -365,10 +428,27 @@ export default function AdminSettings() {
                             className="w-full h-full object-cover"
                           />
                         </div>
+
+                        {/* Upload Overlay */}
                         {isEditing && (
-                          <div className="absolute inset-0 bg-black/40 rounded-full flex items-center justify-center cursor-pointer">
-                            <Camera className="text-white w-6 h-6" />
-                          </div>
+                          <label
+                            htmlFor="file-upload"
+                            className="absolute inset-0 bg-black/40 rounded-full flex items-center justify-center cursor-pointer hover:bg-black/50 transition-colors"
+                          >
+                            {isUploadingImage ? (
+                              <Loader2 className="animate-spin text-white w-6 h-6" />
+                            ) : (
+                              <Camera className="text-white w-6 h-6" />
+                            )}
+                            <input
+                              id="file-upload"
+                              type="file"
+                              className="hidden"
+                              accept="image/*"
+                              onChange={handleFileChange}
+                              disabled={isUploadingImage}
+                            />
+                          </label>
                         )}
                       </div>
                       <div>
@@ -377,9 +457,15 @@ export default function AdminSettings() {
                         </h3>
                         <p className="text-sm text-gray-500">
                           {isEditing
-                            ? "Paste a valid image URL below to update."
+                            ? "Click the camera icon to select a new image."
                             : "This will be displayed on your profile."}
                         </p>
+                        {selectedFile && isEditing && (
+                          <span className="text-xs text-green-600 font-medium flex items-center gap-1 mt-1">
+                            <CheckCircle size={12} /> Image selected (Will
+                            upload on save)
+                          </span>
+                        )}
                       </div>
                     </div>
 
@@ -394,11 +480,7 @@ export default function AdminSettings() {
                           value={formData.name}
                           onChange={handleChange}
                           disabled={!isEditing}
-                          className={`w-full px-4 py-2.5 rounded-lg border focus:ring-2 outline-none transition-all ${
-                            isEditing
-                              ? "border-gray-300 focus:ring-blue-100 focus:border-blue-500 bg-white"
-                              : "border-transparent bg-gray-50 text-gray-600 cursor-not-allowed"
-                          }`}
+                          className={`text-black w-full px-4 py-2.5 rounded-lg border focus:ring-2 outline-none transition-all ${isEditing ? "border-gray-300 focus:ring-blue-100 focus:border-blue-500 bg-white" : "border-transparent bg-gray-50 text-gray-600 cursor-not-allowed"}`}
                         />
                       </div>
                       <div>
@@ -411,63 +493,27 @@ export default function AdminSettings() {
                           value={formData.email}
                           onChange={handleChange}
                           disabled={!isEditing}
-                          className={`w-full px-4 py-2.5 rounded-lg border focus:ring-2 outline-none transition-all ${
-                            isEditing
-                              ? "border-gray-300 focus:ring-blue-100 focus:border-blue-500 bg-white"
-                              : "border-transparent bg-gray-50 text-gray-600 cursor-not-allowed"
-                          }`}
-                        />
-                      </div>
-                      <div className="col-span-1 md:col-span-2">
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Profile Image URL
-                        </label>
-                        <input
-                          type="text"
-                          name="profileImg"
-                          value={formData.profileImg}
-                          onChange={handleChange}
-                          disabled={!isEditing}
-                          placeholder={isEditing ? "https://..." : ""}
-                          className={`w-full px-4 py-2.5 rounded-lg border focus:ring-2 outline-none transition-all ${
-                            isEditing
-                              ? "border-gray-300 focus:ring-blue-100 focus:border-blue-500 bg-white"
-                              : "border-transparent bg-gray-50 text-gray-600 cursor-not-allowed"
-                          }`}
+                          className={`text-black w-full px-4 py-2.5 rounded-lg border focus:ring-2 outline-none transition-all ${isEditing ? "border-gray-300 focus:ring-blue-100 focus:border-blue-500 bg-white" : "border-transparent bg-gray-50 text-gray-600 cursor-not-allowed"}`}
                         />
                       </div>
                     </div>
                   </div>
                 )}
 
-                {/* --- SECURITY SECTION (Always Editable) --- */}
+                {/* --- SECURITY SECTION (No Current Password) --- */}
                 {section === "security" && (
                   <div className="space-y-6 max-w-lg animate-in fade-in slide-in-from-bottom-2 duration-300">
                     <div>
                       <h3 className="text-lg font-bold text-gray-900 mb-1">
-                        Change Password
+                        Set New Password
                       </h3>
                       <p className="text-sm text-gray-500 mb-6">
-                        Ensure your account is using a long, random password to
-                        stay secure.
+                        Enter a new secure password for your Super Admin
+                        account.
                       </p>
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Current Password
-                      </label>
-                      <input
-                        type="password"
-                        name="currentPassword"
-                        value={formData.currentPassword}
-                        onChange={handleChange}
-                        className="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-100 focus:border-blue-500 outline-none transition-all"
-                        placeholder="••••••••"
-                      />
-                    </div>
-
-                    <div className="pt-4 border-t border-gray-100">
                       <label className="block text-sm font-medium text-gray-700 mb-2">
                         New Password
                       </label>
@@ -476,7 +522,7 @@ export default function AdminSettings() {
                         name="newPassword"
                         value={formData.newPassword}
                         onChange={handleChange}
-                        className="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-100 focus:border-blue-500 outline-none transition-all"
+                        className="text-black w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-100 focus:border-blue-500 outline-none transition-all"
                         placeholder="••••••••"
                       />
                     </div>
@@ -490,14 +536,14 @@ export default function AdminSettings() {
                         name="confirmPassword"
                         value={formData.confirmPassword}
                         onChange={handleChange}
-                        className="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-100 focus:border-blue-500 outline-none transition-all"
+                        className="text-black w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-100 focus:border-blue-500 outline-none transition-all"
                         placeholder="••••••••"
                       />
                     </div>
                   </div>
                 )}
 
-                {/* Footer Buttons (Only show when Editing or in Security tab) */}
+                {/* Footer Buttons */}
                 {(isEditing || section === "security") && (
                   <div className="mt-8 pt-6 border-t border-gray-100 flex items-center justify-end gap-3">
                     <button
@@ -521,7 +567,7 @@ export default function AdminSettings() {
                       ) : (
                         <Save className="w-4 h-4" />
                       )}
-                      Save Changes
+                      {isUploadingImage ? "Uploading Image..." : "Save Changes"}
                     </button>
                   </div>
                 )}
