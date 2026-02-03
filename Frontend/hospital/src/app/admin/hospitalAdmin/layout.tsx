@@ -26,7 +26,7 @@ export default function HospitalAdminLayout({
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [activeTab, setActiveTab] = useState("overview");
 
-  // Fetch user if not loaded (redundant if AuthContext handles it, but safe)
+  // Fetch user if not loaded
   useEffect(() => {
     fetchUser();
   }, []);
@@ -91,7 +91,8 @@ export default function HospitalAdminLayout({
       >
         <div className="p-6 border-b border-gray-100 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-gradient-to-r from-emerald-500 to-teal-600 rounded-xl flex items-center justify-center shadow-lg shadow-emerald-200">
+            {/* CHANGED TO BLUE GRADIENT */}
+            <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-200">
               <span className="text-white font-bold text-xl">H</span>
             </div>
             <div>
@@ -122,12 +123,14 @@ export default function HospitalAdminLayout({
               }}
               className={`flex items-center px-4 py-3 rounded-xl transition-all duration-200 group ${
                 activeTab === item.id
-                  ? "bg-emerald-50 text-emerald-700 font-semibold border-l-4 border-emerald-600"
+                  ? "bg-blue-50 text-blue-700 font-semibold border-l-4 border-blue-600" // CHANGED TO BLUE
                   : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
               }`}
             >
               <item.icon
-                className={`w-5 h-5 transition-colors ${activeTab === item.id ? "text-emerald-600" : "text-gray-400"}`}
+                className={`w-5 h-5 transition-colors ${
+                  activeTab === item.id ? "text-blue-600" : "text-gray-400" // CHANGED TO BLUE
+                }`}
               />
               <span className="ml-3">{item.label}</span>
             </Link>
@@ -174,7 +177,8 @@ export default function HospitalAdminLayout({
                   </p>
                   <p className="text-xs text-gray-500">Administrator</p>
                 </div>
-                <div className="w-9 h-9 rounded-full bg-emerald-100 overflow-hidden border border-emerald-200">
+                {/* CHANGED AVATAR BORDER TO BLUE */}
+                <div className="w-9 h-9 rounded-full bg-blue-100 overflow-hidden border border-blue-200">
                   <img
                     src={user?.profileImg || "https://via.placeholder.com/150"}
                     alt="Profile"

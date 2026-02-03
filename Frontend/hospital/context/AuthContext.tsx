@@ -41,7 +41,7 @@ export function AuthProvider({ children }: any) {
       const data =
         res.data.doctor ||
         res.data.patient ||
-        res.data.hospital_admin ||
+        res.data.admin ||
         res.data.superAdmin ||
         res.data;
 
