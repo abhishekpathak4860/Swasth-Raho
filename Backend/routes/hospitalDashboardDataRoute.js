@@ -3,6 +3,7 @@ import { verifyToken } from "../middleware/auth.js";
 import { getHospitalData } from "../controllers/getHospitalData.js";
 import { getAdminProfile } from "../controllers/getAdminProfile.js";
 import { updatedHospitalData } from "../controllers/updatedHospitalData.js";
+import { getHospitalDoctors } from "../controllers/getHospitalDoctors.js";
 
 const router = express.Router();
 
@@ -10,4 +11,5 @@ router.get("/get-hospitalData", getHospitalData);
 
 router.get("/get-profile", verifyToken, getAdminProfile);
 router.patch("/update-profile", verifyToken, updatedHospitalData);
+router.get("/doctors", verifyToken, getHospitalDoctors);
 export default router;
