@@ -1,6 +1,8 @@
 import axios from "axios";
 import querystring from "querystring";
 import Payment from "../models/Payment.js";
+import Doctor from "../models/Doctor.js";
+import HospitalAdmin from "../models/HospitalAdmin.js";
 
 // ENV
 const {
@@ -66,8 +68,34 @@ export const verifyPayment = async (req, res) => {
 
     // 6 Update payment according to status
     if (phonepeStatus === "COMPLETED") {
-      payment.status = "paid";
-      payment.amount_received = payment.consultationFee; // full received
+      // Avoid double updating if already marked as paid
+      if (payment.status !== "paid") {
+        payment.status = "paid";
+        payment.amount_received = payment.consultationFee; // Full amount received
+
+        //  REVENUE UPDATE LOGIC
+
+        // A. Update Doctor's Revenue
+        const feeAmount = parseFloat(payment.consultationFee) || 0;
+
+        const doctor = await Doctor.findById(payment.doc_id);
+
+        if (doctor) {
+          // Update Doctor Revenue
+          doctor.Total_Revenue = (doctor.Total_Revenue || 0) + feeAmount;
+          await doctor.save();
+
+          // B. Update Hospital's Revenue
+          if (doctor.hospital_id) {
+            const hospital = await HospitalAdmin.findById(doctor.hospital_id);
+            if (hospital) {
+              hospital.Total_Revenue_Hospital =
+                (hospital.Total_Revenue_Hospital || 0) + feeAmount;
+              await hospital.save();
+            }
+          }
+        }
+      }
     } else if (phonepeStatus === "FAILED") {
       payment.status = "failed";
       payment.amount_received = "0";
@@ -87,7 +115,7 @@ export const verifyPayment = async (req, res) => {
   } catch (err) {
     console.error(
       "Payment status check error:",
-      err?.response?.data || err.message
+      err?.response?.data || err.message,
     );
     return res.status(500).json({ error: "Internal Server Error" });
   }

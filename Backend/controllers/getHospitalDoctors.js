@@ -1,32 +1,3 @@
-// import Doctor from "../models/Doctor.js";
-
-// export const getHospitalDoctors = async (req, res) => {
-//   try {
-//     // 1. Get the Hospital Admin's ID from the verified token
-//     const hospitalId = req.user.id;
-
-//     // 2. Find all doctors where 'hospital_id' matches this admin's ID
-//     // We exclude the password field for security
-//     const doctors = await Doctor.find({ hospital_id: hospitalId })
-//       .select("-password")
-//       .sort({ createdAt: -1 }); // Optional: Show newest doctors first
-
-//     // 3. Send response
-//     res.status(200).json({
-//       success: true,
-//       count: doctors.length,
-//       doctors: doctors,
-//     });
-//   } catch (error) {
-//     console.error("Error fetching doctors:", error);
-//     res.status(500).json({
-//       success: false,
-//       message: "Server Error while fetching doctors",
-//       error: error.message,
-//     });
-//   }
-// };
-
 import Doctor from "../models/Doctor.js";
 
 export const getHospitalDoctors = async (req, res) => {
