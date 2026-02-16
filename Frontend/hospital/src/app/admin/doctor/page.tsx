@@ -78,7 +78,7 @@ export default function DoctorDashboard() {
   };
 
   const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
   ) => {
     const { name, value } = e.target;
     setEditDetails((prev: any) => ({ ...prev, [name]: value }));
@@ -286,7 +286,7 @@ export default function DoctorDashboard() {
                         }}
                         className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-50"
                       >
-                        Logout
+                        Logout from here
                       </button>
                     </div>
                   )}
