@@ -1,39 +1,23 @@
 "use client";
-
 import React, { useEffect, useState } from "react";
-import Link from "next/link";
 import axios from "axios";
 import {
-  User,
-  CalendarDays,
-  Stethoscope,
+  CreditCard,
+  Users,
   FileText,
-  Hospital,
-  Receipt,
-  MessageCircle,
-  MessageSquare,
+  Activity,
+  Search,
+  Filter,
+  X,
+  IndianRupee,
 } from "lucide-react";
 import { useAuth } from "../../../../../context/AuthContext";
 
 export default function Revenue() {
-  const { user, loading } = useAuth();
-  const [activeTab, setActiveTab] = useState("bills");
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [showProfileMenu, setShowProfileMenu] = useState(false);
-  const [patient, setPatient] = useState<any>(null);
-  const [payments, setPayments] = useState<any>([]);
-
-  // Dummy stats and revenue rows
-  // const stats = {
-  //   totalRevenue: 45200,
-  //   totalPatients: 128,
-  //   totalTreatments: 76,
-  //   totalReports: 42,
-  // };
-
-  // Filters
+  const { user } = useAuth();
+  const [payments, setPayments] = useState<any[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
-  const [paymentFilter, setPaymentFilter] = useState("all"); // all | paid | pending | failed
+  const [paymentFilter, setPaymentFilter] = useState("all");
 
   const filteredRows = payments.filter((r) => {
     const matchesName = r.doc_name
@@ -44,59 +28,6 @@ export default function Revenue() {
     return matchesName && matchesStatus;
   });
 
-  // fetch doctor profile
-  const sidebarItems = [
-    {
-      id: "profile",
-      label: "Profile",
-      icon: User,
-      route: "/admin/patient",
-    },
-    {
-      id: "appointments",
-      label: "Appointments",
-      icon: CalendarDays,
-      route: "/admin/patient/appointments",
-    },
-    {
-      id: "doctors",
-      label: "Doctors",
-      icon: Stethoscope,
-      route: "/admin/patient/doctors",
-    },
-    {
-      id: "reports",
-      label: "Medical Reports",
-      icon: FileText,
-      route: "/admin/patient/reports",
-    },
-    {
-      id: "hospitals",
-      label: "Hospitals",
-      icon: Hospital,
-      route: "/admin/patient/hospitals",
-    },
-    {
-      id: "bills",
-      label: "Bills",
-      icon: Receipt,
-      route: "/admin/patient/bills",
-    },
-    {
-      id: "chat",
-      label: "Swasth Bot",
-      icon: MessageCircle,
-      route: "/admin/patient/chat",
-    },
-    {
-      id: "messages",
-      label: "Messages",
-      icon: MessageSquare,
-      route: "/admin/patient/messages",
-    },
-  ];
-
-  // fetch doctor payments
   useEffect(() => {
     const fetchPayments = async () => {
       try {
@@ -105,346 +36,196 @@ export default function Revenue() {
         });
         setPayments(res.data.payments);
       } catch (err) {
-        // ignore and keep null
+        // ignore error
       }
     };
     fetchPayments();
   }, []);
 
-  const handleLogout = async () => {
-    try {
-      await axios.post(`/api/logout`, {}, { withCredentials: true });
-      window.location.href = "/login";
-    } catch (error) {
-      console.error("Error logging out:", error);
-    }
-  };
-
   const getStatusClasses = (s: string) => {
     switch (s) {
       case "paid":
-        return "bg-emerald-100 text-emerald-800";
+        return "bg-green-100 text-green-700 border-green-200";
       case "pending":
-        return "bg-yellow-100 text-yellow-800";
+        return "bg-yellow-100 text-yellow-700 border-yellow-200";
       case "failed":
-        return "bg-red-100 text-red-800";
+        return "bg-red-100 text-red-700 border-red-200";
       default:
-        return "bg-gray-100 text-gray-800";
+        return "bg-gray-100 text-gray-700 border-gray-200";
     }
   };
 
+  const totalBill = payments.reduce(
+    (total, item) => total + Number(item.amount_received),
+    0,
+  );
+  const uniqueDoctors = new Set(payments.map((item) => item.doc_id)).size;
+
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Mobile overlay */}
-      {isSidebarOpen && (
-        <div
-          className="fixed inset-0 bg-black/40 z-40 md:hidden"
-          onClick={() => setIsSidebarOpen(false)}
-        ></div>
-      )}
-
-      {/* Mobile Drawer */}
-      <aside
-        className={`fixed top-0 left-0 z-50 h-full w-64 bg-white shadow-lg transform transition-transform md:hidden ${
-          isSidebarOpen ? "translate-x-0" : "-translate-x-full"
-        }`}
-      >
-        <div className="p-4 border-b border-gray-200 flex items-center justify-between">
-          <div className="flex items-center">
-            <div className="w-10 h-10 bg-linear-to-r from-blue-600 to-green-600 rounded-full flex items-center justify-center">
-              <span className="text-white font-bold text-xl">D</span>
+    <div className="space-y-6 font-sans text-black">
+      {/* 1. Stats Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm hover:shadow-md transition-all">
+          <div className="flex items-center gap-4">
+            <div className="p-3 bg-green-100 rounded-full text-green-600">
+              <IndianRupee size={24} />
             </div>
-            <div className="ml-3">
-              <h1 className="text-xl font-bold text-gray-800">Swasth-Raho</h1>
-              <p className="text-sm text-gray-500">Doctor Portal</p>
+            <div>
+              <p className="text-sm text-gray-500 font-medium">Total Bill</p>
+              <p className="text-2xl font-bold text-gray-800">
+                ₹{totalBill.toLocaleString()}
+              </p>
             </div>
           </div>
-          <button
-            className="p-2 rounded-md hover:bg-gray-100"
-            onClick={() => setIsSidebarOpen(false)}
-          >
-            ✕
-          </button>
         </div>
-        <nav className="mt-6 px-2">
-          {sidebarItems.map((item) => (
-            <Link
-              key={item.id}
-              href={item.route}
-              className={`flex items-center px-3 py-3 rounded-lg transition-colors ${
-                activeTab === item.id
-                  ? "bg-blue-50 text-blue-600"
-                  : "text-gray-700 hover:bg-gray-50"
-              }`}
-              onClick={() => setIsSidebarOpen(false)}
-            >
-              <item.icon className="h-5 w-5" />
-              <span className="ml-3 font-medium">{item.label}</span>
-            </Link>
-          ))}
-        </nav>
-        <div className="absolute bottom-4 left-4 right-4">
-          <button
-            className="w-full flex items-center px-4 py-3 text-gray-700 hover:bg-red-50 hover:text-red-600 rounded-lg transition-colors"
-            onClick={handleLogout}
-          >
-            <span className="ml-3 font-medium">Logout</span>
-          </button>
+
+        <div className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm hover:shadow-md transition-all">
+          <div className="flex items-center gap-4">
+            <div className="p-3 bg-blue-100 rounded-full text-blue-600">
+              <Users size={24} />
+            </div>
+            <div>
+              <p className="text-sm text-gray-500 font-medium">Total Doctors</p>
+              <p className="text-2xl font-bold text-gray-800">
+                {uniqueDoctors}
+              </p>
+            </div>
+          </div>
         </div>
-      </aside>
 
-      <div className="md:flex min-h-screen">
-        {/* Desktop fixed sidebar */}
-        <aside className="hidden md:flex flex-col w-64 bg-white shadow-lg flex-shrink-0 h-screen fixed left-0 top-0">
-          <div className="p-4 border-b border-gray-200">
-            <div className="flex items-center">
-              <div className="w-10 h-10 bg-linear-to-r from-blue-600 to-green-600 rounded-full flex items-center justify-center">
-                <span className="text-white font-bold text-xl">D</span>
-              </div>
-              <div className="ml-3">
-                <h1 className="text-xl font-bold text-gray-800">Swasth-Raho</h1>
-                <p className="text-sm text-gray-500">Doctor Portal</p>
-              </div>
+        <div className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm hover:shadow-md transition-all">
+          <div className="flex items-center gap-4">
+            <div className="p-3 bg-purple-100 rounded-full text-purple-600">
+              <Activity size={24} />
+            </div>
+            <div>
+              <p className="text-sm text-gray-500 font-medium">Treatments</p>
+              <p className="text-2xl font-bold text-gray-800">
+                {payments.length}
+              </p>
             </div>
           </div>
-          <nav className="mt-6 flex-1 px-2 overflow-y-auto">
-            {sidebarItems.map((item) => (
-              <Link
-                key={item.id}
-                href={item.route}
-                className={`flex items-center px-4 py-3 mx-2 rounded-lg transition-colors ${
-                  activeTab === item.id
-                    ? "bg-blue-50 text-blue-600 border-r-4 border-blue-600"
-                    : "text-gray-700 hover:bg-gray-50"
-                }`}
-                onClick={() => setActiveTab(item.id)}
-              >
-                <item.icon className="h-5 w-5" />
-                <span className="ml-3 font-medium">{item.label}</span>
-              </Link>
-            ))}
-          </nav>
-          <div className="p-4">
-            <button
-              className="w-full flex items-center px-4 py-3 text-gray-700 hover:bg-red-50 hover:text-red-600 rounded-lg transition-colors"
-              onClick={handleLogout}
-            >
-              <span className="text-2xl">🚪</span>
-              <span className="ml-3 font-medium">Logout</span>
-            </button>
+        </div>
+
+        <div className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm hover:shadow-md transition-all">
+          <div className="flex items-center gap-4">
+            <div className="p-3 bg-orange-100 rounded-full text-orange-600">
+              <FileText size={24} />
+            </div>
+            <div>
+              <p className="text-sm text-gray-500 font-medium">Reports</p>
+              <p className="text-2xl font-bold text-gray-800">
+                {payments.length}
+              </p>
+            </div>
           </div>
-        </aside>
-
-        {/* Main area; add left margin on md+ to account for fixed sidebar */}
-        <div className="flex-1 md:ml-64 flex flex-col">
-          {/* Header */}
-          <header className="bg-white shadow-sm border-b border-gray-200 px-4 md:px-6 py-3 sticky top-0 z-30">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center">
-                <button
-                  onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-                  className="md:hidden p-2 rounded-md text-gray-600 hover:bg-gray-100"
-                >
-                  <svg
-                    className="w-6 h-6"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M4 6h16M4 12h16M4 18h16"
-                    />
-                  </svg>
-                </button>
-                <h2 className="text-lg md:text-2xl font-bold text-gray-800 ml-2">
-                  Revenue
-                </h2>
-              </div>
-
-              <div className="flex items-center space-x-3">
-                <div className="relative">
-                  <button
-                    onClick={() => setShowProfileMenu(!showProfileMenu)}
-                    className="flex items-center space-x-3 p-1 rounded-md hover:bg-gray-100"
-                  >
-                    <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center overflow-hidden">
-                      <img
-                        src={user?.profileImg ? user.profileImg : null}
-                        alt=""
-                        className="w-full h-full rounded-full object-cover"
-                      />
-                    </div>
-                    <div className="hidden md:block text-left">
-                      <p className="text-sm font-medium text-gray-800">
-                        {user?.name || ""}
-                      </p>
-                      <p className="text-xs text-gray-500">
-                        {user?.email || ""}
-                      </p>
-                    </div>
-                  </button>
-
-                  {showProfileMenu && (
-                    <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-lg shadow-lg py-1 z-50">
-                      <button
-                        onClick={() => setShowProfileMenu(false)}
-                        className="w-full text-left px-4 py-2 text-sm hover:bg-gray-50"
-                      >
-                        Close
-                      </button>
-                      <button
-                        onClick={handleLogout}
-                        className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-50"
-                      >
-                        Logout
-                      </button>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-          </header>
-
-          {/* Main Content */}
-          <main className="flex-1 p-4 md:p-6">
-            {/* Stats cards */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-              <div className="bg-white rounded-lg border border-gray-200 p-4 shadow-sm">
-                <p className="text-sm text-gray-500">Total Bill</p>
-                <p className="text-2xl font-bold text-gray-800">
-                  ₹{" "}
-                  {payments.reduce(
-                    (total, item) => total + Number(item.amount_received),
-                    0
-                  )}
-                </p>
-              </div>
-              <div className="bg-white rounded-lg border border-gray-200 p-4 shadow-sm">
-                <p className="text-sm text-gray-500">Total Doctors</p>
-                {/* filter unique doctors */}
-                <p className="text-2xl font-bold text-gray-800">
-                  {new Set(payments.map((item) => item.doc_id)).size}
-                </p>
-              </div>
-              <div className="bg-white rounded-lg border border-gray-200 p-4 shadow-sm">
-                <p className="text-sm text-gray-500">Total Treatments</p>
-                <p className="text-2xl font-bold text-gray-800">
-                  {payments.length}
-                </p>
-              </div>
-              <div className="bg-white rounded-lg border border-gray-200 p-4 shadow-sm">
-                <p className="text-sm text-gray-500">Total Reports</p>
-                <p className="text-2xl font-bold text-gray-800">
-                  {payments.length}
-                </p>
-              </div>
-            </div>
-
-            {/* Filter controls */}
-            <div className="bg-white rounded-lg border border-gray-200 p-4 shadow-sm mb-6">
-              <h4 className="text-lg font-semibold text-gray-800 mb-4">
-                Filter Transactions
-              </h4>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div>
-                  <label className="text-sm text-gray-600 mb-1 block">
-                    Search Doctor
-                  </label>
-                  <input
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Type doctor name..."
-                    className="w-full px-4 py-2 border-2 border-gray-200 rounded-xl text-black focus:outline-none"
-                  />
-                </div>
-                <div>
-                  <label className="text-sm text-gray-600 mb-1 block">
-                    Payment Status
-                  </label>
-                  <select
-                    value={paymentFilter}
-                    onChange={(e) => setPaymentFilter(e.target.value)}
-                    className="w-full px-4 py-2 border-2 border-gray-200 text-black rounded-xl"
-                  >
-                    <option value="all">All</option>
-                    <option value="paid">Paid</option>
-                    <option value="pending">Pending</option>
-                    <option value="failed">Failed</option>
-                  </select>
-                </div>
-                <div className="flex items-end">
-                  <button
-                    onClick={() => {
-                      setSearchQuery("");
-                      setPaymentFilter("all");
-                    }}
-                    className="px-4 py-2 bg-gray-100 rounded-lg text-black"
-                  >
-                    Clear
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            {/* Table */}
-            <div className="bg-white rounded-lg border border-gray-200 p-4 shadow-sm overflow-x-auto">
-              <h3 className="text-lg font-semibold text-gray-800 mb-4">
-                Transactions
-              </h3>
-              <table className="w-full text-left table-auto">
-                <thead>
-                  <tr className="text-sm text-gray-500 border-b">
-                    <th className="py-3 px-3">Date</th>
-                    <th className="py-3 px-3">Doctor</th>
-                    <th className="py-3 px-3">Disease</th>
-                    <th className="py-3 px-3">Consultation Fee</th>
-                    <th className="py-3 px-3">Amount Received</th>
-                    <th className="py-3 px-3">Payment Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredRows.map((r, i) => (
-                    <tr key={i} className="odd:bg-white even:bg-gray-50">
-                      <td className="py-4 px-3 text-sm text-gray-700">
-                        {r.date}
-                      </td>
-                      <td className="py-4 px-3 text-sm text-gray-700">
-                        {r.doc_name}
-                      </td>
-                      <td className="py-4 px-3 text-sm text-gray-700">
-                        {r.disease}
-                      </td>
-                      <td className="py-4 px-3 text-sm text-gray-700">
-                        ₹ {r.consultationFee}
-                      </td>
-                      <td className="py-4 px-3 text-sm text-gray-700">
-                        ₹ {r.amount_received}
-                      </td>
-                      <td className="py-4 px-3 text-sm">
-                        <span
-                          className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${getStatusClasses(
-                            r.status
-                          )}`}
-                        >
-                          {r.status.toUpperCase()}
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </main>
         </div>
       </div>
 
-      {/* Floating chat button */}
-      <button className="fixed bottom-6 right-6 w-14 h-14 bg-linear-to-r from-blue-600 to-green-600 text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center z-50">
-        💬
-      </button>
+      {/* 2. Filter Controls */}
+      <div className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm">
+        <div className="flex flex-col md:flex-row gap-4 items-center">
+          {/* Search */}
+          <div className="relative flex-1 w-full">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
+            <input
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search by doctor name..."
+              className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm text-black"
+            />
+          </div>
+
+          {/* Status Filter */}
+          <div className="relative w-full md:w-48">
+            <Filter className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
+            <select
+              value={paymentFilter}
+              onChange={(e) => setPaymentFilter(e.target.value)}
+              className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-white text-black appearance-none cursor-pointer"
+            >
+              <option value="all">All Status</option>
+              <option value="paid">Paid</option>
+              <option value="pending">Pending</option>
+              <option value="failed">Failed</option>
+            </select>
+          </div>
+
+          {/* Clear Button */}
+          <button
+            onClick={() => {
+              setSearchQuery("");
+              setPaymentFilter("all");
+            }}
+            className="px-4 py-2 bg-gray-100 text-gray-600 rounded-lg text-sm hover:bg-gray-200 transition-colors flex items-center gap-2"
+          >
+            <X size={16} /> Clear
+          </button>
+        </div>
+      </div>
+
+      {/* 3. Transactions Table */}
+      <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+        <div className="px-6 py-4 border-b border-gray-200">
+          <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2">
+            <CreditCard size={20} className="text-blue-600" />
+            Transaction History
+          </h3>
+        </div>
+
+        <div className="overflow-x-auto">
+          <table className="w-full text-left table-auto">
+            <thead className="bg-gray-50 text-gray-500 font-medium text-xs uppercase tracking-wider">
+              <tr>
+                <th className="py-3 px-6">Date</th>
+                <th className="py-3 px-6">Doctor</th>
+                <th className="py-3 px-6">Disease</th>
+                <th className="py-3 px-6">Consultation</th>
+                <th className="py-3 px-6">Paid Amount</th>
+                <th className="py-3 px-6">Status</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-100">
+              {filteredRows.length > 0 ? (
+                filteredRows.map((r, i) => (
+                  <tr key={i} className="hover:bg-gray-50 transition-colors">
+                    <td className="py-4 px-6 text-sm text-gray-700">
+                      {r.date}
+                    </td>
+                    <td className="py-4 px-6 text-sm font-medium text-gray-900">
+                      {r.doc_name}
+                    </td>
+                    <td className="py-4 px-6 text-sm text-gray-600">
+                      {r.disease}
+                    </td>
+                    <td className="py-4 px-6 text-sm text-gray-700">
+                      ₹{r.consultationFee}
+                    </td>
+                    <td className="py-4 px-6 text-sm font-bold text-gray-800">
+                      ₹{r.amount_received}
+                    </td>
+                    <td className="py-4 px-6 text-sm">
+                      <span
+                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${getStatusClasses(
+                          r.status,
+                        )}`}
+                      >
+                        {r.status.toUpperCase()}
+                      </span>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan={6} className="py-8 text-center text-gray-500">
+                    No transactions found matching your search.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
   );
 }
