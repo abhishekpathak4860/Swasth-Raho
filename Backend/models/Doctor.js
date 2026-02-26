@@ -10,6 +10,7 @@ const doctorSchema = new mongoose.Schema({
   contact: { type: String, required: true },
   experience: { type: String, required: true },
   education: { type: String, required: true },
+  Doctordepartments: { type: String, required: true },
   hospital: { type: String, required: true },
   consultationFee: { type: String, required: true },
   Total_Revenue: { type: Number, required: true },

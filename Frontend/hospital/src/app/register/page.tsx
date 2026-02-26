@@ -15,6 +15,7 @@ interface DoctorFormData {
   experience: string;
   education: string;
   hospital: string;
+  Doctordepartments: string; // NEW FIELD
   consultationFee: string;
   Total_Revenue: number | 0;
   patient_ids: string[];
@@ -82,9 +83,13 @@ interface SuperAdminFormData {
 export default function Register() {
   const router = useRouter();
   const [hospitalData, setHospitalData] = useState<any[]>([]);
+  const [availableDepartments, setAvailableDepartments] = useState<string[]>(
+    [],
+  ); // To store depts of selected hospital
   const [role, setRole] = useState<
     "doctor" | "patient" | "hospital_admin" | "super_admin" | ""
   >("");
+
   const [formDataDoctor, setFormDataDoctor] = useState<DoctorFormData>({
     name: "",
     email: "",
@@ -96,6 +101,7 @@ export default function Register() {
     experience: "",
     education: "",
     hospital: "",
+    Doctordepartments: "", // NEW FIELD
     consultationFee: "",
     Total_Revenue: 0,
     patient_ids: [],
@@ -170,8 +176,7 @@ export default function Register() {
   const [isUploaded, setIsUploaded] = useState<boolean>(false);
   const [uploadedImageUrl, setUploadedImageUrl] = useState<string>("");
 
-  // Cloudinary config (fallbacks to values you provided if not set in env)
-
+  // Cloudinary config
   const CLOUDINARY_CLOUD_NAME =
     process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || "dwqf8u53j";
   const CLOUDINARY_UPLOAD_PRESET =
@@ -179,13 +184,12 @@ export default function Register() {
   const CLOUDINARY_FOLDER =
     process.env.NEXT_PUBLIC_CLOUDINARY_FOLDER || "swasthRaho_profile";
 
-  // fetch hospital data for the doctors to choose their hospital during registrations
+  // Fetch hospital data for the doctors to choose their hospital during registrations
   const fetchHospitalData = async () => {
     try {
       const apiUrl = `/api/hospital/get-hospitalData`;
       const res = await axios.get(apiUrl);
       setHospitalData(res.data);
-      console.log(res.data);
     } catch (error) {
       console.log(error);
     }
@@ -194,6 +198,26 @@ export default function Register() {
   useEffect(() => {
     fetchHospitalData();
   }, []);
+
+  // Handle Hospital Selection to populate Departments
+  const handleHospitalSelect = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const selectedHospitalName = e.target.value;
+    const selectedHospital = hospitalData.find(
+      (h) => h.hospital_name === selectedHospitalName,
+    );
+
+    setFormDataDoctor({
+      ...formDataDoctor,
+      hospital: selectedHospitalName,
+      Doctordepartments: "", // Reset department when hospital changes
+    });
+
+    if (selectedHospital && selectedHospital.departments) {
+      setAvailableDepartments(selectedHospital.departments);
+    } else {
+      setAvailableDepartments([]);
+    }
+  };
 
   // Reset image states when role changes
   useEffect(() => {
@@ -204,9 +228,9 @@ export default function Register() {
     setIsUploaded(false);
     setUploadedImageUrl("");
   }, [role]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // If an image is chosen but not uploaded yet, block registration
     if (selectedFile && !isUploaded) {
       alert("Please upload the selected image before registering.");
       return;
@@ -273,16 +297,15 @@ export default function Register() {
         onUploadProgress: (progressEvent) => {
           if (progressEvent.total)
             setUploadProgress(
-              Math.round((progressEvent.loaded / progressEvent.total) * 100)
+              Math.round((progressEvent.loaded / progressEvent.total) * 100),
             );
         },
       });
 
       const secureUrl = res.data.secure_url || res.data.url;
       setUploadedImageUrl(secureUrl);
-      console.log(secureUrl);
       setIsUploaded(true);
-      // Attach uploaded url to the correct form data depending on role
+
       switch (role) {
         case "doctor":
           setFormDataDoctor({ ...formDataDoctor, profileImg: secureUrl });
@@ -310,10 +333,9 @@ export default function Register() {
       setIsUploading(false);
     }
   };
-  // scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-200
 
   return (
-    <div className="min-h-screen flex justify-center items-center bg-gradient-to-br from-[#0f2027] via-[#203a43] to-[#2c5364]">
+    <div className="min-h-screen flex justify-center items-center bg-gradient-to-br from-[#0f2027] via-[#203a43] to-[#2c5364] py-10">
       <div className="bg-white/10 backdrop-blur-lg border border-white/20 shadow-2xl rounded-2xl p-10 w-[90%] max-w-md max-h-[85vh] overflow-y-auto scrollbar-thin scrollbar-thumb-cyan-400 scrollbar-track-white/10">
         <h2 className="text-3xl font-bold text-center mb-8 text-white tracking-wide">
           Register as{" "}
@@ -336,7 +358,7 @@ export default function Register() {
                   | "patient"
                   | "hospital_admin"
                   | "super_admin"
-                  | ""
+                  | "",
               )
             }
             className="w-full p-3 rounded-md bg-white/20 text-white placeholder-gray-300 focus:ring-2 focus:ring-cyan-400 outline-none"
@@ -385,10 +407,10 @@ export default function Register() {
                   role === "doctor"
                     ? formDataDoctor.name
                     : role === "patient"
-                    ? formDataPatient.name
-                    : role === "hospital_admin"
-                    ? formDataHospitalAdmin.name
-                    : formDataSuperAdmin.name
+                      ? formDataPatient.name
+                      : role === "hospital_admin"
+                        ? formDataHospitalAdmin.name
+                        : formDataSuperAdmin.name
                 }
                 onChange={(e) => {
                   const value = e.target.value;
@@ -429,7 +451,7 @@ export default function Register() {
                   accept="image/*"
                   onChange={(e) =>
                     handleFileSelected(
-                      e.target.files ? e.target.files[0] : null
+                      e.target.files ? e.target.files[0] : null,
                     )
                   }
                   className="text-gray-300"
@@ -457,9 +479,7 @@ export default function Register() {
                     <button
                       type="button"
                       onClick={() => {
-                        // allow re-upload
                         if (uploadedImageUrl) {
-                          // clear the stored uploaded url
                           setUploadedImageUrl("");
                         }
                         setIsUploaded(false);
@@ -518,10 +538,10 @@ export default function Register() {
                   role === "doctor"
                     ? formDataDoctor.email
                     : role === "patient"
-                    ? formDataPatient.email
-                    : role === "hospital_admin"
-                    ? formDataHospitalAdmin.email
-                    : formDataSuperAdmin.email
+                      ? formDataPatient.email
+                      : role === "hospital_admin"
+                        ? formDataHospitalAdmin.email
+                        : formDataSuperAdmin.email
                 }
                 onChange={(e) => {
                   const value = e.target.value;
@@ -563,10 +583,10 @@ export default function Register() {
                   role === "doctor"
                     ? formDataDoctor.password
                     : role === "patient"
-                    ? formDataPatient.password
-                    : role === "hospital_admin"
-                    ? formDataHospitalAdmin.password
-                    : formDataSuperAdmin.password
+                      ? formDataPatient.password
+                      : role === "hospital_admin"
+                        ? formDataHospitalAdmin.password
+                        : formDataSuperAdmin.password
                 }
                 onChange={(e) => {
                   const value = e.target.value;
@@ -594,7 +614,7 @@ export default function Register() {
                       break;
                   }
                 }}
-                className="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500 outline-none text-gray-200 text-sm"
+                className="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500 outline-none text-gray-200 text-sm bg-transparent border-gray-500"
                 required
               />
             </div>
@@ -621,7 +641,7 @@ export default function Register() {
                           age: Number(e.target.value),
                         })
                   }
-                  className="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500 outline-none text-gray-200 text-sm"
+                  className="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500 outline-none text-gray-200 text-sm bg-transparent border-gray-500"
                   required
                 />
               </div>
@@ -728,8 +748,12 @@ export default function Register() {
                         className="w-full p-3 rounded-md bg-white/20 text-white focus:ring-2 focus:ring-cyan-400 outline-none"
                         required
                       >
-                        <option value="private">Private</option>
-                        <option value="government">Government</option>
+                        <option value="private" className="text-black">
+                          Private
+                        </option>
+                        <option value="government" className="text-black">
+                          Government
+                        </option>
                       </select>
                     </div>
                   </div>
@@ -1008,7 +1032,7 @@ export default function Register() {
                             onClick={() => {
                               const newDepts =
                                 formDataHospitalAdmin.departments.filter(
-                                  (_, i) => i !== index
+                                  (_, i) => i !== index,
                                 );
                               setFormDataHospitalAdmin({
                                 ...formDataHospitalAdmin,
@@ -1071,7 +1095,7 @@ export default function Register() {
                               onClick={() => {
                                 const newLabs =
                                   formDataHospitalAdmin.lab_facilities.filter(
-                                    (_, i) => i !== index
+                                    (_, i) => i !== index,
                                   );
                                 setFormDataHospitalAdmin({
                                   ...formDataHospitalAdmin,
@@ -1083,7 +1107,7 @@ export default function Register() {
                               ✕
                             </button>
                           </div>
-                        )
+                        ),
                       )}
                       <button
                         type="button"
@@ -1142,7 +1166,7 @@ export default function Register() {
                               onClick={() => {
                                 const newPharmacies =
                                   formDataHospitalAdmin.connected_pharmacies.filter(
-                                    (_, i) => i !== index
+                                    (_, i) => i !== index,
                                   );
                                 setFormDataHospitalAdmin({
                                   ...formDataHospitalAdmin,
@@ -1154,7 +1178,7 @@ export default function Register() {
                               ✕
                             </button>
                           </div>
-                        )
+                        ),
                       )}
                       <button
                         type="button"
@@ -1206,7 +1230,7 @@ export default function Register() {
                               onClick={() => {
                                 const newModes =
                                   formDataHospitalAdmin.payment_modes.filter(
-                                    (_, i) => i !== index
+                                    (_, i) => i !== index,
                                   );
                                 setFormDataHospitalAdmin({
                                   ...formDataHospitalAdmin,
@@ -1218,7 +1242,7 @@ export default function Register() {
                               ✕
                             </button>
                           </div>
-                        )
+                        ),
                       )}
                       <button
                         type="button"
@@ -1270,7 +1294,7 @@ export default function Register() {
                               onClick={() => {
                                 const newPartners =
                                   formDataHospitalAdmin.insurance_partners.filter(
-                                    (_, i) => i !== index
+                                    (_, i) => i !== index,
                                   );
                                 setFormDataHospitalAdmin({
                                   ...formDataHospitalAdmin,
@@ -1282,7 +1306,7 @@ export default function Register() {
                               ✕
                             </button>
                           </div>
-                        )
+                        ),
                       )}
                       <button
                         type="button"
@@ -1464,24 +1488,141 @@ export default function Register() {
             )}
 
             {role === "doctor" && (
-              <div>
-                <label className="block text-gray-200 font-medium mb-1">
-                  Specialization Type
-                </label>
-                <input
-                  type="text"
-                  placeholder="e.g. Eye Specialist"
-                  value={formDataDoctor.type}
-                  onChange={(e) =>
-                    setFormDataDoctor({
-                      ...formDataDoctor,
-                      type: e.target.value,
-                    })
-                  }
-                  className="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500 outline-none text-gray-200 text-sm"
-                  required
-                />
-              </div>
+              <>
+                <div>
+                  <label className="block text-gray-200 font-medium mb-1">
+                    Specialization Type
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Eye Specialist"
+                    value={formDataDoctor.type}
+                    onChange={(e) =>
+                      setFormDataDoctor({
+                        ...formDataDoctor,
+                        type: e.target.value,
+                      })
+                    }
+                    className="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500 outline-none text-gray-200 text-sm bg-transparent border-gray-500"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-gray-200 font-medium mb-1">
+                    Experience
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g.15 years"
+                    value={formDataDoctor.experience}
+                    onChange={(e) =>
+                      setFormDataDoctor({
+                        ...formDataDoctor,
+                        experience: e.target.value,
+                      })
+                    }
+                    className="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500 outline-none text-gray-200 text-sm bg-transparent border-gray-500"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-gray-200 font-medium mb-1">
+                    Education
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g.MBBS, MD Cardiology"
+                    value={formDataDoctor.education}
+                    onChange={(e) =>
+                      setFormDataDoctor({
+                        ...formDataDoctor,
+                        education: e.target.value,
+                      })
+                    }
+                    className="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500 outline-none text-gray-200 text-sm bg-transparent border-gray-500"
+                    required
+                  />
+                </div>
+
+                {/* DOCTOR HOSPITAL & DEPARTMENT SELECTION */}
+                <div>
+                  <label className="block text-gray-200 font-medium mb-1">
+                    Hospital Name
+                  </label>
+                  <select
+                    value={formDataDoctor.hospital}
+                    onChange={handleHospitalSelect}
+                    className="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500 outline-none text-gray-200 text-sm bg-gray-800"
+                    required
+                  >
+                    <option value="">-- Select Hospital --</option>
+                    {hospitalData.length > 0 ? (
+                      hospitalData.map((hospital: any, index: number) => (
+                        <option key={index} value={hospital.hospital_name}>
+                          {hospital.hospital_name}
+                        </option>
+                      ))
+                    ) : (
+                      <option disabled>Loading hospitals...</option>
+                    )}
+                  </select>
+                </div>
+
+                {/* NEW DEPARTMENT SELECTION */}
+                <div>
+                  <label className="block text-gray-200 font-medium mb-1">
+                    Department
+                  </label>
+                  <select
+                    value={formDataDoctor.Doctordepartments}
+                    onChange={(e) =>
+                      setFormDataDoctor({
+                        ...formDataDoctor,
+                        Doctordepartments: e.target.value,
+                      })
+                    }
+                    className="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500 outline-none text-gray-200 text-sm bg-gray-800"
+                    required
+                    disabled={!formDataDoctor.hospital} // Disable if no hospital is selected
+                  >
+                    <option value="">-- Select Department --</option>
+                    {availableDepartments.length > 0 ? (
+                      availableDepartments.map(
+                        (dept: string, index: number) => (
+                          <option key={index} value={dept}>
+                            {dept}
+                          </option>
+                        ),
+                      )
+                    ) : (
+                      <option disabled>
+                        {formDataDoctor.hospital
+                          ? "No departments found for this hospital"
+                          : "Select a hospital first"}
+                      </option>
+                    )}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-gray-200 font-medium mb-1">
+                    Consultation Fee
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g. 1500"
+                    value={formDataDoctor.consultationFee}
+                    onChange={(e) =>
+                      setFormDataDoctor({
+                        ...formDataDoctor,
+                        consultationFee: e.target.value,
+                      })
+                    }
+                    className="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500 outline-none text-gray-200 text-sm bg-transparent border-gray-500"
+                    required
+                  />
+                </div>
+              </>
             )}
 
             {role === "patient" && (
@@ -1499,7 +1640,7 @@ export default function Register() {
                       location: e.target.value,
                     })
                   }
-                  className="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500 outline-none text-gray-200 text-sm"
+                  className="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500 outline-none text-gray-200 text-sm bg-transparent border-gray-500"
                   required
                 />
               </div>
@@ -1517,8 +1658,8 @@ export default function Register() {
                     role === "doctor"
                       ? formDataDoctor.contact
                       : role === "patient"
-                      ? formDataPatient.contact
-                      : ""
+                        ? formDataPatient.contact
+                        : ""
                   }
                   onChange={(e) => {
                     const value = e.target.value;
@@ -1537,122 +1678,16 @@ export default function Register() {
                         break;
                     }
                   }}
-                  className="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500 outline-none text-gray-200 text-sm"
+                  className="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500 outline-none text-gray-200 text-sm bg-transparent border-gray-500"
                   required
                 />
               </div>
             )}
 
-            {role == "doctor" && (
-              <>
-                {" "}
-                <div>
-                  <label className="block text-gray-200 font-medium mb-1">
-                    Experience
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="e.g.15 years"
-                    value={formDataDoctor.experience}
-                    onChange={(e) =>
-                      setFormDataDoctor({
-                        ...formDataDoctor,
-                        experience: e.target.value,
-                      })
-                    }
-                    className="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500 outline-none text-gray-200 text-sm"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-gray-200 font-medium mb-1">
-                    Education
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="e.g.MBBS, MD Cardiology"
-                    value={formDataDoctor.education}
-                    onChange={(e) =>
-                      setFormDataDoctor({
-                        ...formDataDoctor,
-                        education: e.target.value,
-                      })
-                    }
-                    className="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500 outline-none text-gray-200 text-sm"
-                    required
-                  />
-                </div>
-                {/* <div>
-                  <label className="block text-gray-200 font-medium mb-1">
-                    Hospital Name
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="e.g.Heart Care Centre"
-                    value={formDataDoctor.hospital}
-                    onChange={(e) =>
-                      setFormDataDoctor({
-                        ...formDataDoctor,
-                        hospital: e.target.value,
-                      })
-                    }
-                    className="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500 outline-none text-gray-200 text-sm"
-                    required
-                  />
-                </div> */}
-                <div>
-                  <label className="block text-gray-200 font-medium mb-1">
-                    Hospital Name
-                  </label>
-
-                  <select
-                    value={formDataDoctor.hospital}
-                    onChange={(e) =>
-                      setFormDataDoctor({
-                        ...formDataDoctor,
-                        hospital: e.target.value,
-                      })
-                    }
-                    className="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500 outline-none text-gray-200 text-sm bg-gray-800"
-                    required
-                  >
-                    <option value="">-- Select Hospital --</option>
-
-                    {hospitalData.length > 0 ? (
-                      hospitalData.map((hospital: any, index: number) => (
-                        <option key={index} value={hospital.hospital_name}>
-                          {hospital.hospital_name}
-                        </option>
-                      ))
-                    ) : (
-                      <option disabled>Loading hospitals...</option>
-                    )}
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-gray-200 font-medium mb-1">
-                    Consultation Fee
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="e.g. 1500"
-                    value={formDataDoctor.consultationFee}
-                    onChange={(e) =>
-                      setFormDataDoctor({
-                        ...formDataDoctor,
-                        consultationFee: e.target.value,
-                      })
-                    }
-                    className="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500 outline-none text-gray-200 text-sm"
-                    required
-                  />
-                </div>
-              </>
-            )}
             <button
               type="submit"
               disabled={!!selectedFile && !isUploaded}
-              className={`w-full py-3 rounded-md text-white font-semibold bg-gradient-to-r from-cyan-500 to-green-400 hover:opacity-90 transition-all ${
+              className={`w-full py-3 rounded-md text-white font-semibold bg-gradient-to-r from-cyan-500 to-green-400 hover:opacity-90 transition-all mt-6 ${
                 selectedFile && !isUploaded
                   ? "opacity-50 cursor-not-allowed"
                   : ""

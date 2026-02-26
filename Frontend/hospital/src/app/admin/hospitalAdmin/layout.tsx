@@ -101,8 +101,8 @@ export default function HospitalAdminLayout({
       >
         <div className="p-6 border-b border-gray-100 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-200">
-              <span className="text-white font-bold text-xl">H</span>
+            <div className="w-10 h-10 bg-gradient-to-r from-blue-600 to-green-600 rounded-full flex items-center justify-center shadow-lg shadow-blue-200">
+              <span className="text-white font-bold text-xl">S</span>
             </div>
             <div>
               <h1 className="text-lg font-bold text-gray-800 leading-tight">

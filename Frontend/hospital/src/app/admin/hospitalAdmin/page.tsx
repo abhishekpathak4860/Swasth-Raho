@@ -223,7 +223,7 @@ export default function HospitalDashboard() {
   return (
     <div className="space-y-6 relative">
       {/* 1. Welcome Banner (Updated to Blue Theme) */}
-      <div className="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl p-6 text-white shadow-lg relative overflow-hidden">
+      <div className="bg-linear-to-r from-blue-600 to-green-600 rounded-2xl p-6 text-white shadow-lg relative overflow-hidden">
         <div className="relative z-10">
           <div className="flex justify-between items-start">
             <div>

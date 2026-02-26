@@ -37,6 +37,7 @@ export const registerUser = async (req, res) => {
       icu_beds,
       ambulances,
       departments,
+      Doctordepartments,
       lab_facilities,
       payment_modes,
       insurance_partners,
@@ -107,6 +108,7 @@ export const registerUser = async (req, res) => {
           contact,
           experience,
           education,
+          Doctordepartments,
           hospital, // hospital name (for easy readability)
           hospital_id: hospitalDoc._id, //Linking hospital here
           consultationFee,
@@ -159,6 +161,7 @@ export const registerUser = async (req, res) => {
           icu_beds,
           ambulances,
           departments,
+
           lab_facilities,
           connected_pharmacies,
           payment_modes,
