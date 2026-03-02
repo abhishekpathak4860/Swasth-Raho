@@ -17,7 +17,7 @@ export default function Header() {
             <span className="text-white font-bold text-xl">S</span>
           </div>
           <Link href="/">
-            <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-green-600 bg-clip-text text-transparent">
+            <h1 className="text-2xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
               Swasth-Raho
             </h1>
           </Link>

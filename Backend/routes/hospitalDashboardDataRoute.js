@@ -10,6 +10,10 @@ import {
   deleteDepartment,
   editDepartment,
 } from "../controllers/hospitalDepartments.js";
+import {
+  updateHospitalAdminPassword,
+  updateHospitalAdminProfile,
+} from "../controllers/updateHospitalAdminPassword-profile.js";
 
 const router = express.Router();
 
@@ -22,4 +26,6 @@ router.get("/patients", verifyToken, getHospitalPatients);
 router.post("/add-department", verifyToken, addDepartment);
 router.put("/edit-department", verifyToken, editDepartment);
 router.delete("/delete-department", verifyToken, deleteDepartment);
+router.patch("/updatePassword", verifyToken, updateHospitalAdminPassword);
+router.patch("/update-personalData", verifyToken, updateHospitalAdminProfile);
 export default router;

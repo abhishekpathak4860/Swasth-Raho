@@ -8,7 +8,7 @@ import Testimonials from "../components/Testimonials";
 
 export default function Home() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50">
+    <div className="min-h-screen">
       {/* Enhanced Navbar */}
       <Header />
       {/* Hero Section */}

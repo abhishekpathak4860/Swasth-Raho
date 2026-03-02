@@ -1,5 +1,442 @@
-import React from "react";
+"use client";
+import React, { useEffect, useState } from "react";
+import Link from "next/link";
+import axios from "axios";
+import {
+  LayoutDashboard,
+  Building2,
+  Stethoscope,
+  Users,
+  Settings,
+  LogOut,
+  Menu,
+  X,
+  User,
+  Lock,
+  Camera,
+  Save,
+  Loader2,
+  ShieldAlert,
+  Edit2,
+  CheckCircle,
+  UploadCloud,
+} from "lucide-react";
+import { useAuth } from "../../../../../context/AuthContext";
 
-export default function page() {
-  return <div>settings</div>;
+// --- ENV VARS ---
+const CLOUDINARY_CLOUD_NAME =
+  process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || "dwqf8u53j";
+const CLOUDINARY_UPLOAD_PRESET =
+  process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET || "image_upload";
+const CLOUDINARY_FOLDER =
+  process.env.NEXT_PUBLIC_CLOUDINARY_FOLDER || "swasthRaho_profile";
+
+export default function AdminSettings() {
+  const { user, fetchUser } = useAuth();
+  const [activeTab, setActiveTab] = useState("settings");
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [showProfileMenu, setShowProfileMenu] = useState(false);
+
+  // Settings State
+  const [section, setSection] = useState<"general" | "security">("general");
+  const [loading, setLoading] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [message, setMessage] = useState({ type: "", text: "" });
+
+  // Form Data
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    profileImg: "",
+    newPassword: "",
+    confirmPassword: "",
+  });
+
+  // Image Upload State
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
+
+  // Load user data
+  useEffect(() => {
+    fetchUser();
+  }, []);
+
+  useEffect(() => {
+    if (user) {
+      setFormData((prev) => ({
+        ...prev,
+        name: user.name || "",
+        email: user.email || "",
+        profileImg: user.profileImg || "",
+      }));
+    }
+  }, [user]);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      setSelectedFile(file);
+      setPreviewUrl(URL.createObjectURL(file)); // Show local preview
+    }
+  };
+
+  const handleEditToggle = () => {
+    if (isEditing && user) {
+      // Reset fields if cancelling
+      setFormData((prev) => ({
+        ...prev,
+        name: user.name || "",
+        email: user.email || "",
+        profileImg: user.profileImg || "",
+      }));
+      setSelectedFile(null);
+      setPreviewUrl(null);
+    }
+    setIsEditing(!isEditing);
+    setMessage({ type: "", text: "" });
+  };
+
+  // --- CLOUDINARY UPLOAD FUNCTION ---
+  const uploadImageToCloudinary = async (): Promise<string | null> => {
+    if (!selectedFile) return null;
+
+    try {
+      setIsUploadingImage(true);
+      const cloudinaryUrl = `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`;
+      const body = new FormData();
+      body.append("file", selectedFile);
+      body.append("upload_preset", CLOUDINARY_UPLOAD_PRESET);
+      body.append("folder", CLOUDINARY_FOLDER);
+
+      const res = await axios.post(cloudinaryUrl, body, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+
+      return res.data.secure_url || res.data.url;
+    } catch (error) {
+      console.error("Cloudinary Upload Error:", error);
+      throw new Error("Failed to upload image. Please try again.");
+    } finally {
+      setIsUploadingImage(false);
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setMessage({ type: "", text: "" });
+    setLoading(true);
+
+    try {
+      if (section === "security") {
+        // --- PASSWORD UPDATE LOGIC ---
+        if (formData.newPassword !== formData.confirmPassword) {
+          throw new Error("New passwords do not match.");
+        }
+        if (formData.newPassword.length < 6) {
+          throw new Error("Password must be at least 6 characters long.");
+        }
+
+        const res = await axios.patch(
+          "/api/hospital/updatePassword",
+          { newPassword: formData.newPassword },
+          { withCredentials: true },
+        );
+        setMessage({ type: "success", text: res.data.message });
+
+        setFormData((prev) => ({
+          ...prev,
+          newPassword: "",
+          confirmPassword: "",
+        }));
+      } else {
+        // --- GENERAL PROFILE UPDATE LOGIC ---
+
+        let finalProfileImg = formData.profileImg;
+
+        // 1. Check if a new file needs uploading
+        if (selectedFile) {
+          const uploadedUrl = await uploadImageToCloudinary();
+          if (uploadedUrl) {
+            finalProfileImg = uploadedUrl;
+          }
+        }
+
+        // 2. Send Data to Backend
+        const res = await axios.patch(
+          "/api/hospital/update-personalData",
+          {
+            name: formData.name,
+            email: formData.email,
+            profileImg: finalProfileImg,
+          },
+          { withCredentials: true },
+        );
+
+        setMessage({ type: "success", text: res.data.message });
+        setIsEditing(false);
+        setSelectedFile(null);
+        setPreviewUrl(null);
+        fetchUser(); // Refresh Context
+      }
+    } catch (err: any) {
+      setMessage({
+        type: "error",
+        text: err.response?.data?.message || err.message || "Update failed",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="h-screen bg-gray-50 flex overflow-hidden font-sans">
+      {/* Mobile Overlay */}
+      {isSidebarOpen && (
+        <div
+          className="fixed inset-0 bg-black/40 z-40 md:hidden"
+          onClick={() => setIsSidebarOpen(false)}
+        ></div>
+      )}
+
+      {/* ---------------- MAIN CONTENT ---------------- */}
+      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+        {/* Settings Content */}
+        <main className="flex-1 overflow-y-auto p-4 sm:p-8 bg-slate-50">
+          <div className="max-w-4xl mx-auto">
+            {/* Tabs */}
+            <div className="flex gap-6 border-b border-gray-200 mb-8">
+              <button
+                onClick={() => {
+                  setSection("general");
+                  setIsEditing(false);
+                  setMessage({ type: "", text: "" });
+                }}
+                className={`pb-4 px-2 text-sm font-medium transition-all relative ${section === "general" ? "text-blue-600" : "text-gray-500 hover:text-gray-700"}`}
+              >
+                <span className="flex items-center gap-2">
+                  <User size={18} /> General Profile
+                </span>
+                {section === "general" && (
+                  <div className="absolute bottom-0 left-0 w-full h-0.5 bg-blue-600 rounded-t-full"></div>
+                )}
+              </button>
+              <button
+                onClick={() => {
+                  setSection("security");
+                  setIsEditing(false);
+                  setMessage({ type: "", text: "" });
+                }}
+                className={`pb-4 px-2 text-sm font-medium transition-all relative ${section === "security" ? "text-blue-600" : "text-gray-500 hover:text-gray-700"}`}
+              >
+                <span className="flex items-center gap-2">
+                  <Lock size={18} /> Security & Password
+                </span>
+                {section === "security" && (
+                  <div className="absolute bottom-0 left-0 w-full h-0.5 bg-blue-600 rounded-t-full"></div>
+                )}
+              </button>
+            </div>
+
+            {/* Notification Message */}
+            {message.text && (
+              <div
+                className={`p-4 mb-6 rounded-lg text-sm flex items-center gap-2 ${message.type === "success" ? "bg-green-50 text-green-700 border border-green-200" : "bg-red-50 text-red-700 border border-red-200"}`}
+              >
+                {message.type === "success" ? (
+                  <CheckCircle size={16} />
+                ) : (
+                  <ShieldAlert size={16} />
+                )}
+                {message.text}
+              </div>
+            )}
+
+            {/* Form Section */}
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 sm:p-8 relative">
+              {/* Edit Button (Only for General) */}
+              {section === "general" && (
+                <button
+                  onClick={handleEditToggle}
+                  type="button"
+                  className={`absolute top-8 right-8 flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${isEditing ? "bg-red-50 text-red-600 hover:bg-red-100" : "bg-blue-50 text-blue-600 hover:bg-blue-100"}`}
+                >
+                  {isEditing ? <X size={16} /> : <Edit2 size={16} />}
+                  {isEditing ? "Cancel" : "Edit Profile"}
+                </button>
+              )}
+
+              <form onSubmit={handleSubmit}>
+                {/* --- GENERAL SECTION --- */}
+                {section === "general" && (
+                  <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                    <div className="flex items-center gap-6 mb-8">
+                      <div className="relative group">
+                        <div
+                          className={`w-24 h-24 rounded-full bg-gray-100 border-4 border-white shadow-md overflow-hidden ${isEditing ? "ring-4 ring-blue-100" : ""}`}
+                        >
+                          <img
+                            src={
+                              previewUrl ||
+                              formData.profileImg ||
+                              "https://via.placeholder.com/150"
+                            }
+                            alt="Avatar"
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+
+                        {/* Upload Overlay */}
+                        {isEditing && (
+                          <label
+                            htmlFor="file-upload"
+                            className="absolute inset-0 bg-black/40 rounded-full flex items-center justify-center cursor-pointer hover:bg-black/50 transition-colors"
+                          >
+                            {isUploadingImage ? (
+                              <Loader2 className="animate-spin text-white w-6 h-6" />
+                            ) : (
+                              <Camera className="text-white w-6 h-6" />
+                            )}
+                            <input
+                              id="file-upload"
+                              type="file"
+                              className="hidden"
+                              accept="image/*"
+                              onChange={handleFileChange}
+                              disabled={isUploadingImage}
+                            />
+                          </label>
+                        )}
+                      </div>
+                      <div>
+                        <h3 className="text-lg font-bold text-gray-900">
+                          Profile Photo
+                        </h3>
+                        <p className="text-sm text-gray-500">
+                          {isEditing
+                            ? "Click the camera icon to select a new image."
+                            : "This will be displayed on your profile."}
+                        </p>
+                        {selectedFile && isEditing && (
+                          <span className="text-xs text-green-600 font-medium flex items-center gap-1 mt-1">
+                            <CheckCircle size={12} /> Image selected (Will
+                            upload on save)
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Full Name
+                        </label>
+                        <input
+                          type="text"
+                          name="name"
+                          value={formData.name}
+                          onChange={handleChange}
+                          disabled={!isEditing}
+                          className={`text-black w-full px-4 py-2.5 rounded-lg border focus:ring-2 outline-none transition-all ${isEditing ? "border-gray-300 focus:ring-blue-100 focus:border-blue-500 bg-white" : "border-transparent bg-gray-50 text-gray-600 cursor-not-allowed"}`}
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Email Address
+                        </label>
+                        <input
+                          type="email"
+                          name="email"
+                          value={formData.email}
+                          onChange={handleChange}
+                          disabled={!isEditing}
+                          className={`text-black w-full px-4 py-2.5 rounded-lg border focus:ring-2 outline-none transition-all ${isEditing ? "border-gray-300 focus:ring-blue-100 focus:border-blue-500 bg-white" : "border-transparent bg-gray-50 text-gray-600 cursor-not-allowed"}`}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* --- SECURITY SECTION (No Current Password) --- */}
+                {section === "security" && (
+                  <div className="space-y-6 max-w-lg animate-in fade-in slide-in-from-bottom-2 duration-300">
+                    <div>
+                      <h3 className="text-lg font-bold text-gray-900 mb-1">
+                        Set New Password
+                      </h3>
+                      <p className="text-sm text-gray-500 mb-6">
+                        Enter a new secure password for your Super Admin
+                        account.
+                      </p>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        New Password
+                      </label>
+                      <input
+                        type="password"
+                        name="newPassword"
+                        value={formData.newPassword}
+                        onChange={handleChange}
+                        className="text-black w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-100 focus:border-blue-500 outline-none transition-all"
+                        placeholder="••••••••"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Confirm New Password
+                      </label>
+                      <input
+                        type="password"
+                        name="confirmPassword"
+                        value={formData.confirmPassword}
+                        onChange={handleChange}
+                        className="text-black w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-100 focus:border-blue-500 outline-none transition-all"
+                        placeholder="••••••••"
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {/* Footer Buttons */}
+                {(isEditing || section === "security") && (
+                  <div className="mt-8 pt-6 border-t border-gray-100 flex items-center justify-end gap-3">
+                    <button
+                      type="button"
+                      className="px-6 py-2.5 rounded-lg border border-gray-200 text-gray-600 font-medium hover:bg-gray-50 transition-colors"
+                      onClick={() =>
+                        section === "general"
+                          ? handleEditToggle()
+                          : window.location.reload()
+                      }
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={loading}
+                      className="px-6 py-2.5 rounded-lg bg-blue-600 text-white font-medium hover:bg-blue-700 transition-all shadow-lg shadow-blue-200 flex items-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
+                    >
+                      {loading ? (
+                        <Loader2 className="animate-spin w-4 h-4" />
+                      ) : (
+                        <Save className="w-4 h-4" />
+                      )}
+                      {isUploadingImage ? "Uploading Image..." : "Save Changes"}
+                    </button>
+                  </div>
+                )}
+              </form>
+            </div>
+          </div>
+        </main>
+      </div>
+    </div>
+  );
 }

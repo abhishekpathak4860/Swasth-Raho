@@ -1,26 +1,27 @@
+@config "../../tailwind.config.js";
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+  /* PRIMARY THEME COLORS (RGB for Tailwind v4) */
+  --primary: #2563eb;   /* blue */
+  --secondary: #16a34a; /* green */
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  /* --background: #ffffff;
+  --foreground: #171717; */
+  --background: #f7f5f2; /* hospital beige */
+  --foreground: #1f2937;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    /* --background: #0a0a0a;
+    --foreground: #ededed; */
+        --background: #0f172a;
+    --foreground: #e5e7eb;
   }
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
 }
