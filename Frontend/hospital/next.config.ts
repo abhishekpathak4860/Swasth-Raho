@@ -1,48 +1,49 @@
 // export default nextConfig;
 /** @type {import('next').NextConfig} */
+
+const BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
+
 const nextConfig = {
   eslint: { ignoreDuringBuilds: true },
   async rewrites() {
-    if (process.env.NODE_ENV === "development") {
-      return [
-        {
-          source: "/api/:path*",
-          destination: "http://localhost:5000/api/:path*",
-        },
-        {
-          source: "/api/chat/:path*",
-          destination: "http://localhost:5000/api/chat/:path*",
-        },
-        {
-          source: "/patient/:path*",
-          destination: "http://localhost:5000/patient/:path*",
-        },
-        {
-          source: "/doctor/:path*",
-          destination: "http://localhost:5000/doctor/:path*",
-        },
-        {
-          source: "/api/hospital/:path*",
-          destination: "http://localhost:5000/api/hospital/:path*",
-        },
-        {
-          source: "/auth/:path*",
-          destination: "http://localhost:5000/auth/:path*",
-        },
-        {
-          source: "/user/auth/:path*",
-          destination: "http://localhost:5000/user/auth/:path*",
-        },
-        {
-          source: "/super-admin/:path*",
-          destination: "http://localhost:5000/super-admin/:path*",
-        },
-        {
-          source: "/ai/:path*",
-          destination: "http://localhost:5000/ai/:path*",
-        },
-      ];
-    }
+    return [
+      {
+        source: "/api/:path*",
+        destination: `${BASE_URL}/api/:path*`,
+      },
+      {
+        source: "/api/chat/:path*",
+        destination: `${BASE_URL}/api/chat/:path*`,
+      },
+      {
+        source: "/patient/:path*",
+        destination: `${BASE_URL}/patient/:path*`,
+      },
+      {
+        source: "/doctor/:path*",
+        destination: `${BASE_URL}/doctor/:path*`,
+      },
+      {
+        source: "/api/hospital/:path*",
+        destination: `${BASE_URL}/api/hospital/:path*`,
+      },
+      {
+        source: "/auth/:path*",
+        destination: `${BASE_URL}/auth/:path*`,
+      },
+      {
+        source: "/user/auth/:path*",
+        destination: `${BASE_URL}/user/auth/:path*`,
+      },
+      {
+        source: "/super-admin/:path*",
+        destination: `${BASE_URL}/super-admin/:path*`,
+      },
+      {
+        source: "/ai/:path*",
+        destination: `${BASE_URL}/ai/:path*`,
+      },
+    ];
 
     return [
       {
