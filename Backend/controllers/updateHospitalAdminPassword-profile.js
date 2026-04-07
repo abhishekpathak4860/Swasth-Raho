@@ -1,3 +1,4 @@
+import { redis } from "../config/redis.js";
 import HospitalAdmin from "../models/HospitalAdmin.js";
 
 export const updateHospitalAdminPassword = async (req, res) => {
@@ -24,7 +25,11 @@ export const updateHospitalAdminPassword = async (req, res) => {
     if (!hospitalAdmin) {
       return res.status(404).json({ message: "hospitalAdmin not found" });
     }
+    // Delete cache
+    const cacheKey = `hospital:admin:profile:${userId}`;
+    await redis.del(cacheKey);
 
+    console.log("Cache deleted for:", cacheKey);
     res.status(200).json({
       success: true,
       message: "Password updated successfully",
@@ -57,6 +62,11 @@ export const updateHospitalAdminProfile = async (req, res) => {
     if (!updatedAdmin) {
       return res.status(404).json({ message: "hospitalAdmin not found" });
     }
+    // Delete cache
+    const cacheKey = `hospital:admin:profile:${userId}`;
+    await redis.del(cacheKey);
+
+    console.log("Cache deleted for:", cacheKey);
     res.status(200).json({
       success: true,
       message: "Profile updated successfully",

@@ -3,19 +3,46 @@ import Doctor from "../models/Doctor.js";
 import HospitalAdmin from "../models/HospitalAdmin.js";
 import Patient from "../models/Patient.js";
 import SuperAdmin from "../models/SuperAdmin.js";
+import { redis } from "../config/redis.js";
 // import bcrypt from "bcrypt";
 
 export const superAdminProfile = async (req, res) => {
   try {
     const { id, role } = req.user;
-    if (role !== "super_admin")
+
+    if (role !== "super_admin") {
       return res.status(403).json({ message: "Access denied" });
+    }
+
+    const cacheKey = `superadmin:profile:${id}`;
+
+    // Check Redis
+    const cachedData = await redis.get(cacheKey);
+
+    if (cachedData) {
+      console.log("CACHE HIT (Redis - SuperAdmin)");
+      return res.status(200).json({
+        message: "superAdmin profile fetched from cache",
+        superAdmin: cachedData,
+      });
+    }
+
+    console.log("CACHE MISS (MongoDB - SuperAdmin)");
 
     const superAdmin = await SuperAdmin.findById(id).select("-password");
-    if (!superAdmin)
-      return res.status(404).json({ message: "superAdmin not found" });
 
-    res.status(200).json({
+    if (!superAdmin) {
+      return res.status(404).json({ message: "Super Admin not found" });
+    }
+
+    // Save to Redis
+    await redis.set(cacheKey, superAdmin, {
+      ex: 60,
+    });
+
+    console.log("Data saved in Redis (SuperAdmin)");
+
+    return res.status(200).json({
       message: "superAdmin profile fetched successfully",
       superAdmin,
     });
@@ -156,7 +183,11 @@ export const updateSuperAdminPassword = async (req, res) => {
     if (!superAdmin) {
       return res.status(404).json({ message: "Super Admin not found" });
     }
+    // Delete cache
+    const cacheKey = `superadmin:profile:${userId}`;
+    await redis.del(cacheKey);
 
+    console.log("Cache deleted for:", cacheKey);
     res.status(200).json({
       success: true,
       message: "Password updated successfully",
@@ -192,6 +223,12 @@ export const updateSuperAdminProfile = async (req, res) => {
     if (!updatedAdmin) {
       return res.status(404).json({ message: "Super Admin not found" });
     }
+
+    // Delete cache
+    const cacheKey = `superadmin:profile:${userId}`;
+    await redis.del(cacheKey);
+
+    console.log("Cache deleted for:", cacheKey);
 
     res.status(200).json({
       success: true,

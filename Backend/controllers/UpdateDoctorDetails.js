@@ -1,3 +1,4 @@
+import { redis } from "../config/redis.js";
 import Doctor from "../models/Doctor.js";
 
 export const UpdateDoctorDetails = async (req, res) => {
@@ -12,12 +13,18 @@ export const UpdateDoctorDetails = async (req, res) => {
     const updatedDoctor = await Doctor.findByIdAndUpdate(
       id,
       { $set: updateData },
-      { new: true, runValidators: true } // return updated doc and validate schema
+      { new: true, runValidators: true }, // return updated doc and validate schema
     );
 
     if (!updatedDoctor) {
       return res.status(404).json({ message: "Patient not found" });
     }
+
+    // Delete Redis cache
+    const cacheKey = `doctor:profile:${id}`;
+    await redis.del(cacheKey);
+
+    console.log("🗑️ Doctor cache deleted:", cacheKey);
 
     res.status(200).json({
       message: "Profile updated successfully",

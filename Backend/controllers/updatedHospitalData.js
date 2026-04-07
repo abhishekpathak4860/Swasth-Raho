@@ -1,3 +1,4 @@
+import { redis } from "../config/redis.js";
 import HospitalAdmin from "../models/HospitalAdmin.js";
 
 export const updatedHospitalData = async (req, res) => {
@@ -26,6 +27,11 @@ export const updatedHospitalData = async (req, res) => {
       });
     }
 
+    // Delete cache
+    const cacheKey = `hospital:admin:profile:${userId}`;
+    await redis.del(cacheKey);
+
+    console.log("Cache deleted for:", cacheKey);
     // 4. Send back success response
     res.status(200).json({
       success: true,
