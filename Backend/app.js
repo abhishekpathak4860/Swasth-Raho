@@ -24,6 +24,7 @@ import passport from "passport";
 import session from "express-session";
 import "./config/passport.js";
 import googleAuthRoute from "./routes/googleAuthRoute.js";
+import connectRedis from "./config/redis.js";
 
 const app = express();
 const server = http.createServer(app); // 4. Create Server
@@ -113,6 +114,7 @@ app.use((err, req, res, next) => {
 });
 
 await connectDB();
+await connectRedis();
 
 // export default app;
 
