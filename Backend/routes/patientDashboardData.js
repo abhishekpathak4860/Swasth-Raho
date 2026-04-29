@@ -11,6 +11,7 @@ import { initiatePayment } from "../controllers/initiatePayment.js";
 import { verifyPayment } from "../controllers/verifyPayment.js";
 import { getReports } from "../controllers/getReports.js";
 import { fetchBills } from "../controllers/fetchBills.js";
+import { bookRoom } from "../controllers/bookRoom.js";
 
 const router = express.Router();
 
@@ -22,16 +23,17 @@ router.post("/initiate-payment", verifyToken, initiatePayment);
 router.get("/get-appointments", verifyToken, UpcomingAppointments);
 router.get("/get-reports", verifyToken, getReports);
 router.get("/payments", verifyToken, fetchBills);
+router.post("/book-room", verifyToken, bookRoom);
 router.patch(
   "/UpdateAppointment/:appointmentId",
   verifyToken,
-  UpdateAppointment
+  UpdateAppointment,
 );
 router.patch("/update-profile", verifyToken, UpdateUserDetails);
 router.delete(
   "/cancel-appointment/:appointmentId",
   verifyToken,
-  cancelAppointment
+  cancelAppointment,
 );
 
 export default router;
