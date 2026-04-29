@@ -368,7 +368,7 @@ export default function Hospitals() {
       {showModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 px-4">
           <div className="bg-white w-full max-w-md rounded-xl p-6 shadow-lg">
-            <h2 className="text-xl font-bold mb-4">
+            <h2 className="text-xl font-bold mb-4 text-black">
               Book Room - {selectedHospital?.hospital_name}
             </h2>
 
@@ -379,7 +379,7 @@ export default function Hospitals() {
               placeholder="Your Name"
               value={formData.patientName}
               onChange={handleChange}
-              className="w-full mb-3 px-4 py-2 border rounded-lg"
+              className="w-full mb-3 px-4 py-2 border rounded-lg text-black"
             />
 
             {/* Phone */}
@@ -389,7 +389,7 @@ export default function Hospitals() {
               placeholder="Phone Number"
               value={formData.phone}
               onChange={handleChange}
-              className="w-full mb-3 px-4 py-2 border rounded-lg"
+              className="w-full mb-3 px-4 py-2 border rounded-lg text-black"
             />
 
             {/* Room Type */}
@@ -397,7 +397,7 @@ export default function Hospitals() {
               name="roomType"
               value={formData.roomType}
               onChange={handleChange}
-              className="w-full mb-3 px-4 py-2 border rounded-lg"
+              className="w-full mb-3 px-4 py-2 border rounded-lg text-black"
             >
               <option value="AC">AC</option>
               <option value="Non-AC">Non-AC</option>
@@ -411,7 +411,7 @@ export default function Hospitals() {
               min="1"
               value={formData.rooms}
               onChange={handleChange}
-              className="w-full mb-4 px-4 py-2 border rounded-lg"
+              className="w-full mb-4 px-4 py-2 border rounded-lg text-black"
             />
 
             {/* Buttons */}
@@ -424,7 +424,7 @@ export default function Hospitals() {
               </button>
               <button
                 onClick={closeModal}
-                className="flex-1 bg-gray-200 py-2 rounded-lg"
+                className="flex-1 bg-gray-200 py-2 rounded-lg text-black"
               >
                 Cancel
               </button>
