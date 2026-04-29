@@ -1,3 +1,7 @@
-Backend/npm-cache/
+node_modules/
 npm-cache/
+Backend/npm-cache/
+Frontend/hospital/npm-cache/
 *.log
+.next/
+.env
